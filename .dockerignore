@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+*.db
+.env
+.env.local
+coverage
+design-system

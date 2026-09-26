@@ -1,0 +1,654 @@
+// ============================================================
+// Trading Platform Database Schema
+// SQLite for phase 1 — designed for migration to PostgreSQL.
+// NOTE: Prisma enums are NOT supported on SQLite, so all status
+// fields are String with documented allowed values (see docs/).
+// ============================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ------------------------------------------------------------
+// Users & Auth
+// ------------------------------------------------------------
+
+model User {
+  id             String   @id @default(cuid())
+  username       String   @unique
+  email          String?  @unique
+  mobile         String?  @unique
+  passwordHash   String
+  role           String   @default("USER") // USER | ADMIN
+  status         String   @default("ACTIVE") // ACTIVE | SUSPENDED | RESTRICTED
+  referralCode   String   @unique
+  referredById   String?
+  referredBy     User?    @relation("Referrals", fields: [referredById], references: [id])
+  referrals      User[]   @relation("Referrals")
+  telegramChatId String?
+  // 2FA-ready fields (not enforced in phase 1)
+  totpSecretEnc  String?
+  totpEnabled    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  sessions            Session[]
+  wallet              Wallet?
+  subscriptions       UserSubscription[]
+  planOverrides       UserPlanOverride[]
+  exchangeAccounts    ExchangeAccount[]
+  strategies          Strategy[]
+  purchases           StrategyPurchase[]   @relation("Buyer")
+  sales               StrategyPurchase[]   @relation("Seller")
+  backtests           Backtest[]
+  liveStrategies      LiveStrategy[]
+  notifications       Notification[]
+  activityLogs        ActivityLog[]
+  referralRecords     Referral[]           @relation("Referrer")
+  referredRecords     Referral[]           @relation("Referee")
+  walletTransactions  WalletTransaction[]
+  marketplaceListings MarketplaceListing[]
+  orders              Order[]
+  trades              Trade[]
+  idempotencyKeys     IdempotencyKey[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash    String   @unique
+  ip           String?
+  userAgent    String?
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ------------------------------------------------------------
+// Plans & Subscriptions
+// ------------------------------------------------------------
+
+model Plan {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique // free | basic-7 | basic-15 | basic-30 | pro-7 | pro-15 | enterprise
+  durationDays  Int
+  price         Int      // تومان
+  backtestLimit Int
+  liveLimit     Int
+  active        Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  description   String?
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subscriptions UserSubscription[]
+  overrides     UserPlanOverride[]
+}
+
+model UserSubscription {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId      String
+  plan        Plan     @relation(fields: [planId], references: [id])
+  startsAt    DateTime @default(now())
+  expiresAt   DateTime
+  graceEndsAt DateTime?
+  source      String   @default("PURCHASE") // PURCHASE | ADMIN | TRIAL | REFERRAL
+  pricePaid   Int      @default(0)
+  status      String   @default("ACTIVE") // TRIAL | ACTIVE | EXPIRING | EXPIRED | GRACE_PERIOD | RESTRICTED | SUSPENDED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, status])
+  @@index([expiresAt])
+}
+
+// Per-user plan overrides (custom price / discount / duration)
+model UserPlanOverride {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId        String
+  plan          Plan     @relation(fields: [planId], references: [id])
+  customPrice   Int?
+  discountPct   Int?
+  customDays    Int?
+  backtestLimit Int?
+  liveLimit     Int?
+  note          String?
+  createdById   String?
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, planId])
+}
+
+// ------------------------------------------------------------
+// Wallet & Financial Ledger
+// ------------------------------------------------------------
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance   Int      @default(0) // تومان — derived truth is wallet_transactions
+  currency  String   @default("IRT")
+  version   Int      @default(0) // optimistic locking
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id              String   @id @default(cuid())
+  walletId        String
+  wallet          Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  type            String   // CHARGE | STRATEGY_PURCHASE | STRATEGY_SALE | PLATFORM_COMMISSION | SUBSCRIPTION | REFUND | REFERRAL_BONUS | MANUAL_ADJUSTMENT | WITHDRAWAL (future)
+  direction       String   // CREDIT | DEBIT
+  amount          Int      // always positive; direction determines sign
+  balanceBefore   Int
+  balanceAfter    Int
+  description     String?
+  referenceNumber String   @unique
+  idempotencyKey  String?  @unique
+  metadata        String?  // JSON
+  createdById     String?  // actor (admin id or system)
+  createdAt       DateTime @default(now())
+
+  @@index([walletId, createdAt])
+  @@index([userId, createdAt])
+  @@index([type])
+}
+
+// ------------------------------------------------------------
+// Exchange Accounts (encrypted credentials)
+// ------------------------------------------------------------
+
+model ExchangeAccount {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exchange      String   @default("NOBITEX") // NOBITEX | BINANCE | BYBIT (future)
+  label         String   @default("نوبیتکس")
+  apiKeyEnc     String   // AES-256-GCM encrypted
+  apiSecretEnc  String   // AES-256-GCM encrypted
+  apiKeyMask    String   // e.g. "abcd...wxyz" for display only
+  status        String   @default("PENDING") // PENDING | CONNECTED | FAILED | DISCONNECTED
+  lastCheckedAt DateTime?
+  lastError     String?  // sanitized, never contains secret
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, exchange])
+}
+
+// ------------------------------------------------------------
+// Pairs / Markets
+// ------------------------------------------------------------
+
+model Pair {
+  id             String   @id @default(cuid())
+  symbol         String   @unique // e.g. BTCIRT
+  baseCurrency   String
+  quoteCurrency  String
+  minAmount      Float?
+  maxAmount      Float?
+  minPrice       Float?
+  maxPrice       Float?
+  amountPrecision Int    @default(8)
+  pricePrecision  Int    @default(0)
+  active         Boolean  @default(true)
+  tradingStatus  String   @default("ACTIVE") // ACTIVE | DISABLED | DELISTED
+  exchange       String   @default("NOBITEX")
+  metadata       String?  // JSON from exchange
+  syncedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  backtests      Backtest[]
+  liveStrategies LiveStrategy[]
+}
+
+// ------------------------------------------------------------
+// Strategies
+// ------------------------------------------------------------
+
+model Strategy {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  status          String   @default("DRAFT") // DRAFT | BACKTESTING | READY | LIVE | PAUSED | STOPPING | STOPPED | ERROR | EXPIRED
+  sourceStrategyId String? // clone source
+  parentVersionId String?  // clone parent version
+  isAiGenerated   Boolean  @default(false)
+  origin          String   @default("USER") // USER | CLONED | PURCHASED | AI
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  versions    StrategyVersion[]
+  listings    MarketplaceListing[]
+  backtests   Backtest[]
+  liveStrategies LiveStrategy[]
+
+  @@index([userId])
+}
+
+model StrategyVersion {
+  id               String   @id @default(cuid())
+  strategyId       String
+  strategy         Strategy @relation(fields: [strategyId], references: [id], onDelete: Cascade)
+  versionNumber    Int
+  kind             String   @default("SIGNAL") // SIGNAL | ORDER_BOOK_IMBALANCE | MARKET_MAKING
+  symbol           String   // pair symbol e.g. BTCIRT
+  timeframe        String   // 1m 3m 5m 15m 30m 1h
+  // weighted signal config
+  buyThreshold     Float    @default(0.35)
+  sellThreshold    Float    @default(-0.35)
+  // risk config
+  riskPerTradePct  Float    @default(1)
+  stopLossPct      Float    @default(1)
+  takeProfitPct    Float    @default(2)
+  trailingStop     Boolean  @default(false)
+  trailingStopPct  Float?
+  maxPositionPct   Float    @default(100) // of allocated capital
+  // execution config
+  orderType        String   @default("MARKET") // MARKET | LIMIT
+  config           String   @default("{}") // JSON — full strategy config snapshot
+  createdAt        DateTime @default(now())
+
+  indicators   StrategyIndicator[]
+  listings     MarketplaceListing[]
+  purchases    StrategyPurchase[]
+  backtests    Backtest[]
+  liveStrategies LiveStrategy[]
+
+  @@unique([strategyId, versionNumber])
+  @@index([strategyId])
+}
+
+model StrategyIndicator {
+  id           String  @id @default(cuid())
+  versionId    String
+  version      StrategyVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  name         String  // RSI | EMA | SMA | MACD | BOLLINGER
+  parameters   String  @default("{}") // JSON
+  weight       Float   @default(0)
+  enabled      Boolean @default(true)
+  buyCondition String  @default("{}") // JSON DSL
+  sellCondition String @default("{}") // JSON DSL
+  sortOrder    Int     @default(0)
+
+  @@index([versionId])
+}
+
+// ------------------------------------------------------------
+// Marketplace
+// ------------------------------------------------------------
+
+model MarketplaceListing {
+  id                String   @id @default(cuid())
+  strategyId        String
+  strategy          Strategy @relation(fields: [strategyId], references: [id])
+  versionId         String   // bound to a specific version
+  version           StrategyVersion @relation(fields: [versionId], references: [id])
+  sellerId          String
+  seller            User     @relation(fields: [sellerId], references: [id])
+  title             String
+  description       String?
+  imageUrl          String?
+  price             Int      // تومان
+  subscriptionDays  Int      @default(0) // 0 = lifetime access
+  status            String   @default("DRAFT") // DRAFT | PENDING_REVIEW | APPROVED | PUBLISHED | REJECTED | SUSPENDED | ARCHIVED
+  reviewNote        String?
+  reviewedById      String?
+  reviewedAt        DateTime?
+  publishedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  purchases StrategyPurchase[]
+
+  @@index([status])
+  @@index([sellerId])
+}
+
+model StrategyPurchase {
+  id            String   @id @default(cuid())
+  listingId     String
+  listing       MarketplaceListing @relation(fields: [listingId], references: [id])
+  versionId     String
+  version       StrategyVersion @relation(fields: [versionId], references: [id])
+  buyerId       String
+  buyer         User     @relation("Buyer", fields: [buyerId], references: [id])
+  sellerId      String
+  seller        User     @relation("Seller", fields: [sellerId], references: [id])
+  price         Int
+  commissionPct Float
+  commissionAmt Int
+  sellerNet     Int
+  clonedStrategyId String?  // strategy created for buyer from purchase
+  expiresAt     DateTime?
+  idempotencyKey String? @unique
+  createdAt     DateTime @default(now())
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([listingId])
+}
+
+// ------------------------------------------------------------
+// Backtests
+// ------------------------------------------------------------
+
+model Backtest {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  strategyId    String
+  strategy      Strategy @relation(fields: [strategyId], references: [id])
+  versionId     String?
+  version       StrategyVersion? @relation(fields: [versionId], references: [id])
+  pairId        String?
+  pair          Pair?    @relation(fields: [pairId], references: [id])
+  symbol        String
+  timeframe     String
+  startDate     DateTime
+  endDate       DateTime
+  initialBalance Float
+  // simulation parameters
+  feePct        Float    @default(0.25)
+  slippagePct   Float    @default(0.05)
+  executionDelayMs Int   @default(0)
+  partialFill   Boolean  @default(false)
+  status        String   @default("QUEUED") // QUEUED | RUNNING | COMPLETED | FAILED
+  progress      Int      @default(0)
+  error         String?  // sanitized
+  quotaConsumed Boolean  @default(false)
+  // results (nullable until complete)
+  finalBalance       Float?
+  netProfit          Float?
+  profitPct          Float?
+  winRate            Float?
+  lossRate           Float?
+  totalTrades        Int?
+  winningTrades      Int?
+  losingTrades       Int?
+  avgProfit          Float?
+  avgLoss            Float?
+  maxDrawdown        Float?
+  profitFactor       Float?
+  largestWin         Float?
+  largestLoss        Float?
+  avgTradeDurationMin Float?
+  equityCurve        String?  // JSON array [{t, equity}]
+  results            String?  // JSON full result blob
+  idempotencyKey     String? @unique
+  createdAt          DateTime @default(now())
+  startedAt          DateTime?
+  completedAt        DateTime?
+
+  trades BacktestTrade[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model BacktestTrade {
+  id         String   @id @default(cuid())
+  backtestId String
+  backtest   Backtest @relation(fields: [backtestId], references: [id], onDelete: Cascade)
+  side       String   // BUY | SELL
+  entryPrice Float
+  exitPrice  Float?
+  amount     Float
+  fee        Float    @default(0)
+  pnl        Float?
+  pnlPct     Float?
+  entryTime  DateTime
+  exitTime   DateTime?
+  exitReason String?  // SIGNAL | STOP_LOSS | TAKE_PROFIT | TRAILING_STOP | END
+
+  @@index([backtestId])
+}
+
+// ------------------------------------------------------------
+// Live Trading
+// ------------------------------------------------------------
+
+model LiveStrategy {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  strategyId    String
+  strategy      Strategy @relation(fields: [strategyId], references: [id])
+  versionId     String
+  version       StrategyVersion @relation(fields: [versionId], references: [id])
+  pairId        String?
+  pair          Pair?    @relation(fields: [pairId], references: [id])
+  symbol        String
+  allocatedCapital Float
+  mode          String   @default("REAL") // REAL | PAPER (تست زنده — no real orders)
+  status        String   @default("STARTING") // STARTING | RUNNING | PAUSED | DEGRADED | STOPPING | STOPPED | ERROR
+  stopPolicy    String?  // CLOSE_ALL | KEEP_MANAGING (chosen at stop time)
+  circuitBreakerFailures Int @default(0)
+  lastSignalAt  DateTime?
+  lastError     String?
+  stats         String   @default("{}") // JSON runtime stats
+  startedAt     DateTime @default(now())
+  stoppedAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders Order[]
+  trades Trade[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Order {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  liveStrategyId String?
+  liveStrategy   LiveStrategy? @relation(fields: [liveStrategyId], references: [id])
+  tradeId        String?
+  symbol         String
+  side           String   // BUY | SELL
+  type           String   // MARKET | LIMIT
+  amount         Float
+  price          Float?
+  filledAmount   Float    @default(0)
+  avgFillPrice   Float?
+  status         String   @default("PENDING") // PENDING | SUBMITTED | PARTIALLY_FILLED | FILLED | CANCEL_REQUESTED | CANCELLED | REJECTED | EXPIRED | ERROR
+  exchangeOrderId String?
+  idempotencyKey String   @unique
+  modifyCount    Int      @default(0)
+  lastCheckedAt  DateTime?
+  error          String?
+  metadata       String?  // JSON
+  createdAt      DateTime @default(now())
+  submittedAt    DateTime?
+  closedAt       DateTime?
+
+  trade  Trade? @relation("TradeOrders", fields: [tradeId], references: [id])
+  trades Trade[] @relation("OrderTrades")
+
+  @@index([liveStrategyId, status])
+  @@index([exchangeOrderId])
+}
+
+model Trade {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  liveStrategyId String?
+  liveStrategy   LiveStrategy? @relation(fields: [liveStrategyId], references: [id])
+  symbol         String
+  side           String   @default("LONG") // LONG (spot phase 1)
+  entryOrderId   String?
+  entryOrder     Order?   @relation("OrderTrades", fields: [entryOrderId], references: [id])
+  entryPrice     Float
+  amount         Float
+  invested       Float    // quote currency spent
+  status         String   @default("OPEN") // OPEN | CLOSING | CLOSED
+  exitPrice      Float?
+  exitReason     String?  // SIGNAL | STOP_LOSS | TAKE_PROFIT | TRAILING_STOP | MANUAL | STOP_POLICY | RECONCILE
+  pnl            Float?
+  pnlPct         Float?
+  stopLossPrice  Float?
+  takeProfitPrice Float?
+  trailingPeak   Float?   // highest price since entry (for trailing)
+  fee            Float    @default(0)
+  openedAt       DateTime @default(now())
+  closedAt       DateTime?
+
+  orders Order[] @relation("TradeOrders")
+
+  @@index([liveStrategyId, status])
+  @@index([userId, status])
+}
+
+// ------------------------------------------------------------
+// Historical Candles (market data cache)
+// ------------------------------------------------------------
+
+model HistoricalCandle {
+  id        String   @id @default(cuid())
+  symbol    String
+  timeframe String
+  time      DateTime // candle open time
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Float
+
+  @@unique([symbol, timeframe, time])
+  @@index([symbol, timeframe, time])
+}
+
+// ------------------------------------------------------------
+// Referrals
+// ------------------------------------------------------------
+
+model Referral {
+  id            String   @id @default(cuid())
+  referrerId    String
+  referrer      User     @relation("Referrer", fields: [referrerId], references: [id])
+  refereeId     String   @unique // one referral record per referee
+  referee       User     @relation("Referee", fields: [refereeId], references: [id])
+  // condition tracking
+  registered    Boolean  @default(true)
+  apiConnected  Boolean  @default(false)
+  firstLiveTrade Boolean @default(false)
+  completed     Boolean  @default(false)
+  bonusDays     Int      @default(7)
+  bonusGrantedAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([referrerId])
+}
+
+// ------------------------------------------------------------
+// Notifications
+// ------------------------------------------------------------
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // LOGIN | API_CONNECTED | TRADE_OPENED | TRADE_CLOSED | TP_HIT | SL_HIT | ORDER_ERROR | API_ERROR | SUBSCRIPTION_EXPIRY | GRACE_PERIOD | AUTO_TRADE_CLOSE | BACKTEST_COMPLETED | STRATEGY_PURCHASED | STRATEGY_SOLD | REFERRAL_BONUS | SYSTEM
+  title     String
+  body      String
+  severity  String   @default("INFO") // INFO | SUCCESS | WARNING | ERROR | CRITICAL
+  read      Boolean  @default(false)
+  metadata  String?  // JSON
+  telegramSent Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read, createdAt])
+}
+
+// ------------------------------------------------------------
+// Activity Logs / Audit
+// ------------------------------------------------------------
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  actorType  String   @default("USER") // USER | ADMIN | SYSTEM | WORKER
+  action     String   // LOGIN | LOGOUT | CREATE_STRATEGY | EDIT_STRATEGY | CLONE_STRATEGY | BACKTEST | START_LIVE | PAUSE | STOP | API_CONNECT | API_DISCONNECT | PURCHASE | SALE | WALLET_CHARGE | REFERRAL | SUBSCRIPTION | ...
+  entityType String?
+  entityId   String?
+  metadata   String?  // JSON — never contains secrets
+  ip         String?
+  requestId  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([action])
+  @@index([entityType, entityId])
+}
+
+// ------------------------------------------------------------
+// System Settings & Idempotency
+// ------------------------------------------------------------
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   // JSON-encoded value
+  description String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model IdempotencyKey {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  operation  String   // PLACE_ORDER | WALLET_CHARGE | STRATEGY_PURCHASE | SUBSCRIPTION_PURCHASE
+  status     String   @default("PROCESSING") // PROCESSING | COMPLETED | FAILED
+  response   String?  // JSON cached response
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime?
+
+  @@index([key])
+}
+
+// Queue job persistence for durable records (BullMQ holds runtime state)
+model JobRecord {
+  id          String   @id @default(cuid())
+  queue       String
+  bullmqJobId String?
+  type        String
+  payload     String   // JSON
+  status      String   @default("QUEUED") // QUEUED | RUNNING | COMPLETED | FAILED
+  attempts    Int      @default(0)
+  error       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([queue, status])
+}

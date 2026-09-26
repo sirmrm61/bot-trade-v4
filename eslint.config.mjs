@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // project extras:
+    ".windsurf/**",
+    "src/generated/**",
+    "prisma/migrations/**",
+    "coverage/**",
   ]),
 ]);
 

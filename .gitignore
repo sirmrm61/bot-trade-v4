@@ -32,6 +32,12 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+
+# database
+*.db
+*.db-journal
+/prisma/dev.db*
 
 # vercel
 .vercel
@@ -39,3 +45,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated
+src/generated/
+
+# reserved DOS device name — can be created accidentally by "> nul" redirects
+nul

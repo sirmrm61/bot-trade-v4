@@ -1,0 +1,3 @@
+# Normalize all text files to LF — consistent endings across platforms,
+# silences the autocrlf "LF will be replaced by CRLF" warnings on Windows.
+* text=auto eol=lf
