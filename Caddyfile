@@ -2,3 +2,8 @@ app.sirmrm.xyz, 66.93.9.160.sslip.io {
 	reverse_proxy app:3000
 	encode zstd gzip
 }
+
+omni.sirmrm.xyz {
+	reverse_proxy host.docker.internal:20128
+	encode zstd gzip
+}

@@ -74,6 +74,9 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    # lets caddy reach host-published ports (e.g. omniroute on :20128)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "80:80"
       - "443:443"
