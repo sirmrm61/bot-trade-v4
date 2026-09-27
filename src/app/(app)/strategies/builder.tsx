@@ -64,12 +64,14 @@ export function StrategyBuilder({
     stopLossPct: number; takeProfitPct: number; trailingStop: boolean;
     trailingStopPct?: number | null; maxPositionPct: number; orderType: string;
     indicators: { name: string; parameters: string; weight: number; enabled: boolean; buyCondition: string; sellCondition: string }[];
+    market?: "SPOT" | "FUTURES"; leverage?: number;
   };
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [kind, setKind] = useState<StrategyKind>(initial?.kind ?? "SIGNAL");
+  const [market, setMarket] = useState<"SPOT" | "FUTURES">(initial?.market ?? "SPOT");
 
   const [inds, setInds] = useState<Record<string, IndicatorState>>(() => {
     if (!initial) return DEFAULTS;
@@ -138,6 +140,8 @@ export function StrategyBuilder({
       trailingStopPct: num("trailingStopPct", 0) || null,
       maxPositionPct: num("maxPositionPct", 100),
       orderType: kind === "MARKET_MAKING" ? "LIMIT" : String(fd.get("orderType") ?? "MARKET"),
+      market: kind === "MARKET_MAKING" ? "SPOT" : market,
+      ...(kind !== "MARKET_MAKING" && market === "FUTURES" ? { leverage: num("leverage", 3) } : {}),
       indicators,
       ...(kind === "ORDER_BOOK_IMBALANCE" && {
         orderBookImbalance: {
@@ -572,6 +576,17 @@ export function StrategyBuilder({
               <Select name="orderType" defaultValue={initial?.orderType ?? "MARKET"}
                 options={[{ value: "MARKET", label: "بازار (Market)" }, { value: "LIMIT", label: "محدود (Limit)" }]} />
             </Field>
+            <Field label="بازار"
+              help="اسپات: فقط خرید (لانگ) با موجودی واقعی. فیوچرز: معاملات تعهدی نوبیتکس — امکان شورت (سود از ریزش) و ضریب اهرمی. در فیوچرز رسیدن قیمت به سطح لیکوییدیشن کل مارجین را می‌سوزاند.">
+              <Select value={market} onChange={(e) => setMarket(e.target.value as "SPOT" | "FUTURES")}
+                options={[{ value: "SPOT", label: "اسپات" }, { value: "FUTURES", label: "فیوچرز (تعهدی)" }]} />
+            </Field>
+            {market === "FUTURES" && (
+            <Field label="لورج (اهرم)"
+              help="ضریب اهرمی پوزیشن — مثلاً ۳× یعنی با هر ۱ تومان مارجین، ۳ تومان موقعیت. سود و زیان به نسبت اهرم بزرگ‌تر می‌شود و فاصله‌ی لیکوییدیشن ≈ ۱۰۰÷اهرم درصد است (۳× ⇒ ~۳۰٪). حداکثر ۱۰، گام‌های ۰٫۵.">
+              <Input name="leverage" type="number" step="0.5" min={1} max={10} defaultValue={initial?.leverage ?? 3} required />
+            </Field>
+            )}
             <label className="flex items-end gap-2 pb-2 text-sm">
               <input type="checkbox" name="trailingStop" defaultChecked={initial?.trailingStop} className="size-4 accent-primary" />
               تریلینگ استاپ

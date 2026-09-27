@@ -501,7 +501,10 @@ model Trade {
   liveStrategyId String?
   liveStrategy   LiveStrategy? @relation(fields: [liveStrategyId], references: [id])
   symbol         String
-  side           String   @default("LONG") // LONG (spot phase 1)
+  side           String   @default("LONG") // LONG | SHORT
+  leverage       Float    @default(1)      // 1 = spot; >1 futures margin
+  liquidationPrice Float?                  // futures: forced-close level
+  exchangePositionId String?               // futures: exchange position id for close
   entryOrderId   String?
   entryOrder     Order?   @relation("OrderTrades", fields: [entryOrderId], references: [id])
   entryPrice     Float
@@ -509,7 +512,7 @@ model Trade {
   invested       Float    // quote currency spent
   status         String   @default("OPEN") // OPEN | CLOSING | CLOSED
   exitPrice      Float?
-  exitReason     String?  // SIGNAL | STOP_LOSS | TAKE_PROFIT | TRAILING_STOP | MANUAL | STOP_POLICY | RECONCILE
+  exitReason     String?  // SIGNAL | STOP_LOSS | TAKE_PROFIT | TRAILING_STOP | MANUAL | STOP_POLICY | RECONCILE | LIQUIDATED
   pnl            Float?
   pnlPct         Float?
   stopLossPrice  Float?

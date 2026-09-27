@@ -27,6 +27,8 @@ export type AggregateTrade = {
 }
 
 export type TradeAvgAggregateOutputType = {
+  leverage: number | null
+  liquidationPrice: number | null
   entryPrice: number | null
   amount: number | null
   invested: number | null
@@ -40,6 +42,8 @@ export type TradeAvgAggregateOutputType = {
 }
 
 export type TradeSumAggregateOutputType = {
+  leverage: number | null
+  liquidationPrice: number | null
   entryPrice: number | null
   amount: number | null
   invested: number | null
@@ -58,6 +62,9 @@ export type TradeMinAggregateOutputType = {
   liveStrategyId: string | null
   symbol: string | null
   side: string | null
+  leverage: number | null
+  liquidationPrice: number | null
+  exchangePositionId: string | null
   entryOrderId: string | null
   entryPrice: number | null
   amount: number | null
@@ -81,6 +88,9 @@ export type TradeMaxAggregateOutputType = {
   liveStrategyId: string | null
   symbol: string | null
   side: string | null
+  leverage: number | null
+  liquidationPrice: number | null
+  exchangePositionId: string | null
   entryOrderId: string | null
   entryPrice: number | null
   amount: number | null
@@ -104,6 +114,9 @@ export type TradeCountAggregateOutputType = {
   liveStrategyId: number
   symbol: number
   side: number
+  leverage: number
+  liquidationPrice: number
+  exchangePositionId: number
   entryOrderId: number
   entryPrice: number
   amount: number
@@ -124,6 +137,8 @@ export type TradeCountAggregateOutputType = {
 
 
 export type TradeAvgAggregateInputType = {
+  leverage?: true
+  liquidationPrice?: true
   entryPrice?: true
   amount?: true
   invested?: true
@@ -137,6 +152,8 @@ export type TradeAvgAggregateInputType = {
 }
 
 export type TradeSumAggregateInputType = {
+  leverage?: true
+  liquidationPrice?: true
   entryPrice?: true
   amount?: true
   invested?: true
@@ -155,6 +172,9 @@ export type TradeMinAggregateInputType = {
   liveStrategyId?: true
   symbol?: true
   side?: true
+  leverage?: true
+  liquidationPrice?: true
+  exchangePositionId?: true
   entryOrderId?: true
   entryPrice?: true
   amount?: true
@@ -178,6 +198,9 @@ export type TradeMaxAggregateInputType = {
   liveStrategyId?: true
   symbol?: true
   side?: true
+  leverage?: true
+  liquidationPrice?: true
+  exchangePositionId?: true
   entryOrderId?: true
   entryPrice?: true
   amount?: true
@@ -201,6 +224,9 @@ export type TradeCountAggregateInputType = {
   liveStrategyId?: true
   symbol?: true
   side?: true
+  leverage?: true
+  liquidationPrice?: true
+  exchangePositionId?: true
   entryOrderId?: true
   entryPrice?: true
   amount?: true
@@ -311,6 +337,9 @@ export type TradeGroupByOutputType = {
   liveStrategyId: string | null
   symbol: string
   side: string
+  leverage: number
+  liquidationPrice: number | null
+  exchangePositionId: string | null
   entryOrderId: string | null
   entryPrice: number
   amount: number
@@ -357,6 +386,9 @@ export type TradeWhereInput = {
   liveStrategyId?: Prisma.StringNullableFilter<"Trade"> | string | null
   symbol?: Prisma.StringFilter<"Trade"> | string
   side?: Prisma.StringFilter<"Trade"> | string
+  leverage?: Prisma.FloatFilter<"Trade"> | number
+  liquidationPrice?: Prisma.FloatNullableFilter<"Trade"> | number | null
+  exchangePositionId?: Prisma.StringNullableFilter<"Trade"> | string | null
   entryOrderId?: Prisma.StringNullableFilter<"Trade"> | string | null
   entryPrice?: Prisma.FloatFilter<"Trade"> | number
   amount?: Prisma.FloatFilter<"Trade"> | number
@@ -384,6 +416,9 @@ export type TradeOrderByWithRelationInput = {
   liveStrategyId?: Prisma.SortOrderInput | Prisma.SortOrder
   symbol?: Prisma.SortOrder
   side?: Prisma.SortOrder
+  leverage?: Prisma.SortOrder
+  liquidationPrice?: Prisma.SortOrderInput | Prisma.SortOrder
+  exchangePositionId?: Prisma.SortOrderInput | Prisma.SortOrder
   entryOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
   entryPrice?: Prisma.SortOrder
   amount?: Prisma.SortOrder
@@ -414,6 +449,9 @@ export type TradeWhereUniqueInput = Prisma.AtLeast<{
   liveStrategyId?: Prisma.StringNullableFilter<"Trade"> | string | null
   symbol?: Prisma.StringFilter<"Trade"> | string
   side?: Prisma.StringFilter<"Trade"> | string
+  leverage?: Prisma.FloatFilter<"Trade"> | number
+  liquidationPrice?: Prisma.FloatNullableFilter<"Trade"> | number | null
+  exchangePositionId?: Prisma.StringNullableFilter<"Trade"> | string | null
   entryOrderId?: Prisma.StringNullableFilter<"Trade"> | string | null
   entryPrice?: Prisma.FloatFilter<"Trade"> | number
   amount?: Prisma.FloatFilter<"Trade"> | number
@@ -441,6 +479,9 @@ export type TradeOrderByWithAggregationInput = {
   liveStrategyId?: Prisma.SortOrderInput | Prisma.SortOrder
   symbol?: Prisma.SortOrder
   side?: Prisma.SortOrder
+  leverage?: Prisma.SortOrder
+  liquidationPrice?: Prisma.SortOrderInput | Prisma.SortOrder
+  exchangePositionId?: Prisma.SortOrderInput | Prisma.SortOrder
   entryOrderId?: Prisma.SortOrderInput | Prisma.SortOrder
   entryPrice?: Prisma.SortOrder
   amount?: Prisma.SortOrder
@@ -472,6 +513,9 @@ export type TradeScalarWhereWithAggregatesInput = {
   liveStrategyId?: Prisma.StringNullableWithAggregatesFilter<"Trade"> | string | null
   symbol?: Prisma.StringWithAggregatesFilter<"Trade"> | string
   side?: Prisma.StringWithAggregatesFilter<"Trade"> | string
+  leverage?: Prisma.FloatWithAggregatesFilter<"Trade"> | number
+  liquidationPrice?: Prisma.FloatNullableWithAggregatesFilter<"Trade"> | number | null
+  exchangePositionId?: Prisma.StringNullableWithAggregatesFilter<"Trade"> | string | null
   entryOrderId?: Prisma.StringNullableWithAggregatesFilter<"Trade"> | string | null
   entryPrice?: Prisma.FloatWithAggregatesFilter<"Trade"> | number
   amount?: Prisma.FloatWithAggregatesFilter<"Trade"> | number
@@ -493,6 +537,9 @@ export type TradeCreateInput = {
   id?: string
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryPrice: number
   amount: number
   invested: number
@@ -519,6 +566,9 @@ export type TradeUncheckedCreateInput = {
   liveStrategyId?: string | null
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryOrderId?: string | null
   entryPrice: number
   amount: number
@@ -541,6 +591,9 @@ export type TradeUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   invested?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -567,6 +620,9 @@ export type TradeUncheckedUpdateInput = {
   liveStrategyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -591,6 +647,9 @@ export type TradeCreateManyInput = {
   liveStrategyId?: string | null
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryOrderId?: string | null
   entryPrice: number
   amount: number
@@ -612,6 +671,9 @@ export type TradeUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   invested?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -634,6 +696,9 @@ export type TradeUncheckedUpdateManyInput = {
   liveStrategyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -672,6 +737,9 @@ export type TradeCountOrderByAggregateInput = {
   liveStrategyId?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
   side?: Prisma.SortOrder
+  leverage?: Prisma.SortOrder
+  liquidationPrice?: Prisma.SortOrder
+  exchangePositionId?: Prisma.SortOrder
   entryOrderId?: Prisma.SortOrder
   entryPrice?: Prisma.SortOrder
   amount?: Prisma.SortOrder
@@ -690,6 +758,8 @@ export type TradeCountOrderByAggregateInput = {
 }
 
 export type TradeAvgOrderByAggregateInput = {
+  leverage?: Prisma.SortOrder
+  liquidationPrice?: Prisma.SortOrder
   entryPrice?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   invested?: Prisma.SortOrder
@@ -708,6 +778,9 @@ export type TradeMaxOrderByAggregateInput = {
   liveStrategyId?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
   side?: Prisma.SortOrder
+  leverage?: Prisma.SortOrder
+  liquidationPrice?: Prisma.SortOrder
+  exchangePositionId?: Prisma.SortOrder
   entryOrderId?: Prisma.SortOrder
   entryPrice?: Prisma.SortOrder
   amount?: Prisma.SortOrder
@@ -731,6 +804,9 @@ export type TradeMinOrderByAggregateInput = {
   liveStrategyId?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
   side?: Prisma.SortOrder
+  leverage?: Prisma.SortOrder
+  liquidationPrice?: Prisma.SortOrder
+  exchangePositionId?: Prisma.SortOrder
   entryOrderId?: Prisma.SortOrder
   entryPrice?: Prisma.SortOrder
   amount?: Prisma.SortOrder
@@ -749,6 +825,8 @@ export type TradeMinOrderByAggregateInput = {
 }
 
 export type TradeSumOrderByAggregateInput = {
+  leverage?: Prisma.SortOrder
+  liquidationPrice?: Prisma.SortOrder
   entryPrice?: Prisma.SortOrder
   amount?: Prisma.SortOrder
   invested?: Prisma.SortOrder
@@ -907,6 +985,9 @@ export type TradeCreateWithoutUserInput = {
   id?: string
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryPrice: number
   amount: number
   invested: number
@@ -931,6 +1012,9 @@ export type TradeUncheckedCreateWithoutUserInput = {
   liveStrategyId?: string | null
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryOrderId?: string | null
   entryPrice: number
   amount: number
@@ -983,6 +1067,9 @@ export type TradeScalarWhereInput = {
   liveStrategyId?: Prisma.StringNullableFilter<"Trade"> | string | null
   symbol?: Prisma.StringFilter<"Trade"> | string
   side?: Prisma.StringFilter<"Trade"> | string
+  leverage?: Prisma.FloatFilter<"Trade"> | number
+  liquidationPrice?: Prisma.FloatNullableFilter<"Trade"> | number | null
+  exchangePositionId?: Prisma.StringNullableFilter<"Trade"> | string | null
   entryOrderId?: Prisma.StringNullableFilter<"Trade"> | string | null
   entryPrice?: Prisma.FloatFilter<"Trade"> | number
   amount?: Prisma.FloatFilter<"Trade"> | number
@@ -1004,6 +1091,9 @@ export type TradeCreateWithoutLiveStrategyInput = {
   id?: string
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryPrice: number
   amount: number
   invested: number
@@ -1028,6 +1118,9 @@ export type TradeUncheckedCreateWithoutLiveStrategyInput = {
   userId: string
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryOrderId?: string | null
   entryPrice: number
   amount: number
@@ -1075,6 +1168,9 @@ export type TradeCreateWithoutOrdersInput = {
   id?: string
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryPrice: number
   amount: number
   invested: number
@@ -1100,6 +1196,9 @@ export type TradeUncheckedCreateWithoutOrdersInput = {
   liveStrategyId?: string | null
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryOrderId?: string | null
   entryPrice: number
   amount: number
@@ -1126,6 +1225,9 @@ export type TradeCreateWithoutEntryOrderInput = {
   id?: string
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryPrice: number
   amount: number
   invested: number
@@ -1151,6 +1253,9 @@ export type TradeUncheckedCreateWithoutEntryOrderInput = {
   liveStrategyId?: string | null
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryPrice: number
   amount: number
   invested: number
@@ -1192,6 +1297,9 @@ export type TradeUpdateWithoutOrdersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   invested?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1217,6 +1325,9 @@ export type TradeUncheckedUpdateWithoutOrdersInput = {
   liveStrategyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1255,6 +1366,9 @@ export type TradeCreateManyUserInput = {
   liveStrategyId?: string | null
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryOrderId?: string | null
   entryPrice: number
   amount: number
@@ -1276,6 +1390,9 @@ export type TradeUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   invested?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1300,6 +1417,9 @@ export type TradeUncheckedUpdateWithoutUserInput = {
   liveStrategyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1323,6 +1443,9 @@ export type TradeUncheckedUpdateManyWithoutUserInput = {
   liveStrategyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1345,6 +1468,9 @@ export type TradeCreateManyLiveStrategyInput = {
   userId: string
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryOrderId?: string | null
   entryPrice: number
   amount: number
@@ -1366,6 +1492,9 @@ export type TradeUpdateWithoutLiveStrategyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   invested?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1390,6 +1519,9 @@ export type TradeUncheckedUpdateWithoutLiveStrategyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1413,6 +1545,9 @@ export type TradeUncheckedUpdateManyWithoutLiveStrategyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryOrderId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1436,6 +1571,9 @@ export type TradeCreateManyEntryOrderInput = {
   liveStrategyId?: string | null
   symbol: string
   side?: string
+  leverage?: number
+  liquidationPrice?: number | null
+  exchangePositionId?: string | null
   entryPrice: number
   amount: number
   invested: number
@@ -1456,6 +1594,9 @@ export type TradeUpdateWithoutEntryOrderInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   invested?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1481,6 +1622,9 @@ export type TradeUncheckedUpdateWithoutEntryOrderInput = {
   liveStrategyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   invested?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1504,6 +1648,9 @@ export type TradeUncheckedUpdateManyWithoutEntryOrderInput = {
   liveStrategyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   side?: Prisma.StringFieldUpdateOperationsInput | string
+  leverage?: Prisma.FloatFieldUpdateOperationsInput | number
+  liquidationPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  exchangePositionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   entryPrice?: Prisma.FloatFieldUpdateOperationsInput | number
   amount?: Prisma.FloatFieldUpdateOperationsInput | number
   invested?: Prisma.FloatFieldUpdateOperationsInput | number
@@ -1557,6 +1704,9 @@ export type TradeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   liveStrategyId?: boolean
   symbol?: boolean
   side?: boolean
+  leverage?: boolean
+  liquidationPrice?: boolean
+  exchangePositionId?: boolean
   entryOrderId?: boolean
   entryPrice?: boolean
   amount?: boolean
@@ -1585,6 +1735,9 @@ export type TradeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   liveStrategyId?: boolean
   symbol?: boolean
   side?: boolean
+  leverage?: boolean
+  liquidationPrice?: boolean
+  exchangePositionId?: boolean
   entryOrderId?: boolean
   entryPrice?: boolean
   amount?: boolean
@@ -1611,6 +1764,9 @@ export type TradeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   liveStrategyId?: boolean
   symbol?: boolean
   side?: boolean
+  leverage?: boolean
+  liquidationPrice?: boolean
+  exchangePositionId?: boolean
   entryOrderId?: boolean
   entryPrice?: boolean
   amount?: boolean
@@ -1637,6 +1793,9 @@ export type TradeSelectScalar = {
   liveStrategyId?: boolean
   symbol?: boolean
   side?: boolean
+  leverage?: boolean
+  liquidationPrice?: boolean
+  exchangePositionId?: boolean
   entryOrderId?: boolean
   entryPrice?: boolean
   amount?: boolean
@@ -1654,7 +1813,7 @@ export type TradeSelectScalar = {
   closedAt?: boolean
 }
 
-export type TradeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "liveStrategyId" | "symbol" | "side" | "entryOrderId" | "entryPrice" | "amount" | "invested" | "status" | "exitPrice" | "exitReason" | "pnl" | "pnlPct" | "stopLossPrice" | "takeProfitPrice" | "trailingPeak" | "fee" | "openedAt" | "closedAt", ExtArgs["result"]["trade"]>
+export type TradeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "liveStrategyId" | "symbol" | "side" | "leverage" | "liquidationPrice" | "exchangePositionId" | "entryOrderId" | "entryPrice" | "amount" | "invested" | "status" | "exitPrice" | "exitReason" | "pnl" | "pnlPct" | "stopLossPrice" | "takeProfitPrice" | "trailingPeak" | "fee" | "openedAt" | "closedAt", ExtArgs["result"]["trade"]>
 export type TradeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   liveStrategy?: boolean | Prisma.Trade$liveStrategyArgs<ExtArgs>
@@ -1687,6 +1846,9 @@ export type $TradePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     liveStrategyId: string | null
     symbol: string
     side: string
+    leverage: number
+    liquidationPrice: number | null
+    exchangePositionId: string | null
     entryOrderId: string | null
     entryPrice: number
     amount: number
@@ -2134,6 +2296,9 @@ export interface TradeFieldRefs {
   readonly liveStrategyId: Prisma.FieldRef<"Trade", 'String'>
   readonly symbol: Prisma.FieldRef<"Trade", 'String'>
   readonly side: Prisma.FieldRef<"Trade", 'String'>
+  readonly leverage: Prisma.FieldRef<"Trade", 'Float'>
+  readonly liquidationPrice: Prisma.FieldRef<"Trade", 'Float'>
+  readonly exchangePositionId: Prisma.FieldRef<"Trade", 'String'>
   readonly entryOrderId: Prisma.FieldRef<"Trade", 'String'>
   readonly entryPrice: Prisma.FieldRef<"Trade", 'Float'>
   readonly amount: Prisma.FieldRef<"Trade", 'Float'>

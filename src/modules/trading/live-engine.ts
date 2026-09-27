@@ -4,6 +4,7 @@ import { computeSignal } from "@/modules/signals/engine";
 import { orderBookImbalance, readObiConfig, smoothObi } from "./orderbook-imbalance";
 import { isSymbolicKind, symbolicLast, symbolicWarmup } from "./symbolic-engines";
 import { marketMakingTick, paperMarketMakingTick, cancelStrategyOrders } from "./market-making";
+import { readMarketConfig, liquidationPrice, futuresPnl } from "./futures";
 import { atr } from "@/modules/indicators/engine";
 import { atrStopsFromIndicators } from "@/modules/backtest/service";
 import { enforceRisk } from "./risk-engine";
@@ -160,13 +161,39 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       return;
     }
 
-    // ---- manage open trades (SL / TP / trailing) — runs even when PAUSED
+    const marketCfg = readMarketConfig(live.version.config);
+    const futures = marketCfg.market === "FUTURES";
+
+    // ---- manage open trades (SL / TP / trailing / liquidation) — runs even when PAUSED
     const openTrades = await prisma.trade.findMany({
       where: { liveStrategyId: live.id, status: "OPEN" },
     });
     const ticker = await adapter.getTicker(live.symbol);
+
+    // real futures: lazily resolve the exchange position id so exits can
+    // use /positions/{id}/close instead of a counter-order
+    if (futures && !paper && adapter.getOpenPositions) {
+      const unresolved = openTrades.filter((t) => !t.exchangePositionId);
+      if (unresolved.length) {
+        const positions = await adapter.getOpenPositions(live.symbol).catch(() => []);
+        for (const trade of unresolved) {
+          const match = positions.find((p) => p.symbol === live.symbol && p.side === trade.side);
+          if (match) {
+            await prisma.trade.update({
+              where: { id: trade.id },
+              data: {
+                exchangePositionId: match.id,
+                ...(match.liquidationPrice ? { liquidationPrice: match.liquidationPrice } : {}),
+              },
+            });
+            trade.exchangePositionId = match.id;
+          }
+        }
+      }
+    }
+
     for (const trade of openTrades) {
-      await manageOpenTrade(live, trade, ticker.last, paper);
+      await manageOpenTrade(live, trade, ticker.last, paper, futures ? adapter : null);
     }
 
     if (live.status === "PAUSED") return;
@@ -241,7 +268,15 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       },
     });
 
-    if (signal !== "BUY") return;
+    // signal → direction. shorts only exist in futures mode
+    const side: "LONG" | "SHORT" | null =
+      signal === "BUY" ? "LONG" : futures && signal === "SELL" ? "SHORT" : null;
+    if (!side) return;
+    const long = side === "LONG";
+
+    if (futures && !paper && !adapter.createFuturesOrder) {
+      throw new AppError("FUTURES_UNSUPPORTED", 400, { reason: "adapter has no margin endpoints" });
+    }
 
     // duplicate trade prevention — position + order + signal checks
     const openPosition = await prisma.trade.findFirst({
@@ -272,18 +307,29 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       });
     }
     const atrNow = atrStops && candles?.length ? atr(candles, atrStops.period).at(-1) : undefined;
-    const slPrice = atrStops && atrNow && Number.isFinite(atrNow)
-      ? ticker.last - atrNow * atrStops.slMultiplier
-      : ticker.last * (1 - live.version.stopLossPct / 100);
-    const tpPrice = atrStops && atrNow && Number.isFinite(atrNow)
-      ? ticker.last + atrNow * atrStops.tpMultiplier
-      : ticker.last * (1 + live.version.takeProfitPct / 100);
-    const stopDistPct = Math.max(((ticker.last - slPrice) / ticker.last) * 100, 0.1);
+    const useAtr = atrStops && atrNow && Number.isFinite(atrNow);
+    const slPrice = useAtr
+      ? long ? ticker.last - atrNow! * atrStops.slMultiplier : ticker.last + atrNow! * atrStops.slMultiplier
+      : long ? ticker.last * (1 - live.version.stopLossPct / 100) : ticker.last * (1 + live.version.stopLossPct / 100);
+    const tpPrice = useAtr
+      ? long ? ticker.last + atrNow! * atrStops.tpMultiplier : ticker.last - atrNow! * atrStops.tpMultiplier
+      : long ? ticker.last * (1 + live.version.takeProfitPct / 100) : ticker.last * (1 - live.version.takeProfitPct / 100);
+    const liqPrice = futures ? liquidationPrice(ticker.last, side, marketCfg.leverage) : null;
+    // the stop must sit inside the liquidation distance or the position
+    // dies at liq before the stop ever fires
+    const effSl = futures && liqPrice
+      ? long ? Math.max(slPrice, liqPrice) : Math.min(slPrice, liqPrice)
+      : slPrice;
+    const stopDistPct = Math.max((Math.abs(ticker.last - effSl) / ticker.last) * 100, 0.1);
 
     const riskCapital = live.allocatedCapital * (live.version.riskPerTradePct / 100);
     const maxPosition = live.allocatedCapital * (live.version.maxPositionPct / 100);
-    const notional = Math.min(riskCapital * (100 / stopDistPct), maxPosition);
-    const amount = notional / ticker.last;
+    // exposure bounded by risk on the stop distance AND the position cap
+    // (cap scales with leverage — margin posted stays bounded by capital)
+    const leverage = futures ? marketCfg.leverage : 1;
+    const exposure = Math.min(riskCapital * (100 / stopDistPct), maxPosition * leverage);
+    const margin = exposure / leverage;   // wallet outlay (spot: exposure == margin)
+    const amount = exposure / ticker.last;
     if (amount <= 0) return;
 
     // paper mode: sizing vs virtual capital only — real balance/risk checks don't apply
@@ -293,12 +339,14 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
           userId: live.userId,
           liveStrategyId: live.id,
           symbol: live.symbol,
-          side: "BUY",
-          amount,
+          side: long ? "BUY" : "SELL",
+          // risk engine sees margin usage, not leveraged exposure
+          amount: margin / ticker.last,
           price: ticker.last,
           allocatedCapital: live.allocatedCapital,
           riskPerTradePct: live.version.riskPerTradePct,
           maxPositionPct: live.version.maxPositionPct,
+          market: marketCfg.market,
         },
         adapter,
       );
@@ -310,11 +358,13 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         userId: live.userId,
         liveStrategyId: live.id,
         symbol: live.symbol,
-        side: "LONG",
+        side,
+        leverage,
+        liquidationPrice: liqPrice,
         entryPrice: ticker.last,
         amount,
-        invested: notional,
-        stopLossPrice: slPrice,
+        invested: margin,
+        stopLossPrice: effSl,
         takeProfitPrice: tpPrice,
         trailingPeak: ticker.last,
       },
@@ -326,10 +376,12 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
           liveStrategyId: live.id,
           tradeId: trade.id,
           symbol: live.symbol,
-          side: "BUY",
+          side: long ? "BUY" : "SELL",
           type: live.version.orderType as "MARKET" | "LIMIT",
           amount,
-          price: live.version.orderType === "LIMIT" ? ticker.last : undefined,
+          // nobitex margin orders always carry a reference price
+          price: futures ? ticker.last : live.version.orderType === "LIMIT" ? ticker.last : undefined,
+          ...(futures ? { futures: { leverage: marketCfg.leverage, positionSide: side } } : {}),
         },
         `entry:${trade.id}`,
       );
@@ -338,8 +390,8 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     await notify({
       userId: live.userId, type: "TRADE_OPENED", severity: "INFO",
       title: paper ? "معامله‌ی تست باز شد" : "معامله باز شد",
-      body: `خرید ${live.symbol} در قیمت ${ticker.last}`,
-      metadata: { tradeId: trade.id, paper },
+      body: `${long ? "خرید" : "فروش (شورت)"} ${live.symbol} در قیمت ${ticker.last}${futures ? ` — لورج ${marketCfg.leverage}×` : ""}`,
+      metadata: { tradeId: trade.id, paper, side, leverage },
     });
 
     if (live.circuitBreakerFailures > 0) {
@@ -366,24 +418,49 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
   }
 }
 
+interface TradeLike {
+  id: string;
+  entryPrice: number;
+  amount: number;
+  invested: number;
+  side: string;
+  leverage: number;
+  liquidationPrice: number | null;
+  exchangePositionId: string | null;
+  trailingPeak: number | null;
+  stopLossPrice: number | null;
+  takeProfitPrice: number | null;
+}
+
 async function manageOpenTrade(
   live: { id: string; userId: string; symbol: string; versionId: string },
-  trade: {
-    id: string; entryPrice: number; amount: number; trailingPeak: number | null;
-    stopLossPrice: number | null; takeProfitPrice: number | null;
-  },
+  trade: TradeLike,
   price: number,
   paper = false,
+  /** non-null only for real futures — used for position close + counter-orders */
+  futuresAdapter: { closePosition?: (id: string) => Promise<boolean>; createFuturesOrder?: unknown } | null = null,
 ) {
   const version = await prisma.strategyVersion.findUnique({ where: { id: live.versionId } });
   if (!version) return;
 
+  const long = trade.side !== "SHORT";
+  const futures = trade.leverage > 1 || futuresAdapter !== null;
+
+  // extreme price since entry — long tracks the max, short the min
+  const peak = long
+    ? Math.max(trade.trailingPeak ?? trade.entryPrice, price)
+    : Math.min(trade.trailingPeak ?? trade.entryPrice, price);
+
   let exitReason: string | null = null;
-  const peak = Math.max(trade.trailingPeak ?? trade.entryPrice, price);
-  if (price <= (trade.stopLossPrice ?? 0)) exitReason = "STOP_LOSS";
-  else if (trade.takeProfitPrice && price >= trade.takeProfitPrice) exitReason = "TAKE_PROFIT";
-  else if (version.trailingStop && version.trailingStopPct && peak > trade.entryPrice) {
-    if (price <= peak * (1 - version.trailingStopPct / 100)) exitReason = "TRAILING_STOP";
+  if (futures && trade.liquidationPrice && (long ? price <= trade.liquidationPrice : price >= trade.liquidationPrice)) {
+    exitReason = "LIQUIDATED";
+  } else if (long ? price <= (trade.stopLossPrice ?? 0) : trade.stopLossPrice !== null && price >= trade.stopLossPrice) {
+    exitReason = "STOP_LOSS";
+  } else if (trade.takeProfitPrice && (long ? price >= trade.takeProfitPrice : price <= trade.takeProfitPrice)) {
+    exitReason = "TAKE_PROFIT";
+  } else if (version.trailingStop && version.trailingStopPct && (long ? peak > trade.entryPrice : peak < trade.entryPrice)) {
+    const trail = long ? peak * (1 - version.trailingStopPct / 100) : peak * (1 + version.trailingStopPct / 100);
+    if (long ? price <= trail : price >= trail) exitReason = "TRAILING_STOP";
   }
 
   if (peak !== trade.trailingPeak) {
@@ -391,28 +468,55 @@ async function manageOpenTrade(
   }
   if (!exitReason) return;
 
-  // close position — sell via order engine (paper: simulated fill at ticker)
+  // close position (paper: simulated fill at ticker)
   await prisma.trade.update({ where: { id: trade.id }, data: { status: "CLOSING" } });
   if (!paper) {
-    await placeOrder(
-      {
-        userId: live.userId, liveStrategyId: live.id, tradeId: trade.id,
-        symbol: live.symbol, side: "SELL", type: "MARKET", amount: trade.amount,
-      },
-      `exit:${trade.id}:${exitReason}`,
-    );
+    let closedByPosition = false;
+    if (futures && trade.exchangePositionId && futuresAdapter?.closePosition) {
+      closedByPosition = await futuresAdapter.closePosition(trade.exchangePositionId).catch(() => false);
+      if (closedByPosition) {
+        // bookkeeping order row — audit trail mirrors the exchange close
+        await prisma.order.create({
+          data: {
+            userId: live.userId, liveStrategyId: live.id, tradeId: trade.id,
+            symbol: live.symbol, side: long ? "SELL" : "BUY", type: "MARKET",
+            amount: trade.amount, status: "FILLED", filledAmount: trade.amount,
+            avgFillPrice: price, closedAt: new Date(),
+            idempotencyKey: `closepos:${trade.id}:${exitReason}`,
+            metadata: JSON.stringify({ market: "FUTURES", positionId: trade.exchangePositionId }),
+          },
+        }).catch(() => {});
+      }
+    }
+    if (!closedByPosition) {
+      await placeOrder(
+        {
+          userId: live.userId, liveStrategyId: live.id, tradeId: trade.id,
+          symbol: live.symbol, side: long ? "SELL" : "BUY", type: "MARKET",
+          amount: trade.amount,
+          ...(futures ? { price, futures: { leverage: trade.leverage, positionSide: long ? "LONG" : "SHORT" } } : {}),
+        },
+        `exit:${trade.id}:${exitReason}`,
+      );
+    }
   }
-  const proceeds = trade.amount * price;
-  const pnl = proceeds - trade.amount * trade.entryPrice;
+
+  const pnl = exitReason === "LIQUIDATED"
+    ? -trade.invested // isolated margin — the posted margin is lost
+    : futuresPnl(trade.entryPrice, price, trade.amount, long ? "LONG" : "SHORT");
   await prisma.trade.update({
     where: { id: trade.id },
-    data: { status: "CLOSED", exitPrice: price, exitReason, pnl, pnlPct: (pnl / (trade.amount * trade.entryPrice)) * 100, closedAt: new Date() },
+    data: {
+      status: "CLOSED", exitPrice: price, exitReason,
+      pnl, pnlPct: trade.invested > 0 ? (pnl / trade.invested) * 100 : 0,
+      closedAt: new Date(),
+    },
   });
   await notify({
     userId: live.userId,
-    type: exitReason === "TAKE_PROFIT" ? "TP_HIT" : exitReason === "STOP_LOSS" ? "SL_HIT" : "TRADE_CLOSED",
+    type: exitReason === "TAKE_PROFIT" ? "TP_HIT" : exitReason === "STOP_LOSS" || exitReason === "LIQUIDATED" ? "SL_HIT" : "TRADE_CLOSED",
     severity: pnl >= 0 ? "SUCCESS" : "WARNING",
-    title: "معامله بسته شد",
+    title: exitReason === "LIQUIDATED" ? "پوزیشن لیکویید شد" : "معامله بسته شد",
     body: `${live.symbol} با دلیل ${exitReason} بسته شد. سود/زیان: ${pnl.toFixed(0)}`,
     metadata: { tradeId: trade.id, exitReason, pnl },
   });
@@ -431,19 +535,35 @@ async function executeStopPolicy(live: { id: string; userId: string; symbol: str
       : await adapterForUser(live.userId, "NOBITEX", "stop-policy").catch(() => null);
     const price = adapter ? (await adapter.getTicker(live.symbol).catch(() => null))?.last ?? 0 : 0;
     for (const trade of openTrades) {
+      const long = trade.side !== "SHORT";
+      const futures = trade.leverage > 1;
       if (!paper) {
-        await placeOrder(
-          { userId: live.userId, liveStrategyId: live.id, tradeId: trade.id, symbol: live.symbol, side: "SELL", type: "MARKET", amount: trade.amount },
-          `stopclose:${trade.id}`,
-        );
+        let closedByPosition = false;
+        if (futures && trade.exchangePositionId && adapter?.closePosition) {
+          closedByPosition = await adapter.closePosition(trade.exchangePositionId).catch(() => false);
+        }
+        if (!closedByPosition) {
+          await placeOrder(
+            {
+              userId: live.userId, liveStrategyId: live.id, tradeId: trade.id,
+              symbol: live.symbol, side: long ? "SELL" : "BUY", type: "MARKET",
+              amount: trade.amount,
+              ...(futures ? { price: price || trade.entryPrice, futures: { leverage: trade.leverage, positionSide: long ? "LONG" : "SHORT" } } : {}),
+            },
+            `stopclose:${trade.id}`,
+          );
+        }
       }
-      const pnl = trade.amount * ((price || trade.entryPrice) - trade.entryPrice);
+      const exitPx = price || trade.entryPrice;
+      const pnl = long
+        ? trade.amount * (exitPx - trade.entryPrice)
+        : trade.amount * (trade.entryPrice - exitPx);
       await prisma.trade.update({
         where: { id: trade.id },
         data: {
           status: "CLOSED", exitReason: "STOP_POLICY",
-          exitPrice: price || trade.entryPrice, closedAt: new Date(),
-          ...(paper ? { pnl, pnlPct: (pnl / (trade.amount * trade.entryPrice)) * 100 } : {}),
+          exitPrice: exitPx, closedAt: new Date(),
+          ...(paper ? { pnl, pnlPct: trade.invested > 0 ? (pnl / trade.invested) * 100 : 0 } : {}),
         },
       });
     }

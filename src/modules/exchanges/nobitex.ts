@@ -7,7 +7,9 @@ import {
   type OrderBook,
   type Candle,
   type OrderParams,
+  type FuturesOrderParams,
   type ExchangeOrder,
+  type ExchangePosition,
   type ExchangeTrade,
 } from "./types";
 import { rateLimit } from "./rate-limiter";
@@ -360,6 +362,73 @@ export class NobitexAdapter implements ExchangeAdapter {
       ts: Date.parse(String(t.time ?? "")) || Date.now(),
     }));
   }
+
+  // ---- Margin / futures ------------------------------------------------
+  // Docs: /margin/orders/add (leverage, buy=long sell=short),
+  //       /positions/list, /positions/{id}/close
+
+  async createFuturesOrder(params: FuturesOrderParams): Promise<ExchangeOrder> {
+    const { src, dst } = this.toPair(params.symbol);
+    const body: Record<string, unknown> = {
+      type: params.side,
+      execution: params.type,
+      srcCurrency: src.toLowerCase(),
+      dstCurrency: dst.toLowerCase(),
+      amount: String(params.amount),
+      leverage: String(params.leverage),
+    };
+    // margin orders are limit by default — market orders still carry a
+    // reference price on nobitex, so always send one when known
+    const price = params.price;
+    if (price !== undefined) body.price = String(price);
+    if (params.clientOrderId) body.clientOrderId = params.clientOrderId;
+
+    const data = await this.request<{ status: string; order?: Record<string, unknown> }>(
+      "POST",
+      "/margin/orders/add",
+      { auth: true, body },
+    );
+    if (!data.order) throw new AppError("ORDER_REJECTED", 502);
+    return normalizeOrder(data.order, params.symbol);
+  }
+
+  async getOpenPositions(symbol?: string): Promise<ExchangePosition[]> {
+    const data = await this.request<{ positions?: Record<string, unknown>[] }>(
+      "POST",
+      "/positions/list",
+      { auth: true, body: { status: "active" } },
+    );
+    return (data.positions ?? [])
+      .map((p) => normalizePosition(p))
+      .filter((p) => !symbol || p.symbol === symbol.toUpperCase());
+  }
+
+  async closePosition(positionId: string): Promise<boolean> {
+    try {
+      await this.request("POST", `/positions/${positionId}/close`, { auth: true });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/** /positions/list row → normalized position. Nobitex type: "Buy" = long, "Sell" = short. */
+function normalizePosition(p: Record<string, unknown>): ExchangePosition {
+  const src = String(p.srcCurrency ?? "").toUpperCase();
+  const dst = String(p.dstCurrency ?? "").toUpperCase();
+  const sideRaw = String(p.type ?? p.side ?? "buy").toLowerCase();
+  return {
+    id: String(p.id ?? p.positionId ?? ""),
+    symbol: src && dst ? `${src}${dst}` : "",
+    side: sideRaw === "sell" ? "SHORT" : "LONG",
+    leverage: Number(p.leverage ?? 1),
+    entryPrice: Number(p.entryPrice ?? p.averagePrice ?? p.avgPrice ?? 0),
+    amount: Number(p.amount ?? p.volume ?? 0),
+    margin: Number(p.margin ?? p.collateral ?? 0),
+    liquidationPrice: p.liquidationPrice !== undefined ? Number(p.liquidationPrice) : undefined,
+    raw: p,
+  };
 }
 
 /** /v3/orderbook returns a flat {asks,bids} body (older docs show it keyed by symbol — handle both). */

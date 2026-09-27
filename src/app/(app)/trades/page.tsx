@@ -30,7 +30,7 @@ export default async function TradesPage() {
         <EmptyState title="معامله‌ای ثبت نشده" />
       ) : (
         <Card>
-          <Table headers={["استراتژی", "نماد", "ورود", "خروج", "سود/زیان", "دلیل", "وضعیت", "زمان"]}>
+          <Table headers={["استراتژی", "نماد", "جهت", "ورود", "خروج", "سود/زیان", "دلیل", "وضعیت", "زمان"]}>
             {trades.map((t) => (
               <tr key={t.id}>
                 <td className="px-4 py-3 font-bold">
@@ -38,6 +38,11 @@ export default async function TradesPage() {
                   {t.liveStrategy?.mode === "PAPER" && <span className="mr-1 rounded bg-warning/15 px-1.5 py-0.5 text-xs font-normal text-warning">تست</span>}
                 </td>
                 <td className="px-4 py-3 ltr">{t.symbol}</td>
+                <td className="px-4 py-3">
+                  {t.side === "SHORT"
+                    ? <span className="rounded bg-danger/15 px-1.5 py-0.5 text-xs font-bold text-danger">شورت{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</span>
+                    : <span className="rounded bg-success/15 px-1.5 py-0.5 text-xs font-bold text-success">لانگ{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</span>}
+                </td>
                 <td className="px-4 py-3 ltr">{faNumber(t.entryPrice)}</td>
                 <td className="px-4 py-3 ltr">{t.exitPrice ? faNumber(t.exitPrice) : "—"}</td>
                 <td className="px-4 py-3 font-bold">

@@ -2,8 +2,12 @@ import { api } from "@/infrastructure/http/api";
 import { prisma } from "@/infrastructure/database/prisma";
 import { getCandles, tfMs } from "@/modules/pairs/service";
 import { loadBacktestChart } from "@/modules/backtest/chart-data";
-import { parseJson } from "@/shared/utils";
-import { isSymbolicKind } from "@/modules/trading/symbolic-engines";
+import { faNumber, parseJson } from "@/shared/utils";
+import {
+  isSymbolicKind, readAtmSmeConfig, readRmmBseConfig, readDzsHmmConfig,
+} from "@/modules/trading/symbolic-engines";
+import { readMmConfig } from "@/modules/trading/market-making";
+import { readMarketConfig, liquidationPrice } from "@/modules/trading/futures";
 import { AppError } from "@/shared/errors";
 import type {
   ChartCandle, TradeMark, OverlaySeries, OscillatorSeries, SignalMark, PriceLevel,
@@ -12,12 +16,116 @@ import type {
 const CANDLES = 150;
 
 interface LiveStats {
+  lastScore?: number;
+  lastSignal?: string;
+  symLabel?: string;
+  mid?: number;
   obiHist?: { t: number; v: number }[];
   paper?: {
     quotes?: { side: string; price: number; amount: number }[];
     fillsLog?: { t: number; side: string; price: number }[];
     pnlHist?: { t: number; v: number }[];
   };
+}
+
+interface WatchLine {
+  tone: "buy" | "sell" | "info";
+  text: string;
+}
+
+/** Live "when does it trade" explainer — shown beside the current price on /live. */
+export interface SignalWatch {
+  price: number | null;
+  signal: string;
+  score: number | null;
+  label: string | null;
+  state: string;
+  lines: WatchLine[];
+}
+
+const round = (n: number) => Math.round(n * 10000) / 10000;
+
+/** Per-kind Persian explanation of the entry/exit triggers with live values. */
+function buildWatch(
+  kind: string,
+  version: {
+    config: string;
+    buyThreshold: number;
+    sellThreshold: number;
+    stopLossPct: number;
+    takeProfitPct: number;
+    trailingStop: boolean;
+    trailingStopPct: number | null;
+  },
+  stats: LiveStats,
+  lastClose: number | null,
+): SignalWatch {
+  const signal = stats.lastSignal ?? "HOLD";
+  const score = typeof stats.lastScore === "number" ? round(stats.lastScore) : null;
+  const label = stats.symLabel ?? null;
+  const lines: WatchLine[] = [];
+  const marketCfg = readMarketConfig(version.config);
+  const futures = marketCfg.market === "FUTURES";
+  let price = lastClose;
+
+  if (kind === "MARKET_MAKING") {
+    const cfg = readMmConfig(version.config);
+    const mid = stats.mid ?? lastClose;
+    price = mid;
+    if (mid && mid > 0) {
+      const off = cfg.spreadPct / 200;
+      lines.push({ tone: "buy", text: `خرید: قیمت به کوت خرید یعنی ${faNumber(mid * (1 - off), true)} برسد — ${cfg.spreadPct / 2}٪ زیر قیمت میانی` });
+      lines.push({ tone: "sell", text: `فروش: قیمت به کوت فروش یعنی ${faNumber(mid * (1 + off), true)} برسد — ${cfg.spreadPct / 2}٪ بالای قیمت میانی` });
+      lines.push({ tone: "info", text: `مارکت‌میکر دائماً دوطرفه کوت می‌گذارد؛ ورود با فیل شدن هر کوت اتفاق می‌افتد و با ${cfg.levels} سطح با فاصله ${cfg.levelStepPct}٪ پوشش داده می‌شود` });
+    }
+  } else if (kind === "ATM_SME") {
+    const cfg = readAtmSmeConfig(version.config);
+    lines.push({ tone: "buy", text: `ورود به خرید: الگوی خستگی فروش [E,E,C] یا [E,E,D] روی توکن‌ها${cfg.useEmaConfirm ? ` + قیمت بالای EMA(${cfg.emaPeriod})` : ""}` });
+    lines.push({ tone: "sell", text: `خروج: الگوی [A,A,C]/[A,A,B] یا افت مومنتوم از ${cfg.exitTrigger} به زیر ${cfg.exitBack}` });
+    if (score !== null) lines.push({ tone: "info", text: `Vt فعلی ${score} — ناحیه خرید وقتی توکن‌ها از E (زیر ${-cfg.tokenExtreme}) به C بازیابی شوند` });
+  } else if (kind === "RMM_BSE") {
+    const cfg = readRmmBseConfig(version.config);
+    lines.push({ tone: "buy", text: `ورود به خرید: شکست سقف کانال ${cfg.channelLen} کندله — Mt ≥ ${cfg.breakoutMt}${cfg.useVolumeConfirm ? ` + حجم ≥ ${cfg.volMult}× میانگین` : ""}` });
+    lines.push({ tone: "sell", text: `خروج: Mt < ${cfg.exitMt} (برگشت به داخل کانال)` });
+    if (score !== null) lines.push({ tone: "info", text: `Mt فعلی ${score} — فاصله تا ناحیه شکست: ${round(cfg.breakoutMt - score)}` });
+  } else if (kind === "DZS_HMM") {
+    const cfg = readDzsHmmConfig(version.config);
+    lines.push({ tone: "buy", text: `ورود به خرید: P(صعودی) ≥ ${cfg.bullProb}${cfg.persist > 1 ? ` برای ${cfg.persist} کندل متوالی` : ""}` });
+    lines.push({ tone: "sell", text: `خروج: P(رنج) ≥ ${cfg.rangeProbExit} یا P(نزولی) ≥ ${cfg.bearProbExit}` });
+    if (score !== null) lines.push({ tone: "info", text: `تراز رژیم فعلی (صعودی منهای نزولی): ${score}` });
+  } else {
+    // SIGNAL + ORDER_BOOK_IMBALANCE — score crossing the configured thresholds
+    const metric = kind === "ORDER_BOOK_IMBALANCE" ? "OBI هموارشده" : "امتیاز ترکیبی اندیکاتورها";
+    const gap = score !== null && score < version.buyThreshold
+      ? ` — فاصله تا ماشه: ${round(version.buyThreshold - score)}`
+      : "";
+    lines.push({ tone: "buy", text: `ورود به ${futures ? "لانگ" : "خرید"}: ${metric} ≥ ${version.buyThreshold} (اکنون ${score ?? "—"}${gap})` });
+    lines.push({
+      tone: "sell",
+      text: futures
+        ? `ورود به شورت: ${metric} ≤ ${version.sellThreshold} (سیگنال مخالف، پوزیشن باز را هم می‌بندد)`
+        : `سیگنال فروش: ${metric} ≤ ${version.sellThreshold}`,
+    });
+  }
+
+  if (kind !== "MARKET_MAKING") {
+    if (futures) {
+      const liq = price ? liquidationPrice(price, "LONG", marketCfg.leverage) : null;
+      lines.push({
+        tone: "info",
+        text: `بازار فیوچرز — لورج ${marketCfg.leverage}× · شورت روی سیگنال فروش · لیکوییدیشن ≈ ${liq ? faNumber(liq) : "—"} (لانگ از قیمت فعلی)`,
+      });
+    }
+    lines.push({
+      tone: "info",
+      text: `${futures ? "لانگ و شورت" : "فقط پوزیشن لانگ"} — بستن معامله با حد ضرر ${version.stopLossPct}٪، حد سود ${version.takeProfitPct}٪${version.trailingStop && version.trailingStopPct ? ` یا تریلینگ ${version.trailingStopPct}٪` : ""}${futures ? " یا لیکوییدیشن" : ""} انجام می‌شود`,
+    });
+  }
+
+  const state = signal === "BUY" ? "سیگنال خرید برقرار است"
+    : signal === "SELL" ? "سیگنال فروش برقرار است"
+    : "در انتظار شرایط ورود";
+  return { price, signal, score, label, state, lines };
 }
 
 /** Value of candle i = last sample within its time window (forward-fill). */
@@ -161,5 +269,8 @@ export const GET = api(async (_req, ctx) => {
     }
   }
 
-  return { candles, overlays, oscillators, signals, levels, trades: tradeMarks, kind, mode: live.mode };
+  const lastClose = candles.length ? candles[candles.length - 1].close : null;
+  const watch = buildWatch(kind, live.version, stats, lastClose);
+
+  return { candles, overlays, oscillators, signals, levels, trades: tradeMarks, kind, mode: live.mode, watch };
 });

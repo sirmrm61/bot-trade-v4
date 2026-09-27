@@ -29,6 +29,9 @@ export interface BacktestParams {
   minCandles?: number;      // warmup window for indicators (default 60)
   /** signal source override — e.g. OBI proxy; when set, `indicators` are unused for signals */
   signalFn?: (i: number) => "BUY" | "SELL" | "HOLD";
+  /** SPOT (default) long-only; FUTURES enables shorts + leverage + liquidation */
+  market?: "SPOT" | "FUTURES";
+  leverage?: number; // futures only, 1..10
 }
 
 export interface SimTrade {
@@ -70,6 +73,8 @@ export function runBacktest(p: BacktestParams): BacktestResult {
   const feeRate = p.feePct / 100;
   const slip = p.slippagePct / 100;
   const delayCandles = p.executionDelayMs ? Math.max(1, Math.round(p.executionDelayMs / 60_000)) : 0;
+  const futures = p.market === "FUTURES";
+  const leverage = futures ? Math.max(p.leverage ?? 1, 1) : 1;
 
   let balance = p.initialBalance;
   const atrSeries = p.atrStops ? atr(p.candles, p.atrStops.period) : null;
@@ -78,63 +83,109 @@ export function runBacktest(p: BacktestParams): BacktestResult {
       ? p.signalFn(i)
       : computeSignal(p.indicators, p.candles.slice(0, i + 1), p.buyThreshold, p.sellThreshold).signal;
 
-  let openPosition: {
-    entryPrice: number; amount: number; invested: number; entryIdx: number; peak: number;
-    slPrice: number; tpPrice: number;
-  } | null = null;
+  interface Position {
+    side: "LONG" | "SHORT";
+    entryPrice: number;
+    amount: number;       // base units — futures: margin*leverage/price
+    invested: number;     // quote spent (spot) / margin posted (futures)
+    entryIdx: number;
+    peak: number;         // best price since entry (long: max, short: min)
+    slPrice: number;
+    tpPrice: number;
+    liqPrice?: number;    // futures only
+  }
+  let openPosition: Position | null = null;
   const trades: SimTrade[] = [];
   const equityCurve: { t: number; equity: number }[] = [];
+
+  /** direction-aware PnL at a price, before fees */
+  const posPnl = (pos: Position, price: number) =>
+    pos.side === "LONG" ? (price - pos.entryPrice) * pos.amount : (pos.entryPrice - price) * pos.amount;
+
+  const closePosition = (pos: Position, rawExit: number, c: Candle, exitReason: string) => {
+    // slippage always moves the fill against the position
+    const fillPrice = pos.side === "LONG" ? rawExit * (1 - slip) : rawExit * (1 + slip);
+    const notional = pos.amount * fillPrice;
+    const fee = notional * feeRate;
+    if (futures) {
+      if (exitReason === "LIQUIDATED") {
+        // isolated margin — the posted margin is lost
+        trades.push({
+          side: pos.side === "LONG" ? "BUY" : "SELL",
+          entryPrice: pos.entryPrice, exitPrice: fillPrice, amount: pos.amount, fee,
+          pnl: -pos.invested, pnlPct: -100,
+          entryTime: p.candles[pos.entryIdx].time, exitTime: c.time, exitReason,
+        });
+        balance -= Math.min(fee, balance); // liquidation fee comes out of wallet
+      } else {
+        const pnl = posPnl(pos, fillPrice) - fee;
+        balance += pos.invested + pnl; // release margin ± result
+        trades.push({
+          side: pos.side === "LONG" ? "BUY" : "SELL",
+          entryPrice: pos.entryPrice, exitPrice: fillPrice, amount: pos.amount, fee,
+          pnl, pnlPct: (pnl / pos.invested) * 100,
+          entryTime: p.candles[pos.entryIdx].time, exitTime: c.time, exitReason,
+        });
+      }
+    } else {
+      const proceeds = pos.amount * fillPrice;
+      const pnl = proceeds - fee - pos.invested;
+      balance += proceeds - fee;
+      trades.push({
+        side: "BUY",
+        entryPrice: pos.entryPrice, exitPrice: fillPrice, amount: pos.amount, fee,
+        pnl, pnlPct: (pnl / pos.invested) * 100,
+        entryTime: p.candles[pos.entryIdx].time, exitTime: c.time, exitReason,
+      });
+    }
+  };
 
   for (let i = warmup; i < p.candles.length; i++) {
     const c = p.candles[i];
 
     // mark-to-market equity
-    const equity = balance + (openPosition ? openPosition.amount * c.close : 0);
+    const equity = balance + (openPosition
+      ? futures
+        ? openPosition.invested + posPnl(openPosition, c.close)
+        : openPosition.amount * c.close
+      : 0);
     equityCurve.push({ t: c.time, equity });
 
     // manage open position first (SL/TP/trailing checked on candle extremes)
     if (openPosition) {
       const pos = openPosition;
-      pos.peak = Math.max(pos.peak, c.high);
+      const long = pos.side === "LONG";
+      pos.peak = long ? Math.max(pos.peak, c.high) : Math.min(pos.peak, c.low);
       const entry = pos.entryPrice;
       let exitPrice: number | null = null;
       let exitReason = "";
 
-      const slPrice = pos.slPrice;
-      const tpPrice = pos.tpPrice;
-      const trailPrice = p.trailingStop && p.trailingStopPct
-        ? pos.peak * (1 - p.trailingStopPct / 100)
-        : null;
-
-      if (c.low <= slPrice) { exitPrice = slPrice; exitReason = "STOP_LOSS"; }
-      else if (c.high >= tpPrice) { exitPrice = tpPrice; exitReason = "TAKE_PROFIT"; }
-      else if (trailPrice !== null && pos.peak > entry && c.low <= trailPrice) {
-        exitPrice = trailPrice; exitReason = "TRAILING_STOP";
+      // liquidation beats everything — margin is gone before SL logic matters
+      if (pos.liqPrice !== undefined && (long ? c.low <= pos.liqPrice : c.high >= pos.liqPrice)) {
+        exitPrice = pos.liqPrice; exitReason = "LIQUIDATED";
+      } else if (long ? c.low <= pos.slPrice : c.high >= pos.slPrice) {
+        exitPrice = pos.slPrice; exitReason = "STOP_LOSS";
+      } else if (long ? c.high >= pos.tpPrice : c.low <= pos.tpPrice) {
+        exitPrice = pos.tpPrice; exitReason = "TAKE_PROFIT";
+      } else {
+        const trailPrice = p.trailingStop && p.trailingStopPct
+          ? long ? pos.peak * (1 - p.trailingStopPct / 100) : pos.peak * (1 + p.trailingStopPct / 100)
+          : null;
+        if (trailPrice !== null && (long ? pos.peak > entry && c.low <= trailPrice : pos.peak < entry && c.high >= trailPrice)) {
+          exitPrice = trailPrice; exitReason = "TRAILING_STOP";
+        }
       }
 
       if (exitPrice === null) {
-        // signal-driven exit
-        if (evalSignal(i) === "SELL") { exitPrice = c.close; exitReason = "SIGNAL"; }
+        // signal-driven exit — opposite signal closes the position
+        const sig = evalSignal(i);
+        if ((long && sig === "SELL") || (!long && sig === "BUY")) {
+          exitPrice = c.close; exitReason = "SIGNAL";
+        }
       }
 
       if (exitPrice !== null) {
-        const fillPrice = exitPrice * (1 - slip); // sell slippage
-        const proceeds = pos.amount * fillPrice;
-        const fee = proceeds * feeRate;
-        const pnl = proceeds - fee - pos.invested;
-        balance += proceeds - fee;
-        trades.push({
-          side: "BUY",
-          entryPrice: pos.entryPrice,
-          exitPrice: fillPrice,
-          amount: pos.amount,
-          fee,
-          pnl,
-          pnlPct: (pnl / pos.invested) * 100,
-          entryTime: p.candles[pos.entryIdx].time,
-          exitTime: c.time,
-          exitReason,
-        });
+        closePosition(pos, exitPrice, c, exitReason);
         openPosition = null;
         continue;
       }
@@ -142,25 +193,52 @@ export function runBacktest(p: BacktestParams): BacktestResult {
 
     // entry logic — only when flat
     if (!openPosition && i + delayCandles < p.candles.length) {
-      if (evalSignal(i) === "BUY" && balance > 0) {
+      const sig = evalSignal(i);
+      const side: "LONG" | "SHORT" | null =
+        sig === "BUY" ? "LONG" : futures && sig === "SELL" ? "SHORT" : null;
+      if (side && balance > 0) {
         const execIdx = Math.min(i + delayCandles, p.candles.length - 1);
         const execCandle = p.candles[execIdx];
-        const fillPrice = execCandle.open * (1 + slip); // buy slippage
+        const long = side === "LONG";
+        const fillPrice = long ? execCandle.open * (1 + slip) : execCandle.open * (1 - slip);
         const fillFactor = p.partialFill ? 0.85 : 1;
         const invested = Math.min(balance * (p.riskPerTradePct / 100) * fillFactor, balance);
         if (invested <= 0) continue;
-        const entryFee = invested * feeRate;
-        const amount = (invested - entryFee) / fillPrice;
-        balance -= invested;
-        // ATR-based dynamic stops at entry, else fixed pct
+
+        let amount: number;
+        let feePaid: number;
+        if (futures) {
+          // invested = margin; notional = margin × leverage; fee on notional
+          const notional = invested * leverage;
+          feePaid = notional * feeRate;
+          amount = (notional - feePaid) / fillPrice;
+          balance -= invested;
+        } else {
+          feePaid = invested * feeRate;
+          amount = (invested - feePaid) / fillPrice;
+          balance -= invested;
+        }
+
         const a = atrSeries?.[execIdx];
-        const slPrice = p.atrStops && Number.isFinite(a)
-          ? fillPrice - a! * p.atrStops.slMultiplier
-          : fillPrice * (1 - p.stopLossPct / 100);
-        const tpPrice = p.atrStops && Number.isFinite(a)
-          ? fillPrice + a! * p.atrStops.tpMultiplier
-          : fillPrice * (1 + p.takeProfitPct / 100);
-        openPosition = { entryPrice: fillPrice, amount, invested, entryIdx: execIdx, peak: fillPrice, slPrice, tpPrice };
+        const stops = p.atrStops;
+        const useAtr = stops !== undefined && Number.isFinite(a);
+        const slPrice = useAtr
+          ? long ? fillPrice - a! * stops.slMultiplier : fillPrice + a! * stops.slMultiplier
+          : long ? fillPrice * (1 - p.stopLossPct / 100) : fillPrice * (1 + p.stopLossPct / 100);
+        const tpPrice = useAtr
+          ? long ? fillPrice + a! * stops.tpMultiplier : fillPrice - a! * stops.tpMultiplier
+          : long ? fillPrice * (1 + p.takeProfitPct / 100) : fillPrice * (1 - p.takeProfitPct / 100);
+        const liqPrice = futures
+          ? long
+            ? fillPrice * (1 - 0.9 / leverage)
+            : fillPrice * (1 + 0.9 / leverage)
+          : undefined;
+        // stop-loss must sit inside the liquidation distance — otherwise the
+        // position dies at liq before the stop can fire; clamp the stop to liq
+        const effSl = futures && liqPrice !== undefined
+          ? long ? Math.max(slPrice, liqPrice) : Math.min(slPrice, liqPrice)
+          : slPrice;
+        openPosition = { side, entryPrice: fillPrice, amount, invested, entryIdx: execIdx, peak: fillPrice, slPrice: effSl, tpPrice, liqPrice };
       }
     }
   }
@@ -168,23 +246,8 @@ export function runBacktest(p: BacktestParams): BacktestResult {
   // force-close at last candle
   if (openPosition) {
     const last = p.candles[p.candles.length - 1];
-    const fillPrice = last.close * (1 - slip);
-    const proceeds = openPosition.amount * fillPrice;
-    const fee = proceeds * feeRate;
-    const pnl = proceeds - fee - openPosition.invested;
-    balance += proceeds - fee;
-    trades.push({
-      side: "BUY",
-      entryPrice: openPosition.entryPrice,
-      exitPrice: fillPrice,
-      amount: openPosition.amount,
-      fee,
-      pnl,
-      pnlPct: (pnl / openPosition.invested) * 100,
-      entryTime: p.candles[openPosition.entryIdx].time,
-      exitTime: last.time,
-      exitReason: "END",
-    });
+    closePosition(openPosition, last.close, last, "END");
+    openPosition = null;
   }
 
   return summarizeResult(p.initialBalance, balance, trades, equityCurve);

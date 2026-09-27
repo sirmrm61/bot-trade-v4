@@ -84,6 +84,9 @@ export interface StrategyInput {
   trailingStopPct?: number | null;
   maxPositionPct?: number;
   orderType?: string;
+  /** SPOT (default) long-only · FUTURES enables shorts + leverage */
+  market?: "SPOT" | "FUTURES";
+  leverage?: number;
   indicators: StrategyIndicatorConfig[];
   orderBookImbalance?: ObiConfigInput;
   marketMaking?: MarketMakingConfigInput;
@@ -100,6 +103,15 @@ export function validateStrategyInput(input: StrategyInput) {
   if (!TIMEFRAMES.includes(input.timeframe as never)) throw new AppError("INVALID_TIMEFRAME", 400);
   const kind: StrategyKind = input.kind ?? "SIGNAL";
   if (!STRATEGY_KINDS.includes(kind)) throw new AppError("VALIDATION", 400, { field: "kind" });
+
+  // market type — futures only for directional (non-MM) kinds
+  if (input.market !== undefined && !["SPOT", "FUTURES"].includes(input.market)) {
+    throw new AppError("VALIDATION", 400, { field: "market" });
+  }
+  if (input.market === "FUTURES") {
+    if (kind === "MARKET_MAKING") throw new AppError("VALIDATION", 400, { field: "market", reason: "futures not supported for market making" });
+    if (!inRange(input.leverage, 1, 10)) throw new AppError("VALIDATION", 400, { field: "leverage" });
+  }
 
   const indicators = input.indicators ?? [];
   const enabled = indicators.filter((i) => i.enabled);

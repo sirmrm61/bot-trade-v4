@@ -88,9 +88,15 @@ export default async function LivePage() {
                     {openTrades.map((t) => (
                       <div key={t.id} className="flex flex-wrap items-center gap-4 px-4 py-2 text-sm">
                         <span className="ltr">{t.symbol}</span>
+                        {t.side === "SHORT"
+                          ? <Badge tone="danger">شورت{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</Badge>
+                          : <Badge tone="success">لانگ{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</Badge>}
                         <span>ورود: <b className="ltr">{faNumber(t.entryPrice)}</b></span>
                         <span>حجم: <b className="ltr">{faNumber(t.amount, true)}</b></span>
-                        <span className="text-xs text-muted">SL: {faNumber(t.stopLossPrice)} · TP: {faNumber(t.takeProfitPrice)}</span>
+                        <span className="text-xs text-muted">
+                          SL: {faNumber(t.stopLossPrice)} · TP: {faNumber(t.takeProfitPrice)}
+                          {t.liquidationPrice ? ` · لیکویید: ${faNumber(t.liquidationPrice)}` : ""}
+                        </span>
                       </div>
                     ))}
                   </div>

@@ -3,6 +3,7 @@ import { adapterForUser } from "@/modules/exchanges/registry";
 import { AppError } from "@/shared/errors";
 import { logger } from "@/infrastructure/logging/logger";
 import { getSetting } from "@/modules/settings/service";
+import { parseJson } from "@/shared/utils";
 import type { ExchangeOrder } from "@/modules/exchanges/types";
 
 /**
@@ -23,6 +24,8 @@ export interface PlaceOrderInput {
   type: "MARKET" | "LIMIT";
   amount: number;
   price?: number;
+  /** futures routing — submitted via /margin/orders/add instead of spot */
+  futures?: { leverage: number; positionSide: "LONG" | "SHORT" };
 }
 
 /** Creates a PENDING order row + enqueues execution. Idempotent. */
@@ -43,6 +46,7 @@ export async function placeOrder(input: PlaceOrderInput, idemKey?: string) {
       price: input.price,
       status: "PENDING",
       idempotencyKey: key,
+      ...(input.futures ? { metadata: JSON.stringify({ market: "FUTURES", ...input.futures }) } : {}),
     },
   });
 
@@ -62,16 +66,34 @@ export async function submitOrder(orderId: string) {
   if (!order || order.status !== "PENDING") return order;
 
   const adapter = await adapterForUser(order.userId, "NOBITEX", "order-engine");
+  const meta = order.metadata
+    ? parseJson<{ market?: string; leverage?: number; positionSide?: "LONG" | "SHORT" }>(order.metadata, {})
+    : {};
 
   try {
-    const exOrder: ExchangeOrder = await adapter.createOrder({
-      symbol: order.symbol,
-      side: order.side === "BUY" ? "buy" : "sell",
-      type: order.type === "LIMIT" ? "limit" : "market",
-      amount: order.amount,
-      price: order.price ?? undefined,
-      clientOrderId: order.idempotencyKey,
-    });
+    let exOrder: ExchangeOrder;
+    if (meta.market === "FUTURES") {
+      if (!adapter.createFuturesOrder) throw new AppError("FUTURES_UNSUPPORTED", 400);
+      exOrder = await adapter.createFuturesOrder({
+        symbol: order.symbol,
+        side: order.side === "BUY" ? "buy" : "sell",
+        type: order.type === "LIMIT" ? "limit" : "market",
+        amount: order.amount,
+        price: order.price ?? undefined,
+        leverage: meta.leverage ?? 1,
+        positionSide: meta.positionSide ?? "LONG",
+        clientOrderId: order.idempotencyKey,
+      });
+    } else {
+      exOrder = await adapter.createOrder({
+        symbol: order.symbol,
+        side: order.side === "BUY" ? "buy" : "sell",
+        type: order.type === "LIMIT" ? "limit" : "market",
+        amount: order.amount,
+        price: order.price ?? undefined,
+        clientOrderId: order.idempotencyKey,
+      });
+    }
 
     return prisma.order.update({
       where: { id: order.id },
@@ -81,7 +103,7 @@ export async function submitOrder(orderId: string) {
         filledAmount: exOrder.filledAmount,
         avgFillPrice: exOrder.avgPrice,
         submittedAt: new Date(),
-        metadata: JSON.stringify({ raw: exOrder.raw ?? null }),
+        metadata: JSON.stringify({ ...meta, raw: exOrder.raw ?? null }),
       },
     });
   } catch (err) {

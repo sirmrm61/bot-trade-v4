@@ -137,7 +137,7 @@ export function ApiForm({
 }
 
 let helpTipSeq = 0;
-const HELP_TIP_EVENT = "bottrade:helptip";
+export const HELP_TIP_EVENT = "bottrade:helptip";
 
 /** Clickable "؟" icon — opens a styled popover guiding the user. Only one stays open at a time. */
 export function HelpTip({ text }: { text: string }) {

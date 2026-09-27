@@ -98,6 +98,24 @@ export interface ExchangeTrade {
   ts: number;
 }
 
+export interface FuturesOrderParams extends OrderParams {
+  leverage: number;
+  /** futures direction — a "sell" opens a SHORT, "buy" a LONG */
+  positionSide: "LONG" | "SHORT";
+}
+
+export interface ExchangePosition {
+  id: string;
+  symbol: string;
+  side: "LONG" | "SHORT";
+  leverage: number;
+  entryPrice: number;
+  amount: number;
+  margin: number;
+  liquidationPrice?: number;
+  raw?: unknown;
+}
+
 export interface ExchangeAdapter {
   readonly name: string;
   getMarkets(): Promise<Market[]>;
@@ -112,4 +130,8 @@ export interface ExchangeAdapter {
   getOpenOrders(symbol?: string): Promise<ExchangeOrder[]>;
   getTradeHistory(symbol?: string): Promise<ExchangeTrade[]>;
   validateCredentials(): Promise<boolean>;
+  /** margin/futures — optional; engines feature-detect before using */
+  createFuturesOrder?(params: FuturesOrderParams): Promise<ExchangeOrder>;
+  getOpenPositions?(symbol?: string): Promise<ExchangePosition[]>;
+  closePosition?(positionId: string): Promise<boolean>;
 }

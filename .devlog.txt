@@ -6,3 +6,9 @@
 ✓ Running next.config.ts took 30ms
 
  GET /login 200 in 1778ms (next.js: 1509ms, proxy.ts: 133ms, application-code: 136ms)
+ GET / 200 in 530ms (next.js: 423ms, proxy.ts: 7ms, application-code: 100ms)
+ GET /login 200 in 37ms (next.js: 10ms, proxy.ts: 6ms, application-code: 21ms)
+{"ts":"2026-09-26T10:45:39.247Z","level":"info","proc":"app","msg":"api","requestId":"c097aa02-5257-4b88-9635-3769233b4d30","module":"api","action":"POST /api/auth/login","duration":518,"status":"OK"}
+ POST /api/auth/login 200 in 1340ms (next.js: 696ms, application-code: 644ms)
+ GET /dashboard 200 in 1356ms (next.js: 1191ms, proxy.ts: 4ms, application-code: 161ms)
+ GET /dashboard 200 in 127ms (next.js: 10ms, proxy.ts: 21ms, application-code: 96ms)

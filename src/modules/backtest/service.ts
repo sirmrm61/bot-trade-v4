@@ -8,6 +8,7 @@ import { getCandles } from "@/modules/pairs/service";
 import { runBacktest, type BacktestResult } from "./engine";
 import { runMmBacktest } from "./mm-engine";
 import { readMmConfig } from "@/modules/trading/market-making";
+import { readMarketConfig } from "@/modules/trading/futures";
 import { obiBacktestSignal } from "@/modules/trading/orderbook-imbalance";
 import { isSymbolicKind, symbolicSignalFn } from "@/modules/trading/symbolic-engines";
 import type { Candle } from "@/modules/exchanges/types";
@@ -214,6 +215,7 @@ export async function runAndPersist(
   const v = bt.version!;
 
   const kind = v.kind ?? "SIGNAL";
+  const marketCfg = readMarketConfig(v.config);
   let result: BacktestResult;
   if (kind === "MARKET_MAKING") {
     // simulated MM — quotes rest between candles, fills on range touches
@@ -245,6 +247,9 @@ export async function runAndPersist(
       slippagePct: bt.slippagePct,
       executionDelayMs: bt.executionDelayMs,
       partialFill: bt.partialFill,
+      // futures — shorts + leverage + liquidation live inside the engine
+      market: marketCfg.market,
+      leverage: marketCfg.leverage,
       // OBI — candle imbalance proxy; symbolic kinds — their own engine signals
       signalFn: kind === "ORDER_BOOK_IMBALANCE"
         ? obiBacktestSignal(data, v.config, v.buyThreshold, v.sellThreshold)

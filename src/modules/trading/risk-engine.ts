@@ -17,6 +17,8 @@ export interface RiskCheckInput {
   allocatedCapital: number; // strategy capital ceiling (quote currency)
   riskPerTradePct: number;
   maxPositionPct: number;
+  /** FUTURES → notional is the posted margin; shorts skip the base-balance check */
+  market?: "SPOT" | "FUTURES";
 }
 
 export interface RiskDecision {
@@ -27,6 +29,9 @@ export interface RiskDecision {
 
 export async function riskCheck(input: RiskCheckInput, adapter: ExchangeAdapter): Promise<RiskDecision> {
   const violations: string[] = [];
+  const futures = input.market === "FUTURES";
+  // futures entries are margin-posted — SELL (short open) is an entry too
+  const entry = input.side === "BUY" || (futures && input.side === "SELL");
   const notional = input.amount * input.price;
 
   // 1. Capital — notional must not exceed allocated capital
@@ -34,16 +39,17 @@ export async function riskCheck(input: RiskCheckInput, adapter: ExchangeAdapter)
 
   // 2. Risk per trade — size bounded by risk %
   const maxRiskNotional = input.allocatedCapital * (input.riskPerTradePct / 100) * 10;
-  if (notional > maxRiskNotional && input.side === "BUY") violations.push("RISK_PER_TRADE_EXCEEDED");
+  if (notional > maxRiskNotional && entry) violations.push("RISK_PER_TRADE_EXCEEDED");
 
   // 3. Maximum position — pct of allocated capital
   const maxPosition = input.allocatedCapital * (input.maxPositionPct / 100);
-  if (notional > maxPosition && input.side === "BUY") violations.push("MAX_POSITION_EXCEEDED");
+  if (notional > maxPosition && entry) violations.push("MAX_POSITION_EXCEEDED");
 
   // 4. Available balance on the exchange
   try {
     const balances = await adapter.getBalance();
-    if (input.side === "BUY") {
+    if (entry) {
+      // margin shorts borrow the base — only the quote margin must exist
       const quote = balances.find((b) => b.currency === "IRT" || b.currency === "USDT");
       if (quote && quote.free < notional) violations.push("INSUFFICIENT_EXCHANGE_BALANCE");
     } else {
@@ -69,7 +75,7 @@ export async function riskCheck(input: RiskCheckInput, adapter: ExchangeAdapter)
   const openTrade = await prisma.trade.findFirst({
     where: { liveStrategyId: input.liveStrategyId, symbol: input.symbol, status: "OPEN" },
   });
-  if (openTrade && input.side === "BUY") violations.push("EXISTING_POSITION");
+  if (openTrade && entry) violations.push("EXISTING_POSITION");
 
   // 10. Existing open order for this strategy+symbol
   const openOrder = await prisma.order.findFirst({
