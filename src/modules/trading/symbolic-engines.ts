@@ -39,9 +39,12 @@ export interface AtmSmeConfig {
   useEmaConfirm: boolean;     // require close vs EMA confirm (default true)
   recoverVt: number;          // long: Vt must recover above this (default -0.15)
   weakenVt: number;           // short/exit: Vt must weaken below this (default +0.15)
-  minPatternWinRate: number;  // historical hit-rate gate 0..1 (default 0.65; 0 = off)
-  minPatternCount: number;    // min past occurrences for the gate (default 3)
+  minPatternWinRate: number;  // historical hit-rate gate 0..1 (default 0.40; 0 = off)
+  minPatternCount: number;    // min past occurrences for the gate (default 1)
   probWindow: number;         // lookback candles for pattern stats (default 300)
+  bootstrapMargin: number;    // thin-stats gate: v > recoverVt + margin (default 0.15)
+  longPatterns: string[];     // entry token triples (default ["EEC","EED"])
+  shortPatterns: string[];    // exit/short token triples (default ["AAC","AAB"])
   exitTrigger: number;        // momentum-decay: peak Vt (default +0.70)
   exitBack: number;           // momentum-decay: fall back below (default +0.40)
   decayLookback: number;      // candles to look back for the peak (default 10)
@@ -82,9 +85,12 @@ export function readAtmSmeConfig(configJson: string): AtmSmeConfig {
     useEmaConfirm: c.useEmaConfirm ?? true,
     recoverVt: clamp(c.recoverVt ?? -0.15, -1, 1),
     weakenVt: clamp(c.weakenVt ?? 0.15, -1, 1),
-    minPatternWinRate: clamp(c.minPatternWinRate ?? 0.65, 0, 1),
-    minPatternCount: clamp(Math.floor(c.minPatternCount ?? 3), 0, 100),
+    minPatternWinRate: clamp(c.minPatternWinRate ?? 0.4, 0, 1),
+    minPatternCount: clamp(Math.floor(c.minPatternCount ?? 1), 0, 100),
     probWindow: clamp(Math.floor(c.probWindow ?? 300), 10, 5000),
+    bootstrapMargin: clamp(c.bootstrapMargin ?? 0.15, 0, 1),
+    longPatterns: parsePatterns(c.longPatterns, DEFAULT_LONG_PATTERNS),
+    shortPatterns: parsePatterns(c.shortPatterns, DEFAULT_SHORT_PATTERNS),
     exitTrigger: clamp(c.exitTrigger ?? 0.7, -1, 1),
     exitBack: clamp(c.exitBack ?? 0.4, -1, 1),
     decayLookback: clamp(Math.floor(c.decayLookback ?? 10), 1, 200),
@@ -182,8 +188,16 @@ export function atmToken(v: number, cfg: AtmSmeConfig): AtmToken | null {
   return "E";
 }
 
-const LONG_PATTERNS: string[] = ["EEC", "EED"];
-const SHORT_PATTERNS: string[] = ["AAC", "AAB"];
+export const DEFAULT_LONG_PATTERNS: string[] = ["EEC", "EED"];
+export const DEFAULT_SHORT_PATTERNS: string[] = ["AAC", "AAB"];
+
+/** "EEC,EED" → ["EEC","EED"] — invalid triples are dropped; empty → fallback. */
+function parsePatterns(raw: string | string[] | undefined, fallback: string[]): string[] {
+  const list = (typeof raw === "string" ? raw.split(",") : Array.isArray(raw) ? raw : [])
+    .map((p) => p.trim().toUpperCase())
+    .filter((p) => /^[A-E]{3}$/.test(p));
+  return list.length ? list : fallback;
+}
 
 /**
  * Historical hit-rate of a 3-token pattern over the last `probWindow`
@@ -235,13 +249,16 @@ export function atmSmeState(candles: Candle[], cfg: AtmSmeConfig): AtmSmeState {
     // A fresh entry pattern outranks the momentum-decay exit on the same candle
     // (the backtest engine only acts on SELL while holding anyway).
     if (
-      LONG_PATTERNS.includes(pat) &&
+      cfg.longPatterns.includes(pat) &&
       v[i] > cfg.recoverVt &&
       (!emaSeries || (Number.isFinite(emaSeries[i]) && closes[i] > emaSeries[i]))
     ) {
       if (cfg.minPatternWinRate > 0) {
         const { count, rate } = patternWinRate(tokens, closes, i, cfg, "up");
-        if (count < cfg.minPatternCount || rate < cfg.minPatternWinRate) continue;
+        if (count < cfg.minPatternCount) {
+          // thin history → bootstrap gate: allow only stronger recoveries
+          if (v[i] <= cfg.recoverVt + cfg.bootstrapMargin) continue;
+        } else if (rate < cfg.minPatternWinRate) continue;
       }
       signal[i] = "BUY";
       continue;
@@ -255,7 +272,7 @@ export function atmSmeState(candles: Candle[], cfg: AtmSmeConfig): AtmSmeState {
     );
     const momentumDecay = decayPeak >= cfg.exitTrigger && v[i] < cfg.exitBack;
     const shortPat =
-      SHORT_PATTERNS.includes(pat) &&
+      cfg.shortPatterns.includes(pat) &&
       v[i] < cfg.weakenVt &&
       (!emaSeries || (Number.isFinite(emaSeries[i]) && closes[i] < emaSeries[i]));
     if (momentumDecay || shortPat) signal[i] = "SELL";
@@ -477,7 +494,7 @@ export function symbolicSeries(
         return {
           context: pat,
           bucket: Number.isFinite(v) && Math.abs(v) >= cfg.tokenExtreme ? "hi" : "lo",
-          x: [1, v || 0, LONG_PATTERNS.includes(pat) ? 1 : 0, emaOk ? 1 : -1, Math.abs(v || 0)],
+          x: [1, v || 0, cfg.longPatterns.includes(pat) ? 1 : 0, emaOk ? 1 : -1, Math.abs(v || 0)],
         };
       },
     };
@@ -544,7 +561,7 @@ export function symbolicLast(
       detail: {
         context: pat,
         bucket: Number.isFinite(v) && Math.abs(v) >= cfg.tokenExtreme ? "hi" : "lo",
-        x: [1, v || 0, LONG_PATTERNS.includes(pat) ? 1 : 0, emaOk ? 1 : -1, Math.abs(v || 0)],
+        x: [1, v || 0, cfg.longPatterns.includes(pat) ? 1 : 0, emaOk ? 1 : -1, Math.abs(v || 0)],
       },
     };
   }

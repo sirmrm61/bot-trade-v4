@@ -243,9 +243,12 @@ export function StrategyBuilder({
           useEmaConfirm: fd.get("useEmaConfirm") === "on",
           recoverVt: num("recoverVt", -0.15),
           weakenVt: num("weakenVt", 0.15),
-          minPatternWinRate: num("minPatternWinRate", 0.65),
-          minPatternCount: num("minPatternCount", 3),
+          minPatternWinRate: num("minPatternWinRate", 0.4),
+          minPatternCount: num("minPatternCount", 1),
           probWindow: num("probWindow", 300),
+          bootstrapMargin: num("bootstrapMargin", 0.15),
+          longPatterns: String(fd.get("longPatterns") ?? "EEC,EED"),
+          shortPatterns: String(fd.get("shortPatterns") ?? "AAC,AAB"),
           exitTrigger: num("exitTrigger", 0.7),
           exitBack: num("exitBack", 0.4),
           decayLookback: num("decayLookback", 10),
@@ -530,12 +533,24 @@ export function StrategyBuilder({
               <Input name="weakenVt" type="number" step="any" min={-1} max={1} defaultValue={0.15} required />
             </Field>
             <Field label="حداقل احتمال تاریخی الگو" hint="۰–۱ — ۰ یعنی بدون گیت احتمال"
-              help="گیت تاریخچه: الگوی ورود فقط وقتی معتبر است که در گذشته‌ی همین نمودار، دست‌کم به این نرخ برد رسیده باشد (یعنی بعد از آن کندل صعودی آمده). ۰ = غیرفعال؛ ۰٫۶۵ پیش‌فرض سند — ورود فقط به الگوهایی که تاریخاً کار کرده‌اند.">
-              <Input name="minPatternWinRate" type="number" step="any" min={0} max={1} defaultValue={0.65} required />
+              help="گیت تاریخچه: الگوی ورود فقط وقتی معتبر است که در گذشته‌ی همین نمودار، دست‌کم به این نرخ برد رسیده باشد (یعنی بعد از آن کندل صعودی آمده). ۰ = غیرفعال — ورود فقط به الگوهایی که تاریخاً کار کرده‌اند.">
+              <Input name="minPatternWinRate" type="number" step="any" min={0} max={1} defaultValue={0.4} required />
             </Field>
             <Field label="حداقل تکرار الگو" hint="تعداد وقوع تاریخی لازم برای گیت احتمال"
-              help="حداقل دفعات وقوع الگو در پنجره‌ی آمار تا نمونه‌ی آماری معتبر شود. اگر الگو کمتر از این تعداد دیده شده باشد، ورود رد می‌شود — جلوی تصمیم بر اساس چند نمونه‌ی شانسی را می‌گیرد.">
-              <Input name="minPatternCount" type="number" min={0} max={100} defaultValue={3} required />
+              help="حداقل دفعات وقوع الگو در پنجره‌ی آمار تا نمونه‌ی آماری معتبر شود. اگر الگو کمتر از این تعداد دیده شده باشد، ورود با شرط سخت‌گیرانه‌تر (حاشیه‌ی بوت‌استرپ) بررسی می‌شود.">
+              <Input name="minPatternCount" type="number" min={0} max={100} defaultValue={1} required />
+            </Field>
+            <Field label="حاشیه بوت‌استرپ" hint="Vt > بازیابی + این مقدار وقتی آمار کم است"
+              help="وقتی الگوی ورود تاریخچه‌ی کافی ندارد (کمتر از حداقل تکرار)، به‌جای رد کامل، Vt باید از «بازیابی Vt» به‌اندازه‌ی این حاشیه بالاتر باشد — ورود محافظه‌کارانه‌تر برای الگوهای جدید. ۰ = عبور آزاد؛ بزرگ‌تر = تقریباً رد شدن.">
+              <Input name="bootstrapMargin" type="number" step="any" min={0} max={1} defaultValue={0.15} required />
+            </Field>
+            <Field label="الگوهای خرید" hint="توکن‌های ۳تایی با کاما — مثل EEC,EED"
+              help="الگوهای توکن برای ورود لانگ — هر الگو ۳ حرف از A تا E (A=صعودی شدید … E=نزولی شدید). پیش‌فرض EEC,EED یعنی دو سقوط شدید بعد برگشت. برای سیگنال بیشتر می‌توان EDC,DDC,EBB هم اضافه کرد.">
+              <Input name="longPatterns" defaultValue="EEC,EED" dir="ltr" />
+            </Field>
+            <Field label="الگوهای فروش" hint="توکن‌های ۳تایی — مثل AAC,AAB"
+              help="الگوهای توکن برای خروج/فروش — پیش‌فرض AAC,AAB یعنی دو صعود شدید بعد تضعیف. در بازار فیوچرز این سیگنال‌ها پوزیشن شورت باز می‌کنند.">
+              <Input name="shortPatterns" defaultValue="AAC,AAB" dir="ltr" />
             </Field>
             <Field label="پنجره آمار الگو" hint="تعداد کندل‌های گذشته برای محاسبه احتمال"
               help="تعداد کندل‌های گذشته که نرخ برد الگو روی آن‌ها برآورد می‌شود. بزرگ‌تر = آمار پایدارتر ولی واکنش کندتر به تغییر رژیم بازار؛ کوچک‌تر = تطبیق سریع‌تر با رفتار اخیر نمودار.">

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { validateStrategyInput } from "@/modules/strategies/service";
 import {
   atmSmeSeries,
   atmToken,
@@ -184,5 +185,60 @@ describe("dispatch", () => {
     const small = symbolicWarmup("RMM_BSE", "{}");
     const big = symbolicWarmup("RMM_BSE", JSON.stringify({ rmmBse: { channelLen: 100 } }));
     expect(big).toBeGreaterThan(small);
+  });
+});
+
+describe("ATM-SME configurable patterns", () => {
+  const dipThenBounce = mkCandles([
+    ...Array.from({ length: 40 }, () => 100),
+    100, 97, 94, 95, 96, 97, 99, 101,           // crash + recovery
+    ...Array.from({ length: 60 }, (_, i) => 101 + Math.sin(i / 3) * 2),
+  ]);
+
+  it("defaults parse to the classic patterns", () => {
+    const c = readAtmSmeConfig("{}");
+    expect(c.longPatterns).toEqual(["EEC", "EED"]);
+    expect(c.shortPatterns).toEqual(["AAC", "AAB"]);
+    expect(c.minPatternWinRate).toBe(0.4);
+    expect(c.minPatternCount).toBe(1);
+  });
+
+  it("accepts custom pattern lists and drops garbage", () => {
+    const c = readAtmSmeConfig(JSON.stringify({
+      atmSme: { longPatterns: "eec, EDC ,ZZZ,DDC", shortPatterns: "aab" },
+    }));
+    expect(c.longPatterns).toEqual(["EEC", "EDC", "DDC"]);
+    expect(c.shortPatterns).toEqual(["AAB"]);
+  });
+
+  it("widened patterns produce at least as many BUYs", () => {
+    const narrow = atmSmeState(dipThenBounce, { ...atmCfg, minPatternWinRate: 0, useEmaConfirm: false });
+    const wide = atmSmeState(dipThenBounce, {
+      ...atmCfg, minPatternWinRate: 0, useEmaConfirm: false,
+      longPatterns: [...atmCfg.longPatterns, "EDC", "DDC", "EBB"],
+    });
+    expect(wide.signal.filter((s) => s === "BUY").length)
+      .toBeGreaterThanOrEqual(narrow.signal.filter((s) => s === "BUY").length);
+  });
+
+  it("bootstrap margin admits thin-history patterns only on strong recovery", () => {
+    // strict gate params so every pattern is "thin" (count < minPatternCount)
+    const strict = { ...atmCfg, minPatternWinRate: 0.5, minPatternCount: 999, useEmaConfirm: false };
+    const tight = atmSmeState(dipThenBounce, { ...strict, bootstrapMargin: 0.9 });
+    const loose = atmSmeState(dipThenBounce, { ...strict, bootstrapMargin: 0 });
+    // near-zero margin ≈ no extra gate; huge margin ≈ hard reject
+    expect(loose.signal.filter((s) => s === "BUY").length)
+      .toBeGreaterThanOrEqual(tight.signal.filter((s) => s === "BUY").length);
+  });
+
+  it("invalid pattern strings fail server validation", () => {
+    const base = {
+      name: "x", symbol: "BTCUSDT", timeframe: "15m", kind: "ATM_SME" as const,
+      buyThreshold: 0.3, sellThreshold: -0.3, riskPerTradePct: 1,
+      stopLossPct: 1, takeProfitPct: 2, indicators: [],
+    };
+    expect(() => validateStrategyInput({ ...base, atmSme: { longPatterns: "EEC,EED" } })).not.toThrow();
+    expect(() => validateStrategyInput({ ...base, atmSme: { longPatterns: "EEC,XYZ" } })).toThrow();
+    expect(() => validateStrategyInput({ ...base, atmSme: { longPatterns: "EE" } })).toThrow();
   });
 });

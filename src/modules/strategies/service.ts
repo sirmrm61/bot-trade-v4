@@ -35,9 +35,12 @@ export interface AtmSmeConfigInput {
   useEmaConfirm?: boolean;     // default true
   recoverVt?: number;          // long Vt recovery level (default -0.15)
   weakenVt?: number;           // exit Vt weaken level (default +0.15)
-  minPatternWinRate?: number;  // pattern history gate 0..1 (default 0.65; 0 = off)
-  minPatternCount?: number;    // min occurrences for the gate (default 3)
+  minPatternWinRate?: number;  // pattern history gate 0..1 (default 0.40; 0 = off)
+  minPatternCount?: number;    // min occurrences for the gate (default 1)
   probWindow?: number;         // lookback for pattern stats (default 300)
+  bootstrapMargin?: number;    // thin-stats entry margin over recoverVt (default 0.15)
+  longPatterns?: string;       // comma-separated entry triples (default "EEC,EED")
+  shortPatterns?: string;      // comma-separated exit triples (default "AAC,AAB")
   exitTrigger?: number;        // decay-exit peak Vt (default +0.70)
   exitBack?: number;           // decay-exit fall-back Vt (default +0.40)
   decayLookback?: number;      // candles to look back for the peak (default 10)
@@ -99,6 +102,10 @@ export interface StrategyInput {
 
 const inRange = (v: number | undefined, min: number, max: number) =>
   v === undefined || (v >= min && v <= max);
+
+/** comma-separated 3-letter token patterns over the A–E alphabet */
+const validPatterns = (s: string | undefined) =>
+  s === undefined || /^[A-Ea-e]{3}(,[A-Ea-e]{3})*$/.test(s.trim());
 
 export function validateStrategyInput(input: StrategyInput) {
   if (!input.name?.trim()) throw new AppError("VALIDATION", 400, { field: "name" });
@@ -163,6 +170,9 @@ export function validateStrategyInput(input: StrategyInput) {
       !inRange(c.exitTrigger, -1, 1) ||
       !inRange(c.exitBack, -1, 1) ||
       !inRange(c.decayLookback, 1, 200) ||
+      !inRange(c.bootstrapMargin, 0, 1) ||
+      !validPatterns(c.longPatterns) ||
+      !validPatterns(c.shortPatterns) ||
       (c.tokenMid !== undefined && c.tokenExtreme !== undefined && c.tokenMid >= c.tokenExtreme)
     ) {
       throw new AppError("VALIDATION", 400, { field: "atmSme" });
