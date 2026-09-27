@@ -14,7 +14,7 @@ function LoginForm() {
       submitLabel="ورود"
       onSuccess={() => router.push(params.get("next") ?? "/dashboard")}
     >
-      <Field label="نام کاربری یا ایمیل">
+      <Field label="نام کاربری، ایمیل یا موبایل">
         <Input name="identifier" required autoComplete="username" />
       </Field>
       <Field label="رمز عبور">

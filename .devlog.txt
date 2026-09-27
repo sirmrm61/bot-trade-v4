@@ -12,3 +12,29 @@
  POST /api/auth/login 200 in 1340ms (next.js: 696ms, application-code: 644ms)
  GET /dashboard 200 in 1356ms (next.js: 1191ms, proxy.ts: 4ms, application-code: 161ms)
  GET /dashboard 200 in 127ms (next.js: 10ms, proxy.ts: 21ms, application-code: 96ms)
+ GET / 200 in 1160ms (next.js: 492ms, proxy.ts: 366ms, application-code: 301ms)
+ GET /login 200 in 212ms (next.js: 155ms, proxy.ts: 7ms, application-code: 50ms)
+{"ts":"2026-09-27T07:09:12.798Z","level":"error","proc":"app","msg":"api error","requestId":"62c09295-474f-4584-932f-c81539d566e1","module":"api","action":"POST /api/auth/login","duration":17,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 182ms (next.js: 124ms, application-code: 58ms)
+{"ts":"2026-09-27T07:09:17.342Z","level":"error","proc":"app","msg":"api error","requestId":"c6782696-6fbb-4a31-b797-94ca0c4ac3c0","module":"api","action":"POST /api/auth/login","duration":5,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 13ms (next.js: 3ms, application-code: 10ms)
+{"ts":"2026-09-27T07:09:45.741Z","level":"error","proc":"app","msg":"api error","requestId":"a5e404ba-eba3-473a-a543-8f2df28b7409","module":"api","action":"POST /api/auth/login","duration":9,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 32ms (next.js: 8ms, application-code: 24ms)
+{"ts":"2026-09-27T07:09:52.447Z","level":"error","proc":"app","msg":"api error","requestId":"9cae3c52-4bc5-4cf8-af9f-6daaa4e7fdb6","module":"api","action":"POST /api/auth/login","duration":4,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 22ms (next.js: 6ms, application-code: 16ms)
+{"ts":"2026-09-27T07:09:59.394Z","level":"error","proc":"app","msg":"api error","requestId":"2bc54295-6cd4-47ab-931b-20e5dc2807b1","module":"api","action":"POST /api/auth/login","duration":5,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 19ms (next.js: 5ms, application-code: 14ms)
+ GET /login 200 in 97ms (next.js: 4ms, proxy.ts: 3ms, application-code: 89ms)
+{"ts":"2026-09-27T07:14:28.347Z","level":"error","proc":"app","msg":"api error","requestId":"111368f4-9c80-4bc2-a661-e9fbb5e89f6e","module":"api","action":"POST /api/auth/login","duration":7,"status":"ERROR","errorCode":"VALIDATION"}
+ POST /api/auth/login 400 in 15ms (next.js: 3ms, application-code: 12ms)
+{"ts":"2026-09-27T07:15:36.650Z","level":"error","proc":"app","msg":"api error","requestId":"76d7659d-68b3-4fc9-89f8-7c173b7ee0ad","module":"api","action":"POST /api/auth/login","duration":231,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 239ms (next.js: 3ms, application-code: 237ms)
+{"ts":"2026-09-27T07:15:52.063Z","level":"error","proc":"app","msg":"api error","requestId":"a24f0428-6bd2-4167-b816-b85e5d9ab9e6","module":"api","action":"POST /api/auth/login","duration":239,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 247ms (next.js: 2ms, application-code: 245ms)
+{"ts":"2026-09-27T07:16:19.134Z","level":"info","proc":"app","msg":"api","requestId":"e6a5711e-2240-4f0a-ac95-ab5e56353219","module":"api","action":"POST /api/auth/login","duration":257,"status":"OK"}
+ POST /api/auth/login 200 in 264ms (next.js: 2ms, application-code: 262ms)
+ GET /dashboard 200 in 217ms (next.js: 21ms, proxy.ts: 4ms, application-code: 192ms)
+ GET /login 200 in 26ms (next.js: 5ms, proxy.ts: 5ms, application-code: 16ms)
+✓ Compiled in 792ms
+ GET /login 200 in 28ms (next.js: 6ms, proxy.ts: 4ms, application-code: 18ms)
+ GET /login 200 in 29ms (next.js: 9ms, proxy.ts: 3ms, application-code: 17ms)

@@ -293,8 +293,10 @@ export async function deleteStrategy(userId: string, strategyId: string) {
   const strategy = await prisma.strategy.findFirst({ where: { id: strategyId, userId } });
   if (!strategy || strategy.status === "DELETED") throw new AppError("NOT_FOUND", 404);
 
+  // only genuinely-active instances block deletion — PAUSED/DEGRADED rows are
+  // idle (engine skips them / errors out) and are stopped inside the transaction
   const activeLive = await prisma.liveStrategy.findFirst({
-    where: { strategyId, status: { in: ["STARTING", "RUNNING", "PAUSED", "DEGRADED", "STOPPING"] } },
+    where: { strategyId, status: { in: ["STARTING", "RUNNING", "STOPPING"] } },
     select: { id: true },
   });
   if (activeLive) throw new AppError("STRATEGY_HAS_LIVE", 400);
@@ -304,6 +306,12 @@ export async function deleteStrategy(userId: string, strategyId: string) {
   });
 
   await prisma.$transaction(async (tx) => {
+    // parked instances (PAUSED/DEGRADED) must not outlive their strategy —
+    // in the soft-delete path the live rows would otherwise stay and keep ticking
+    await tx.liveStrategy.updateMany({
+      where: { strategyId, status: { in: ["PAUSED", "DEGRADED"] } },
+      data: { status: "STOPPED", stoppedAt: new Date() },
+    });
     if (purchased > 0) {
       await tx.marketplaceListing.updateMany({ where: { strategyId }, data: { status: "ARCHIVED" } });
       await tx.strategy.update({ where: { id: strategyId }, data: { status: "DELETED" } });

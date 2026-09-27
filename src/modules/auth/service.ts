@@ -89,16 +89,16 @@ export async function registerUser(input: {
   return user;
 }
 
-/** Login by username OR email + password. Mobile/OTP hooks reserved. */
+/** Login by username, email OR mobile + password. OTP hooks reserved. */
 export async function loginUser(input: {
-  identifier: string; // username or email
+  identifier: string; // username, email or mobile
   password: string;
   ip?: string;
   userAgent?: string;
 }) {
   const id = input.identifier.trim().toLowerCase();
   const user = await prisma.user.findFirst({
-    where: { OR: [{ username: id }, { email: id }] },
+    where: { OR: [{ username: id }, { email: id }, { mobile: input.identifier.trim() }] },
   });
   if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) {
     throw new AppError("INVALID_CREDENTIALS", 401);
