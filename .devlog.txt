@@ -59,3 +59,48 @@
  GET /strategies 200 in 86ms (next.js: 22ms, proxy.ts: 8ms, application-code: 55ms)
  GET /strategies/create 200 in 457ms (next.js: 411ms, proxy.ts: 4ms, application-code: 43ms)
  GET /strategies/create 200 in 88ms (next.js: 14ms, proxy.ts: 4ms, application-code: 70ms)
+ GET /strategies/create 200 in 67ms (next.js: 14ms, proxy.ts: 4ms, application-code: 49ms)
+{"ts":"2026-09-27T09:04:13.572Z","level":"error","proc":"app","msg":"api error","requestId":"a4c0c590-25d0-431f-9d63-d17a9b8adb7c","module":"api","action":"POST /api/strategies/suggest","duration":10624,"status":"ERROR","errorCode":"UNKNOWN"}
+ POST /api/strategies/suggest 500 in 11.3s (next.js: 572ms, application-code: 10.7s)
+{"ts":"2026-09-27T09:04:23.733Z","level":"info","proc":"app","msg":"api","requestId":"0a69ec66-abac-42be-867f-5c667d018043","module":"api","action":"POST /api/strategies/suggest","userId":"cmub12um6000770lzbvkrj184","duration":1814,"status":"OK"}
+ POST /api/strategies/suggest 200 in 1826ms (next.js: 4ms, application-code: 1822ms)
+{"ts":"2026-09-27T09:04:43.838Z","level":"info","proc":"app","msg":"api","requestId":"eb18ac22-6fd6-4912-bef7-3336fddea5e9","module":"api","action":"POST /api/strategies","userId":"cmub12um6000770lzbvkrj184","duration":41,"status":"OK"}
+ POST /api/strategies 200 in 313ms (next.js: 260ms, application-code: 52ms)
+ GET /strategies 200 in 43ms (next.js: 9ms, proxy.ts: 6ms, application-code: 28ms)
+ GET /strategies/cmujlegbi00bc94lztoqx3lav 200 in 1084ms (next.js: 1020ms, proxy.ts: 3ms, application-code: 61ms)
+{"ts":"2026-09-27T09:04:59.081Z","level":"info","proc":"app","msg":"api","requestId":"689c3888-85cc-4d65-8840-fe100f39d780","module":"api","action":"POST /api/backtests","userId":"cmub12um6000770lzbvkrj184","duration":74,"status":"OK"}
+ POST /api/backtests 200 in 4.9s (next.js: 518ms, application-code: 4.4s)
+ GET /strategies/cmujlegbi00bc94lztoqx3lav 200 in 85ms (next.js: 22ms, proxy.ts: 6ms, application-code: 58ms)
+ GET /strategies/cmujlegbi00bc94lztoqx3lav 200 in 10.9s (next.js: 21ms, proxy.ts: 6ms, application-code: 10.9s)
+ GET /backtests/cmujles2b00bf94lzvsqky3j5 200 in 11.9s (next.js: 1202ms, proxy.ts: 3ms, application-code: 10.7s)
+ GET /strategies 200 in 45ms (next.js: 15ms, proxy.ts: 2ms, application-code: 28ms)
+ GET /strategies/create 200 in 38ms (next.js: 13ms, proxy.ts: 2ms, application-code: 23ms)
+{"ts":"2026-09-27T09:06:54.690Z","level":"error","proc":"app","msg":"api error","requestId":"a2ae1465-cef3-49df-bf8e-b5ae5832b70b","module":"api","action":"POST /api/strategies/suggest","duration":10610,"status":"ERROR","errorCode":"UNKNOWN"}
+ POST /api/strategies/suggest 500 in 10.6s (next.js: 6ms, application-code: 10.6s)
+{"ts":"2026-09-27T09:07:03.622Z","level":"info","proc":"app","msg":"api","requestId":"260671a5-9ffb-4699-98ba-3917dccca339","module":"api","action":"POST /api/strategies/suggest","userId":"cmub12um6000770lzbvkrj184","duration":1951,"status":"OK"}
+ POST /api/strategies/suggest 200 in 1970ms (next.js: 5ms, application-code: 1966ms)
+{"ts":"2026-09-27T09:07:09.928Z","level":"info","proc":"app","msg":"api","requestId":"e99e424c-be83-4150-bc41-7ca354beb6cf","module":"api","action":"POST /api/strategies","userId":"cmub12um6000770lzbvkrj184","duration":29,"status":"OK"}
+ POST /api/strategies 200 in 43ms (next.js: 6ms, application-code: 37ms)
+ GET /strategies 200 in 33ms (next.js: 6ms, proxy.ts: 2ms, application-code: 25ms)
+ GET /strategies/cmujlhl1z00ml94lzbzbsn5po 200 in 57ms (next.js: 19ms, proxy.ts: 3ms, application-code: 36ms)
+{"ts":"2026-09-27T09:07:15.762Z","level":"info","proc":"app","msg":"api","requestId":"a20e4568-1110-4b63-a49f-8bc3928477c6","module":"api","action":"POST /api/backtests","userId":"cmub12um6000770lzbvkrj184","duration":46,"status":"OK"}
+ POST /api/backtests 200 in 58ms (next.js: 5ms, application-code: 53ms)
+ GET /strategies/cmujlhl1z00ml94lzbzbsn5po 200 in 97ms (next.js: 21ms, proxy.ts: 3ms, application-code: 74ms)
+ GET /backtests 200 in 555ms (next.js: 471ms, proxy.ts: 2ms, application-code: 81ms)
+ GET /backtests/cmujlhpjp00mo94lzycb8rze0 200 in 82ms (next.js: 31ms, proxy.ts: 6ms, application-code: 45ms)
+ GET /backtests 200 in 54ms (next.js: 6ms, proxy.ts: 3ms, application-code: 46ms)
+ GET /strategies 200 in 69ms (next.js: 17ms, proxy.ts: 8ms, application-code: 43ms)
+ GET /strategies/cmujlhl1z00ml94lzbzbsn5po 200 in 71ms (next.js: 22ms, proxy.ts: 2ms, application-code: 46ms)
+{"ts":"2026-09-27T09:08:25.184Z","level":"info","proc":"app","msg":"api","requestId":"d26c50ba-cadf-4ee8-bd64-6800eb1748f7","module":"api","action":"POST /api/backtests","userId":"cmub12um6000770lzbvkrj184","duration":41,"status":"OK"}
+ POST /api/backtests 200 in 54ms (next.js: 6ms, application-code: 48ms)
+ GET /strategies/cmujlhl1z00ml94lzbzbsn5po 200 in 83ms (next.js: 16ms, proxy.ts: 5ms, application-code: 61ms)
+ GET /backtests 200 in 97ms (next.js: 14ms, proxy.ts: 8ms, application-code: 75ms)
+ GET /strategies 200 in 41ms (next.js: 9ms, proxy.ts: 3ms, application-code: 29ms)
+ GET /strategies/cmujlhl1z00ml94lzbzbsn5po 200 in 89ms (next.js: 26ms, proxy.ts: 4ms, application-code: 60ms)
+{"ts":"2026-09-27T09:12:25.992Z","level":"info","proc":"app","msg":"api","requestId":"5cb3bc79-a26d-4f11-9b0d-1f9fa61553b8","module":"api","action":"POST /api/backtests","userId":"cmub12um6000770lzbvkrj184","duration":53,"status":"OK"}
+ POST /api/backtests 200 in 63ms (next.js: 5ms, application-code: 58ms)
+ GET /strategies/cmujlhl1z00ml94lzbzbsn5po 200 in 86ms (next.js: 20ms, proxy.ts: 7ms, application-code: 58ms)
+ GET /strategies/cmujlhl1z00ml94lzbzbsn5po 200 in 10.9s (next.js: 15ms, proxy.ts: 4ms, application-code: 10.8s)
+ GET /backtests 200 in 72ms (next.js: 10ms, proxy.ts: 7ms, application-code: 55ms)
+ GET /backtests/cmujlocx600ms94lzsu33uy02 200 in 9.4s (next.js: 31ms, proxy.ts: 2ms, application-code: 9.4s)
+ GET /live 200 in 316ms (next.js: 261ms, proxy.ts: 8ms, application-code: 47ms)

@@ -201,10 +201,19 @@ async function main() {
         select: { id: true },
       });
       for (const s of running) {
+        // jobId dedupes in-flight ticks; removeOnFail:true is critical — a failed
+        // job keeps its id, and BullMQ would silently drop every future add()
+        // for it (observed: SQLITE_FULL during deploy poisoned stop policies).
         await getQueue(QUEUE_NAMES.LIVE_STRATEGY).add(
           "tick",
           { liveStrategyId: s.id, action: "TICK" },
-          { jobId: `tick-${s.id}`, removeOnComplete: true, removeOnFail: 10 }, // BullMQ forbids ':' in custom jobIds
+          {
+            jobId: `tick-${s.id}`,
+            removeOnComplete: true,
+            removeOnFail: true,
+            attempts: 3,
+            backoff: { type: "fixed", delay: 5000 },
+          },
         );
       }
       await redis.set(WORKER_HEARTBEAT_KEY, String(Date.now()));
