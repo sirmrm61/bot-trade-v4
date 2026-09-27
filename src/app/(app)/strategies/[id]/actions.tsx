@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ActionButton, ApiForm, Field, Input } from "@/components/client";
+import { toast } from "@/components/toast";
 
 export function DeleteStrategyButton({
   strategyId,
@@ -33,7 +34,7 @@ export function RunBacktestForm({ strategyId, versionId, defaultFrom, defaultTo 
     <ApiForm
       endpoint="/api/backtests"
       submitLabel="اجرای بک‌تست"
-      onSuccess={() => alert("بک‌تست در صف قرار گرفت — نتیجه به‌زودی آماده می‌شود.")}
+      onSuccess={() => toast.success("بک‌تست در صف قرار گرفت — نتیجه به‌زودی آماده می‌شود.")}
     >
       <input type="hidden" name="strategyId" value={strategyId} />
       {versionId && <input type="hidden" name="versionId" value={versionId} />}
@@ -56,7 +57,7 @@ export function GoLiveForm({ strategyId, versionId, hasBacktest }: { strategyId:
     <ApiForm
       endpoint="/api/live"
       submitLabel="تأیید و شروع"
-      onSuccess={() => alert("استراتژی زنده فعال شد.")}
+      onSuccess={() => toast.success("استراتژی زنده فعال شد.")}
     >
       <input type="hidden" name="strategyId" value={strategyId} />
       {versionId && <input type="hidden" name="versionId" value={versionId} />}
@@ -76,7 +77,7 @@ export function PaperTestForm({ strategyId, versionId }: { strategyId: string; v
     <ApiForm
       endpoint="/api/live"
       submitLabel="شروع تست زنده"
-      onSuccess={() => alert("تست زنده فعال شد — در صفحه «معاملات زنده» قابل مشاهده است.")}
+      onSuccess={() => toast.success("تست زنده فعال شد — در صفحه «معاملات زنده» قابل مشاهده است.")}
     >
       <input type="hidden" name="strategyId" value={strategyId} />
       {versionId && <input type="hidden" name="versionId" value={versionId} />}
@@ -98,7 +99,7 @@ export function SellForm({ strategyId, canSell, existing }: { strategyId: string
     <ApiForm
       endpoint="/api/marketplace"
       submitLabel="ثبت در بازار"
-      onSuccess={() => alert("آگهی ثبت شد — برای انتشار از بخش «خریدهای من/آگهی‌ها» ارسال برای بررسی کنید.")}
+      onSuccess={() => toast.success("آگهی ثبت شد — برای انتشار از بخش «خریدهای من/آگهی‌ها» ارسال برای بررسی کنید.")}
     >
       <input type="hidden" name="strategyId" value={strategyId} />
       <Field label="عنوان آگهی"><Input name="title" required /></Field>

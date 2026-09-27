@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Field, Input, Select } from "@/components/client";
+import { toast } from "@/components/toast";
 import { TIMEFRAMES } from "@/shared/constants";
 
 interface LeaderboardRow {
@@ -28,7 +29,6 @@ interface SmartResult {
 export function SmartSelectForm({ pairs }: { pairs: { symbol: string }[] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SmartResult | null>(null);
 
   const [defaults] = useState(() => {
@@ -42,7 +42,6 @@ export function SmartSelectForm({ pairs }: { pairs: { symbol: string }[] }) {
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setError(null);
     setResult(null);
     const fd = new FormData(e.currentTarget);
     const payload = {
@@ -61,10 +60,10 @@ export function SmartSelectForm({ pairs }: { pairs: { symbol: string }[] }) {
         body: JSON.stringify(payload),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) setError(json.error ?? "خطایی رخ داد");
+      if (!res.ok) toast.error(json.error ?? "خطایی رخ داد");
       else setResult(json as SmartResult);
     } catch {
-      setError("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
+      toast.error("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
     } finally {
       setLoading(false);
     }
@@ -94,12 +93,6 @@ export function SmartSelectForm({ pairs }: { pairs: { symbol: string }[] }) {
           </button>
         </div>
       </form>
-
-      {error && (
-        <div className="mt-4 rounded-xl border border-danger/30 bg-red-50 px-4 py-3 text-sm text-danger dark:bg-red-950/30">
-          {error}
-        </div>
-      )}
 
       {loading && (
         <p className="mt-4 text-xs text-muted">

@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
 import { cn } from "@/shared/utils";
+import { toast } from "./toast";
+import { ConfirmDialog } from "./confirm-dialog";
 
 /** Generic API mutation button with loading + Persian error handling. */
 export function ActionButton({
@@ -19,7 +21,7 @@ export function ActionButton({
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
 
   const variants = {
     primary: "bg-primary text-primary-foreground hover:opacity-90",
@@ -29,9 +31,7 @@ export function ActionButton({
   };
 
   async function run() {
-    if (confirm && !window.confirm(confirm)) return;
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch(endpoint, {
         method,
@@ -39,13 +39,13 @@ export function ActionButton({
         body: payload ? JSON.stringify(typeof payload === "function" ? payload() : payload) : undefined,
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) setError(json.error ?? "خطایی رخ داد");
+      if (!res.ok) toast.error(json.error ?? "خطایی رخ داد");
       else {
         onDone?.(json);
         router.refresh();
       }
     } catch {
-      setError("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
+      toast.error("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
     } finally {
       setLoading(false);
     }
@@ -54,7 +54,7 @@ export function ActionButton({
   return (
     <span className="inline-flex flex-col items-start gap-1">
       <button
-        onClick={run}
+        onClick={() => (confirm ? setAsking(true) : void run())}
         disabled={loading}
         className={cn(
           "rounded-xl px-4 py-2 text-sm font-bold transition disabled:opacity-50",
@@ -64,7 +64,13 @@ export function ActionButton({
       >
         {loading ? "در حال پردازش…" : label}
       </button>
-      {error && <span className="text-xs text-danger">{error}</span>}
+      <ConfirmDialog
+        open={asking}
+        message={confirm ?? ""}
+        danger={variant === "danger"}
+        onCancel={() => setAsking(false)}
+        onConfirm={() => { setAsking(false); void run(); }}
+      />
     </span>
   );
 }
@@ -81,13 +87,11 @@ export function ApiForm({
   onSuccess?: (json: unknown) => void;
 }) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setError(null);
     const fd = new FormData(e.currentTarget);
     const payload: Record<string, unknown> = {};
     for (const el of Array.from(e.currentTarget.elements)) {
@@ -105,13 +109,13 @@ export function ApiForm({
         body: JSON.stringify(payload),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) setError(json.error ?? "خطایی رخ داد");
+      if (!res.ok) toast.error(json.error ?? "خطایی رخ داد");
       else {
         onSuccess?.(json);
         router.refresh();
       }
     } catch {
-      setError("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
+      toast.error("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
     } finally {
       setLoading(false);
     }
@@ -120,11 +124,6 @@ export function ApiForm({
   return (
     <form onSubmit={submit} className={cn("space-y-4", className)}>
       {children}
-      {error && (
-        <div className="rounded-xl border border-danger/30 bg-red-50 px-4 py-3 text-sm text-danger dark:bg-red-950/30">
-          {error}
-        </div>
-      )}
       <button
         type="submit"
         disabled={loading}

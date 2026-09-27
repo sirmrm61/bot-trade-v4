@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field, HelpTip, Input, Select } from "@/components/client";
+import { toast } from "@/components/toast";
 import { TIMEFRAMES, STRATEGY_KINDS, STRATEGY_KIND_LABELS, type StrategyKind } from "@/shared/constants";
 import { INDICATORS, INDICATOR_MAP } from "@/modules/indicators/registry";
 
@@ -49,6 +50,14 @@ const OPS = [
 /** Candle-native symbolic engines — generic score thresholds don't apply to them. */
 const SYMBOLIC = new Set(["ATM_SME", "RMM_BSE", "DZS_HMM"]);
 const showThresholds = (k: StrategyKind) => k === "SIGNAL" || k === "ORDER_BOOK_IMBALANCE";
+/** kinds the market-aware suggester can fill (all except hand-tuned indicator mixes). */
+const SUGGESTABLE = new Set(["ORDER_BOOK_IMBALANCE", "MARKET_MAKING", "ATM_SME", "RMM_BSE", "DZS_HMM"]);
+
+const RISK_OPTIONS = [
+  { value: "LOW", label: "محافظه‌کار — سیگنال کمتر، اطمینان بیشتر" },
+  { value: "MEDIUM", label: "متعادل" },
+  { value: "HIGH", label: "تهاجمی — سیگنال بیشتر، ریسک بالاتر" },
+];
 
 export function StrategyBuilder({
   endpoint, method = "POST", submitLabel = "ذخیره استراتژی", initial, pairs,
@@ -68,10 +77,56 @@ export function StrategyBuilder({
   };
 }) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [loading, setLoading] = useState(false);
   const [kind, setKind] = useState<StrategyKind>(initial?.kind ?? "SIGNAL");
   const [market, setMarket] = useState<"SPOT" | "FUTURES">(initial?.market ?? "SPOT");
+  const [risk, setRisk] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM");
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestNotes, setSuggestNotes] = useState<string[]>([]);
+
+  /** write suggested values onto the uncontrolled inputs/selects/checkboxes by name */
+  function applyFields(fields: Record<string, number | string | boolean>) {
+    const form = formRef.current;
+    if (!form) return;
+    for (const [k, v] of Object.entries(fields)) {
+      const el = form.elements.namedItem(k);
+      if (el instanceof HTMLInputElement) {
+        if (el.type === "checkbox") el.checked = Boolean(v);
+        else el.value = String(v);
+      } else if (el instanceof HTMLSelectElement) {
+        el.value = String(v);
+      }
+    }
+  }
+
+  async function suggest() {
+    const form = formRef.current;
+    if (!form) return;
+    const symbol = String((form.elements.namedItem("symbol") as HTMLSelectElement)?.value ?? "");
+    const timeframe = String((form.elements.namedItem("timeframe") as HTMLSelectElement)?.value ?? "15m");
+    setSuggesting(true);
+    setSuggestNotes([]);
+    try {
+      const res = await fetch("/api/strategies/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symbol, timeframe, kind, risk }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(json.error ?? "پیشنهاد پارامتر ناموفق بود");
+      } else {
+        applyFields(json.fields ?? {});
+        setSuggestNotes(json.notes ?? []);
+        toast.success("پارامترها بر اساس وضعیت فعلی بازار پیشنهاد و اعمال شد — قبل از ذخیره بازبینی کنید.");
+      }
+    } catch {
+      toast.error("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
+    } finally {
+      setSuggesting(false);
+    }
+  }
 
   const [inds, setInds] = useState<Record<string, IndicatorState>>(() => {
     if (!initial) return DEFAULTS;
@@ -95,7 +150,6 @@ export function StrategyBuilder({
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setError(null);
     const fd = new FormData(e.currentTarget);
     const num = (k: string, d = 0) => Number(fd.get(k) ?? d);
 
@@ -120,7 +174,7 @@ export function StrategyBuilder({
         .reduce((a, i) => a + i.weight, 0);
       if (Math.abs(wSum - 1) > 0.01) {
         setLoading(false);
-        setError(`مجموع وزن اندیکاتورهای سیگنال‌دهنده باید ۱۰۰٪ باشد (فعلی: ${Math.round(wSum * 100)}٪)`);
+        toast.error(`مجموع وزن اندیکاتورهای سیگنال‌دهنده باید ۱۰۰٪ باشد (فعلی: ${Math.round(wSum * 100)}٪)`);
         return;
       }
     }
@@ -210,10 +264,13 @@ export function StrategyBuilder({
         method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) setError(json.error ?? "خطایی رخ داد");
-      else router.push("/strategies");
+      if (!res.ok) toast.error(json.error ?? "خطایی رخ داد");
+      else {
+        toast.success("استراتژی ذخیره شد.");
+        router.push("/strategies");
+      }
     } catch {
-      setError("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
+      toast.error("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
     } finally {
       setLoading(false);
     }
@@ -229,7 +286,7 @@ export function StrategyBuilder({
     .reduce((a, [, i]) => a + i.weight, 0);
 
   return (
-    <form onSubmit={submit} className="space-y-6">
+    <form ref={formRef} onSubmit={submit} className="space-y-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Field label="نام استراتژی">
           <Input name="name" required defaultValue={initial?.name} />
@@ -250,6 +307,42 @@ export function StrategyBuilder({
             options={TIMEFRAMES.map((t) => ({ value: t, label: t }))} />
         </Field>
       </div>
+
+      {SUGGESTABLE.has(kind) && (
+        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <h3 className="font-bold">پیشنهاد خودکار پارامترها</h3>
+              <p className="mt-1 text-xs text-muted">
+                کندل‌های اخیر {`«نماد/تایم‌فریم انتخابی»`} تحلیل می‌شود و مقادیر بهینه بر اساس نوسان، روند و حجم بازار پر می‌شود.
+              </p>
+            </div>
+            <div className="ms-auto flex flex-wrap items-end gap-2">
+              <Field label="میزان ریسک">
+                <Select value={risk} onChange={(e) => setRisk(e.target.value as typeof risk)} options={RISK_OPTIONS} />
+              </Field>
+              <button
+                type="button"
+                onClick={suggest}
+                disabled={suggesting}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
+              >
+                {suggesting ? "در حال تحلیل بازار…" : "پیشنهاد بر اساس بازار"}
+              </button>
+            </div>
+          </div>
+          {suggestNotes.length > 0 && (
+            <ul className="mt-3 space-y-1 border-t border-primary/20 pt-3 text-xs leading-5 text-muted">
+              {suggestNotes.map((nt, i) => (
+                <li key={i} className="flex items-start gap-1.5">
+                  <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+                  {nt}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {kind === "SIGNAL" && (
       <div className="rounded-2xl border border-border p-4">
@@ -530,7 +623,7 @@ export function StrategyBuilder({
             </Field>
             <Field label="سطح عبور St" hint="عبور صعودی از این سطح لازم است"
               help="تأیید جهت: علاوه بر احتمال رژیم، خودِ St (Z-Score نرمال‌شده) باید بالای این سطح باشد تا ورود شود — جلوی ورود روی احتمال بالا در بازار ضعیف را می‌گیرد.">
-              <Input name="sCross" type="number" step="0.05" min={0.01} max={1} defaultValue={0.33} required />
+              <Input name="sCross" type="number" step="0.01" min={0.01} max={1} defaultValue={0.33} required />
             </Field>
             <Field label="پایداری شرط (کندل)" hint="چند کندل متوالی احتمال بالا بماند"
               help="شرط احتمال باید این تعداد کندل متوالی برقرار بماند تا ورود صادر شود — فیلتر جهش‌های لحظه‌ای احتمال. ۱ = بدون فیلتر؛ ۲–۳ معمولاً نویز تک‌کندله را می‌گیرد با تأخیر کوچک.">
@@ -597,7 +690,6 @@ export function StrategyBuilder({
         )}
       </div>
 
-      {error && <div className="rounded-xl border border-danger/30 bg-red-50 px-4 py-3 text-sm text-danger dark:bg-red-950/30">{error}</div>}
       <button type="submit" disabled={loading}
         className="w-full rounded-xl bg-primary px-4 py-3 font-bold text-primary-foreground hover:opacity-90 disabled:opacity-50">
         {loading ? "در حال ذخیره…" : submitLabel}

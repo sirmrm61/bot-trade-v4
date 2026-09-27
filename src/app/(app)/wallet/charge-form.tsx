@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Field, Input } from "@/components/client";
+import { toast } from "@/components/toast";
 
 const PRESETS = [50_000, 100_000, 500_000, 1_000_000];
 
@@ -11,13 +12,9 @@ export function ChargeForm() {
   const router = useRouter();
   const [amount, setAmount] = useState<number>(100_000);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [ok, setOk] = useState(false);
 
   async function charge() {
     setLoading(true);
-    setError(null);
-    setOk(false);
     try {
       const res = await fetch("/api/wallet", {
         method: "POST",
@@ -25,13 +22,13 @@ export function ChargeForm() {
         body: JSON.stringify({ amount, idempotencyKey: `charge-ui:${crypto.randomUUID()}` }),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) setError(json.error ?? "خطا در شارژ");
+      if (!res.ok) toast.error(json.error ?? "خطا در شارژ");
       else {
-        setOk(true);
+        toast.success("کیف پول با موفقیت شارژ شد.");
         router.refresh();
       }
     } catch {
-      setError("خطای غیرمنتظره‌ای رخ داد.");
+      toast.error("خطای غیرمنتظره‌ای رخ داد.");
     } finally {
       setLoading(false);
     }
@@ -62,8 +59,6 @@ export function ChargeForm() {
           </button>
         ))}
       </div>
-      {error && <p className="text-sm text-danger">{error}</p>}
-      {ok && <p className="text-sm text-success">کیف پول با موفقیت شارژ شد.</p>}
       <button
         onClick={charge}
         disabled={loading || amount < 10_000}
