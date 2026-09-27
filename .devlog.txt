@@ -38,3 +38,24 @@
 ✓ Compiled in 792ms
  GET /login 200 in 28ms (next.js: 6ms, proxy.ts: 4ms, application-code: 18ms)
  GET /login 200 in 29ms (next.js: 9ms, proxy.ts: 3ms, application-code: 17ms)
+{"ts":"2026-09-27T08:28:08.505Z","level":"error","proc":"app","msg":"api error","requestId":"117e5ff2-c211-4cf6-a964-34275f774084","module":"api","action":"POST /api/auth/login","duration":360,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 393ms (next.js: 13ms, application-code: 380ms)
+{"ts":"2026-09-27T08:28:18.009Z","level":"error","proc":"app","msg":"api error","requestId":"50957304-acb7-473e-9878-63712335551b","module":"api","action":"POST /api/auth/login","duration":463,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 477ms (next.js: 5ms, application-code: 472ms)
+{"ts":"2026-09-27T08:28:27.951Z","level":"error","proc":"app","msg":"api error","requestId":"ba782099-5313-4a24-a81b-31508cf1accf","module":"api","action":"POST /api/auth/login","duration":351,"status":"ERROR","errorCode":"INVALID_CREDENTIALS"}
+ POST /api/auth/login 401 in 367ms (next.js: 5ms, application-code: 361ms)
+{"ts":"2026-09-27T09:00:01.581Z","level":"info","proc":"app","msg":"api","requestId":"782db9b3-8467-452f-a7cc-908851753d8a","module":"api","action":"POST /api/auth/login","duration":516,"status":"OK"}
+ POST /api/auth/login 200 in 528ms (next.js: 5ms, application-code: 524ms)
+ GET /dashboard 200 in 2.0s (next.js: 33ms, proxy.ts: 6ms, application-code: 1987ms)
+ GET /dashboard 200 in 141ms (next.js: 9ms, proxy.ts: 11ms, application-code: 122ms)
+ GET /strategies 200 in 516ms (next.js: 456ms, proxy.ts: 5ms, application-code: 55ms)
+{"ts":"2026-09-27T09:03:36.492Z","level":"info","proc":"app","msg":"api","requestId":"eb7d2095-5b77-4de9-a6ca-b078a55df699","module":"api","action":"DELETE /api/strategies/cmucio4au000wcslz5s7z1tgc","userId":"cmub12um6000770lzbvkrj184","duration":55,"status":"OK"}
+ DELETE /api/strategies/cmucio4au000wcslz5s7z1tgc 200 in 1862ms (next.js: 1791ms, application-code: 70ms)
+ GET /strategies 200 in 62ms (next.js: 8ms, proxy.ts: 4ms, application-code: 50ms)
+ GET /strategies 200 in 85ms (next.js: 17ms, proxy.ts: 6ms, application-code: 63ms)
+{"ts":"2026-09-27T09:03:39.993Z","level":"info","proc":"app","msg":"api","requestId":"0bfe57ce-bd7c-44ac-8fb7-73df0a01b339","module":"api","action":"DELETE /api/strategies/cmuceu7ge000c38lzaei1y5yd","userId":"cmub12um6000770lzbvkrj184","duration":42,"status":"OK"}
+ DELETE /api/strategies/cmuceu7ge000c38lzaei1y5yd 200 in 66ms (next.js: 15ms, application-code: 51ms)
+ GET /strategies 200 in 164ms (next.js: 14ms, proxy.ts: 5ms, application-code: 146ms)
+ GET /strategies 200 in 86ms (next.js: 22ms, proxy.ts: 8ms, application-code: 55ms)
+ GET /strategies/create 200 in 457ms (next.js: 411ms, proxy.ts: 4ms, application-code: 43ms)
+ GET /strategies/create 200 in 88ms (next.js: 14ms, proxy.ts: 4ms, application-code: 70ms)
