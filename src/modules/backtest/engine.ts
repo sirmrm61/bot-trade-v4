@@ -27,8 +27,12 @@ export interface BacktestParams {
   executionDelayMs?: number; // shifts fill to a later candle
   partialFill?: boolean;    // simulate 85% fill
   minCandles?: number;      // warmup window for indicators (default 60)
-  /** signal source override — e.g. OBI proxy; when set, `indicators` are unused for signals */
-  signalFn?: (i: number) => "BUY" | "SELL" | "HOLD";
+  /** signal source override — e.g. OBI proxy; when set, `indicators` are unused for signals.
+   *  May carry `onTradeClosed` — invoked with each closed trade's pnlPct so
+   *  learning strategies (smart symbolic) can adapt inside the simulation. */
+  signalFn?: ((i: number) => "BUY" | "SELL" | "HOLD") & {
+    onTradeClosed?: (pnlPct: number, entryIdx: number, exitIdx: number) => void;
+  };
   /** SPOT (default) long-only; FUTURES enables shorts + leverage + liquidation */
   market?: "SPOT" | "FUTURES";
   leverage?: number; // futures only, 1..10
@@ -102,7 +106,7 @@ export function runBacktest(p: BacktestParams): BacktestResult {
   const posPnl = (pos: Position, price: number) =>
     pos.side === "LONG" ? (price - pos.entryPrice) * pos.amount : (pos.entryPrice - price) * pos.amount;
 
-  const closePosition = (pos: Position, rawExit: number, c: Candle, exitReason: string) => {
+  const closePosition = (pos: Position, rawExit: number, c: Candle, exitReason: string, exitIdx: number) => {
     // slippage always moves the fill against the position
     const fillPrice = pos.side === "LONG" ? rawExit * (1 - slip) : rawExit * (1 + slip);
     const notional = pos.amount * fillPrice;
@@ -138,6 +142,8 @@ export function runBacktest(p: BacktestParams): BacktestResult {
         entryTime: p.candles[pos.entryIdx].time, exitTime: c.time, exitReason,
       });
     }
+    const t = trades[trades.length - 1];
+    p.signalFn?.onTradeClosed?.(t.pnlPct, pos.entryIdx, exitIdx);
   };
 
   for (let i = warmup; i < p.candles.length; i++) {
@@ -185,7 +191,7 @@ export function runBacktest(p: BacktestParams): BacktestResult {
       }
 
       if (exitPrice !== null) {
-        closePosition(pos, exitPrice, c, exitReason);
+        closePosition(pos, exitPrice, c, exitReason, i);
         openPosition = null;
         continue;
       }
@@ -246,7 +252,7 @@ export function runBacktest(p: BacktestParams): BacktestResult {
   // force-close at last candle
   if (openPosition) {
     const last = p.candles[p.candles.length - 1];
-    closePosition(openPosition, last.close, last, "END");
+    closePosition(openPosition, last.close, last, "END", p.candles.length - 1);
     openPosition = null;
   }
 

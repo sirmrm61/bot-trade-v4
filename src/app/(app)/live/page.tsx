@@ -36,7 +36,15 @@ export default async function LivePage() {
       ) : (
         <div className="space-y-5">
           {lives.map((l) => {
-            const stats = parseJson<{ lastSignal?: string; lastScore?: number; kind?: string; mid?: number; openQuotes?: number; inventoryPct?: number; pnl?: number; fills?: number }>(l.stats, {});
+            const stats = parseJson<{
+              lastSignal?: string; lastScore?: number; kind?: string; mid?: number;
+              openQuotes?: number; inventoryPct?: number; pnl?: number; fills?: number;
+              symLabel?: string; symNote?: string;
+              learn?: { n?: number; contexts?: Record<string, { w: number; l: number }> };
+            }>(l.stats, {});
+            const learnTrades = stats.learn?.n ?? 0;
+            const learnCtx = Object.values(stats.learn?.contexts ?? {});
+            const learnWins = learnCtx.reduce((s, c) => s + c.w, 0);
             const openTrades = l.trades.filter((t) => t.status === "OPEN");
             const closedTrades = l.trades.filter((t) => t.status === "CLOSED");
             const pnl = closedTrades.reduce((s, t) => s + (t.pnl ?? 0), 0);
@@ -59,7 +67,16 @@ export default async function LivePage() {
                           {l.mode === "PAPER" && ` · فیل‌ها: ${faNumber(stats.fills ?? 0)} · PnL تست: ${faNumber(stats.pnl ?? 0, true)}`}
                         </span>
                       ) : (
-                        <span>آخرین سیگنال: {stats.lastSignal ?? "—"} ({stats.lastScore?.toFixed(2) ?? "—"})</span>
+                        <span>
+                          آخرین سیگنال: {stats.lastSignal ?? "—"} ({stats.lastScore?.toFixed(2) ?? "—"})
+                          {stats.symLabel ? ` · ${stats.symLabel}` : ""}
+                          {stats.symNote ? ` · ${stats.symNote}` : ""}
+                        </span>
+                      )}
+                      {learnTrades > 0 && (
+                        <span title="آمار یادگیری هوشمند از معاملات بسته‌شده">
+                          هوشمند: {faNumber(learnTrades)} معامله · برد {faNumber(Math.round((learnWins / Math.max(learnTrades, 1)) * 100))}٪
+                        </span>
                       )}
                       <span>شروع: {jalaliDateTime(l.startedAt)}</span>
                     </div>

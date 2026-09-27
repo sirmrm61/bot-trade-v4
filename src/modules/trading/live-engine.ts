@@ -3,6 +3,11 @@ import { adapterForUser, publicAdapter } from "@/modules/exchanges/registry";
 import { computeSignal } from "@/modules/signals/engine";
 import { orderBookImbalance, readObiConfig, smoothObi } from "./orderbook-imbalance";
 import { isSymbolicKind, symbolicLast, symbolicWarmup } from "./symbolic-engines";
+import type { SymbolicKind } from "./symbolic-engines";
+import {
+  adaptConfig, decideEntry, readLearn, recordOutcome, smartEnabled,
+  type SmartDetail,
+} from "./smart";
 import { marketMakingTick, paperMarketMakingTick, cancelStrategyOrders } from "./market-making";
 import { readMarketConfig, liquidationPrice, futuresPnl } from "./futures";
 import { atr } from "@/modules/indicators/engine";
@@ -203,6 +208,9 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     let score: number;
     let obiEma: number | undefined;
     let symLabel = "";
+    let symNote: string | undefined;
+    let smartPending: SmartDetail | null = null; // features captured at entry — consumed on close
+    let smartSizeMult = 1;
     let candles: Awaited<ReturnType<typeof getCandles>> | null = null;
 
     if (live.version.kind === "ORDER_BOOK_IMBALANCE") {
@@ -223,10 +231,27 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         end: new Date(),
       });
       if (candles.length < Math.min(60, need / 2)) return;
-      const r = symbolicLast(live.version.kind, candles, live.version.config);
+      const smartOn = smartEnabled(live.version.config);
+      const learn = smartOn ? readLearn(live.stats) : null;
+      const effConfig = learn
+        ? adaptConfig(live.version.kind, live.version.config, learn)
+        : live.version.config;
+      const r = symbolicLast(live.version.kind, candles, effConfig);
       signal = r.signal;
       score = r.score;
       symLabel = r.label;
+      if (learn && r.detail && signal !== "HOLD") {
+        const d = decideEntry(live.version.kind, learn, r.detail);
+        smartPending = r.detail;
+        smartSizeMult = d.sizeMult;
+        if (!d.allow) {
+          signal = "HOLD";
+          smartPending = null;
+          symNote = d.veto === "score" ? "وتوی هوشمند (امتیاز پایین)" : `وتوی هوشمند (${r.label})`;
+        } else if (learn.n > 0) {
+          symNote = `هوشمند: امتیاز ${(d.smartScore * 100) | 0}٪ · سایز ×${d.sizeMult.toFixed(2)}`;
+        }
+      }
     } else {
       candles = await getCandles({
         symbol: live.symbol,
@@ -250,7 +275,7 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       signal = r.signal;
       score = r.score;
     }
-    const prevStats = parseJson<{ obiHist?: { t: number; v: number }[] }>(live.stats, {});
+    const prevStats = parseJson<Record<string, unknown> & { obiHist?: { t: number; v: number }[] }>(live.stats, {});
     const obiHist = obiEma !== undefined
       ? [...(prevStats.obiHist ?? []), { t: Date.now(), v: obiEma }].slice(-200)
       : prevStats.obiHist;
@@ -259,9 +284,11 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       data: {
         lastSignalAt: new Date(),
         stats: JSON.stringify({
+          ...prevStats, // learn + pendingCtx survive every tick
           lastScore: score,
           lastSignal: signal,
           ...(symLabel ? { symLabel } : {}),
+          ...(symNote ? { symNote } : { symNote: undefined }),
           ...(obiEma !== undefined ? { obiEma } : {}),
           ...(obiHist ? { obiHist } : {}),
         }),
@@ -322,7 +349,8 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       : slPrice;
     const stopDistPct = Math.max((Math.abs(ticker.last - effSl) / ticker.last) * 100, 0.1);
 
-    const riskCapital = live.allocatedCapital * (live.version.riskPerTradePct / 100);
+    // learned sizing — smart layer scales risk within [0.5, 1.75]; hard caps stay
+    const riskCapital = live.allocatedCapital * (live.version.riskPerTradePct / 100) * smartSizeMult;
     const maxPosition = live.allocatedCapital * (live.version.maxPositionPct / 100);
     // exposure bounded by risk on the stop distance AND the position cap
     // (cap scales with leverage — margin posted stays bounded by capital)
@@ -369,6 +397,15 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         trailingPeak: ticker.last,
       },
     });
+    // stash the entry's learning context — consumed by recordOutcome on close
+    if (smartPending) {
+      const s = await prisma.liveStrategy.findUnique({ where: { id: live.id }, select: { stats: true } });
+      const obj = parseJson<Record<string, unknown>>(s?.stats ?? "{}", {});
+      await prisma.liveStrategy.update({
+        where: { id: live.id },
+        data: { stats: JSON.stringify({ ...obj, pendingCtx: { kind: live.version.kind, tradeId: trade.id, ...smartPending } }) },
+      });
+    }
     if (!paper) {
       await placeOrder(
         {
@@ -504,14 +541,42 @@ async function manageOpenTrade(
   const pnl = exitReason === "LIQUIDATED"
     ? -trade.invested // isolated margin — the posted margin is lost
     : futuresPnl(trade.entryPrice, price, trade.amount, long ? "LONG" : "SHORT");
+  const pnlPct = trade.invested > 0 ? (pnl / trade.invested) * 100 : 0;
   await prisma.trade.update({
     where: { id: trade.id },
     data: {
       status: "CLOSED", exitPrice: price, exitReason,
-      pnl, pnlPct: trade.invested > 0 ? (pnl / trade.invested) * 100 : 0,
+      pnl, pnlPct,
       closedAt: new Date(),
     },
   });
+  // smart layer — fold this outcome into the strategy's learn state
+  if (isSymbolicKind(version.kind) && smartEnabled(version.config)) {
+    try {
+      const cur = await prisma.liveStrategy.findUnique({ where: { id: live.id }, select: { stats: true } });
+      const obj = parseJson<Record<string, unknown> & { pendingCtx?: (SmartDetail & { kind: string; tradeId?: string }) | null }>(
+        cur?.stats ?? "{}", {},
+      );
+      const pending = obj.pendingCtx;
+      if (pending && pending.kind === version.kind && (!pending.tradeId || pending.tradeId === trade.id)) {
+        const learn = recordOutcome(
+          version.kind as SymbolicKind, readLearn(cur?.stats ?? "{}"), pending, pnlPct,
+        );
+        await prisma.liveStrategy.update({
+          where: { id: live.id },
+          data: { stats: JSON.stringify({ ...obj, learn, pendingCtx: null }) },
+        });
+      } else if (pending) {
+        // orphaned context (trade closed by stop-policy etc.) — drop it
+        await prisma.liveStrategy.update({
+          where: { id: live.id },
+          data: { stats: JSON.stringify({ ...obj, pendingCtx: null }) },
+        });
+      }
+    } catch {
+      // learning must never break the trading loop
+    }
+  }
   await notify({
     userId: live.userId,
     type: exitReason === "TAKE_PROFIT" ? "TP_HIT" : exitReason === "STOP_LOSS" || exitReason === "LIQUIDATED" ? "SL_HIT" : "TRADE_CLOSED",

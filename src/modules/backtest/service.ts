@@ -11,6 +11,7 @@ import { readMmConfig } from "@/modules/trading/market-making";
 import { readMarketConfig } from "@/modules/trading/futures";
 import { obiBacktestSignal } from "@/modules/trading/orderbook-imbalance";
 import { isSymbolicKind, symbolicSignalFn } from "@/modules/trading/symbolic-engines";
+import { smartEnabled, smartSignalFn } from "@/modules/trading/smart";
 import type { Candle } from "@/modules/exchanges/types";
 import { getSetting } from "@/modules/settings/service";
 import { notify } from "@/modules/notifications/service";
@@ -254,7 +255,9 @@ export async function runAndPersist(
       signalFn: kind === "ORDER_BOOK_IMBALANCE"
         ? obiBacktestSignal(data, v.config, v.buyThreshold, v.sellThreshold)
         : isSymbolicKind(kind)
-          ? symbolicSignalFn(kind, data, v.config)
+          ? smartEnabled(v.config)
+            ? smartSignalFn(kind, data, v.config)   // learns inside the simulation
+            : symbolicSignalFn(kind, data, v.config)
           : undefined,
     });
   }

@@ -74,6 +74,7 @@ export function StrategyBuilder({
     trailingStopPct?: number | null; maxPositionPct: number; orderType: string;
     indicators: { name: string; parameters: string; weight: number; enabled: boolean; buyCondition: string; sellCondition: string }[];
     market?: "SPOT" | "FUTURES"; leverage?: number;
+    smart?: boolean;
   };
 }) {
   const router = useRouter();
@@ -262,6 +263,7 @@ export function StrategyBuilder({
           volPeriod: num("volPeriod", 20),
         },
       }),
+      ...(SYMBOLIC.has(kind) && { smart: fd.get("smart") === "on" }),
       ...(kind === "DZS_HMM" && {
         dzsHmm: {
           zWindow: num("zWindow", 60),
@@ -657,6 +659,22 @@ export function StrategyBuilder({
               <Input name="bearProbExit" type="number" step="any" min={0.1} max={0.99} defaultValue={0.6} required />
             </Field>
           </div>
+        </div>
+      )}
+
+      {SYMBOLIC.has(kind) && (
+        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
+          <label className="flex cursor-pointer items-start gap-3">
+            <input type="checkbox" name="smart" defaultChecked={initial?.smart === true} className="mt-1 size-4 accent-primary" />
+            <span>
+              <span className="block font-bold">یادگیری هوشمند از معاملات</span>
+              <span className="mt-1 block text-xs leading-5 text-muted-foreground">
+                موتور از نتیجه‌ی معاملات بسته‌شده درس می‌گیرد: آستانه‌ها بعد از باخت سخت‌گیرانه‌تر و بعد از برد کمی شل‌تر می‌شوند؛
+                کانتکست‌های بازنده (الگو/رژیم/برچسب) وتز می‌شوند؛ اندازه‌ی پوزیشن بر اساس عملکرد تاریخی سطح سیگنال تنظیم می‌شود؛
+                و یک امتیازدهی آنلاین ورودهای ضعیف را فیلتر می‌کند. در بک‌تست هم یادگیری شبیه‌سازی می‌شود.
+              </span>
+            </span>
+          </label>
         </div>
       )}
 

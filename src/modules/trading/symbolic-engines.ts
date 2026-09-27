@@ -296,6 +296,8 @@ export function rmmLabel(m: number): RmmLabel | null {
 export interface RmmBseState {
   m: number[];
   signal: Signal[];
+  run: number[];      // consecutive squeeze bars ending at i — smart layer feature
+  volRatio: number[]; // candle volume / average volume — smart layer feature
 }
 
 export function rmmBseState(candles: Candle[], cfg: RmmBseConfig): RmmBseState {
@@ -309,6 +311,13 @@ export function rmmBseState(candles: Candle[], cfg: RmmBseConfig): RmmBseState {
     run[i] = Number.isFinite(m[i]) && Math.abs(m[i]) <= cfg.squeezeAbs ? run[i - 1] + 1 : 0;
   }
 
+  const volRatio = new Array<number>(candles.length).fill(NaN);
+  for (let i = 0; i < candles.length; i++) {
+    if (volAvg && Number.isFinite(volAvg[i]) && volAvg[i] > 0) {
+      volRatio[i] = candles[i].volume / volAvg[i];
+    }
+  }
+
   for (let i = cfg.channelLen; i < candles.length; i++) {
     if (!Number.isFinite(m[i])) continue;
     if (m[i] < cfg.exitMt) {
@@ -320,7 +329,7 @@ export function rmmBseState(candles: Candle[], cfg: RmmBseConfig): RmmBseState {
     if (volAvg && Number.isFinite(volAvg[i]) && candles[i].volume < cfg.volMult * volAvg[i]) continue;
     signal[i] = "BUY";
   }
-  return { m, signal };
+  return { m, signal, run, volRatio };
 }
 
 // ============================================================================
@@ -333,6 +342,7 @@ export interface DzsHmmState {
   pBull: number[];  // filtered P(bull trend state)
   pBear: number[];  // filtered P(bear trend state)
   signal: Signal[];
+  bullStreak: number[]; // consecutive bars with pBull ≥ bullProb — smart layer feature
 }
 
 /**
@@ -401,10 +411,12 @@ export function dzsHmmState(candles: Candle[], cfg: DzsHmmConfig): DzsHmmState {
   }
 
   const signal = new Array<Signal>(n).fill("HOLD");
+  const bullStreakArr = new Array<number>(n).fill(0);
   let bullStreak = 0;
   for (let i = 1; i < n; i++) {
     if (!Number.isFinite(s[i])) continue;
     bullStreak = pBull[i] >= cfg.bullProb ? bullStreak + 1 : 0;
+    bullStreakArr[i] = bullStreak;
     if (pRange[i] >= cfg.rangeProbExit || pBear[i] >= cfg.bearProbExit) {
       signal[i] = "SELL";
       continue;
@@ -412,7 +424,7 @@ export function dzsHmmState(candles: Candle[], cfg: DzsHmmConfig): DzsHmmState {
     const crossed = s[i] >= cfg.sCross && s[i - 1] < cfg.sCross;
     if (crossed && bullStreak >= cfg.persist) signal[i] = "BUY";
   }
-  return { s, pRange, pBull, pBear, signal };
+  return { s, pRange, pBull, pBear, signal, bullStreak: bullStreakArr };
 }
 
 // ============================================================================
@@ -437,31 +449,136 @@ export function symbolicSignalFn(
   return (i) => st.signal[i] ?? "HOLD";
 }
 
-/** Latest-candle signal + a normalized score for the live engine's stats. */
+/** Per-candle smart detail — the learning layer's context/bucket/feature view. */
+export interface SymbolicDetail { context: string; bucket: "hi" | "lo"; x: number[] }
+
+/**
+ * Full signal series + per-index smart detail, computed once. The smart
+ * backtest loop re-runs this under the adapted config each time the learn
+ * state changes — cheaper than symbolicLast per candle.
+ */
+export function symbolicSeries(
+  kind: SymbolicKind,
+  candles: Candle[],
+  configJson: string,
+): { signal: Signal[]; detailAt: (i: number) => SymbolicDetail | undefined } {
+  const closes = candles.map((c) => c.close);
+  if (kind === "ATM_SME") {
+    const cfg = readAtmSmeConfig(configJson);
+    const st = atmSmeState(candles, cfg);
+    const emaS = ema(closes, cfg.emaPeriod);
+    return {
+      signal: st.signal,
+      detailAt: (i) => {
+        if (i < 2) return undefined;
+        const pat = `${st.tokens[i - 2]}${st.tokens[i - 1]}${st.tokens[i]}`;
+        const v = st.v[i];
+        const emaOk = Number.isFinite(emaS[i]) && closes[i] > emaS[i];
+        return {
+          context: pat,
+          bucket: Number.isFinite(v) && Math.abs(v) >= cfg.tokenExtreme ? "hi" : "lo",
+          x: [1, v || 0, LONG_PATTERNS.includes(pat) ? 1 : 0, emaOk ? 1 : -1, Math.abs(v || 0)],
+        };
+      },
+    };
+  }
+  if (kind === "RMM_BSE") {
+    const st = rmmBseState(candles, readRmmBseConfig(configJson));
+    return {
+      signal: st.signal,
+      detailAt: (i) => {
+        const m = st.m[i];
+        const vr = st.volRatio[i];
+        return {
+          context: rmmLabel(m) ?? "UNKNOWN",
+          bucket: Number.isFinite(m) && m >= 0.95 ? "hi" : "lo",
+          x: [1, m || 0, Math.min(st.run[i - 1] ?? 0, 20) / 20,
+              Number.isFinite(vr) ? Math.min(vr, 3) / 3 : 0, (m || 0) ** 2],
+        };
+      },
+    };
+  }
+  const cfg = readDzsHmmConfig(configJson);
+  const st = dzsHmmState(candles, cfg);
+  return {
+    signal: st.signal,
+    detailAt: (i) => {
+      const probs = { RANGE: st.pRange[i], BULL: st.pBull[i], BEAR: st.pBear[i] };
+      const best = (Object.keys(probs) as (keyof typeof probs)[]).reduce((a, b) =>
+        (probs[b] ?? 0) > (probs[a] ?? 0) ? b : a,
+      );
+      const s = st.s[i];
+      const pb = st.pBull[i] || 0, pbr = st.pBear[i] || 0;
+      return {
+        context: best,
+        bucket: pb >= 0.85 ? "hi" : "lo",
+        x: [1, s || 0, pb - pbr, Math.min(st.bullStreak[i] ?? 0, 5) / 5, -(st.pRange[i] || 0)],
+      };
+    },
+  };
+}
+
+/** Latest-candle signal + score + smart-layer detail (context/bucket/features). */
 export function symbolicLast(
   kind: SymbolicKind,
   candles: Candle[],
   configJson: string,
-): { signal: Signal; score: number; label: string } {
+): {
+  signal: Signal;
+  score: number;
+  label: string;
+  detail?: { context: string; bucket: "hi" | "lo"; x: number[] };
+} {
   const i = candles.length - 1;
   if (i < 0) return { signal: "HOLD", score: 0, label: "" };
   if (kind === "ATM_SME") {
-    const st = atmSmeState(candles, readAtmSmeConfig(configJson));
+    const cfg = readAtmSmeConfig(configJson);
+    const st = atmSmeState(candles, cfg);
     const tok = st.tokens[i];
-    return { signal: st.signal[i], score: st.v[i] || 0, label: tok ? `توکن ${tok}` : "" };
+    const v = st.v[i];
+    const pat = i >= 2 ? `${st.tokens[i - 2]}${st.tokens[i - 1]}${st.tokens[i]}` : "";
+    const emaS = ema(candles.map((c) => c.close), cfg.emaPeriod);
+    const emaOk = Number.isFinite(emaS[i]) && candles[i].close > emaS[i];
+    return {
+      signal: st.signal[i], score: v || 0, label: tok ? `توکن ${tok}` : "",
+      detail: {
+        context: pat,
+        bucket: Number.isFinite(v) && Math.abs(v) >= cfg.tokenExtreme ? "hi" : "lo",
+        x: [1, v || 0, LONG_PATTERNS.includes(pat) ? 1 : 0, emaOk ? 1 : -1, Math.abs(v || 0)],
+      },
+    };
   }
   if (kind === "RMM_BSE") {
     const st = rmmBseState(candles, readRmmBseConfig(configJson));
     const lbl = rmmLabel(st.m[i]);
-    return { signal: st.signal[i], score: st.m[i] || 0, label: lbl ?? "" };
+    const m = st.m[i];
+    const vr = st.volRatio[i];
+    return {
+      signal: st.signal[i], score: m || 0, label: lbl ?? "",
+      detail: {
+        context: lbl ?? "UNKNOWN",
+        bucket: Number.isFinite(m) && m >= 0.95 ? "hi" : "lo",
+        x: [1, m || 0, Math.min(st.run[i - 1] ?? 0, 20) / 20, Number.isFinite(vr) ? Math.min(vr, 3) / 3 : 0, (m || 0) ** 2],
+      },
+    };
   }
-  const st = dzsHmmState(candles, readDzsHmmConfig(configJson));
+  const cfg = readDzsHmmConfig(configJson);
+  const st = dzsHmmState(candles, cfg);
   const probs = { RANGE: st.pRange[i], BULL: st.pBull[i], BEAR: st.pBear[i] };
   const best = (Object.keys(probs) as (keyof typeof probs)[]).reduce((a, b) =>
     (probs[b] ?? 0) > (probs[a] ?? 0) ? b : a,
   );
   const fa = { RANGE: "رنج", BULL: "صعودی", BEAR: "نزولی" }[best];
-  return { signal: st.signal[i], score: (st.pBull[i] || 0) - (st.pBear[i] || 0), label: `رژیم ${fa}` };
+  const s = st.s[i];
+  const pb = st.pBull[i] || 0, pbr = st.pBear[i] || 0, pr = st.pRange[i] || 0;
+  return {
+    signal: st.signal[i], score: pb - pbr, label: `رژیم ${fa}`,
+    detail: {
+      context: best,
+      bucket: pb >= 0.85 ? "hi" : "lo",
+      x: [1, s || 0, pb - pbr, Math.min(st.bullStreak[i] ?? 0, 5) / 5, -pr],
+    },
+  };
 }
 
 /** Candles needed for meaningful warm-up in live ticks. */

@@ -93,6 +93,8 @@ export interface StrategyInput {
   atmSme?: AtmSmeConfigInput;
   rmmBse?: RmmBseConfigInput;
   dzsHmm?: DzsHmmConfigInput;
+  /** smart mode — symbolic engines learn from their own closed trades */
+  smart?: boolean;
 }
 
 const inRange = (v: number | undefined, min: number, max: number) =>
