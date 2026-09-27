@@ -2,8 +2,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    # no host port — only reachable inside the compose network
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
@@ -42,7 +41,7 @@ services:
       target: runner
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000" # localhost only — public traffic enters via caddy
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379
@@ -72,7 +71,23 @@ services:
       migrate:
         condition: service_completed_successfully
 
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
 volumes:
   redis-data:
   pg-data:
   app-data:
+  caddy-data:
+  caddy-config:
