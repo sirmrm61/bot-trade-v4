@@ -79,28 +79,23 @@ export default async function LivePage() {
                 </div>
 
                 <div className="mt-4">
-                  <LiveChart liveId={l.id} active={["RUNNING", "STARTING", "PAUSED", "DEGRADED"].includes(l.status)} />
+                  <LiveChart
+                    liveId={l.id}
+                    active={["RUNNING", "STARTING", "PAUSED", "DEGRADED"].includes(l.status)}
+                    openTrades={openTrades.map((t) => ({
+                      id: t.id,
+                      symbol: t.symbol,
+                      side: t.side,
+                      leverage: t.leverage,
+                      entryPrice: t.entryPrice,
+                      amount: t.amount,
+                      invested: t.invested,
+                      stopLossPrice: t.stopLossPrice,
+                      takeProfitPrice: t.takeProfitPrice,
+                      liquidationPrice: t.liquidationPrice,
+                    }))}
+                  />
                 </div>
-
-                {openTrades.length > 0 && (
-                  <div className="mt-4 rounded-xl border border-border">
-                    <div className="border-b border-border px-4 py-2 text-sm font-bold">معاملات باز</div>
-                    {openTrades.map((t) => (
-                      <div key={t.id} className="flex flex-wrap items-center gap-4 px-4 py-2 text-sm">
-                        <span className="ltr">{t.symbol}</span>
-                        {t.side === "SHORT"
-                          ? <Badge tone="danger">شورت{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</Badge>
-                          : <Badge tone="success">لانگ{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</Badge>}
-                        <span>ورود: <b className="ltr">{faNumber(t.entryPrice)}</b></span>
-                        <span>حجم: <b className="ltr">{faNumber(t.amount, true)}</b></span>
-                        <span className="text-xs text-muted">
-                          SL: {faNumber(t.stopLossPrice)} · TP: {faNumber(t.takeProfitPrice)}
-                          {t.liquidationPrice ? ` · لیکویید: ${faNumber(t.liquidationPrice)}` : ""}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </Card>
             );
           })}

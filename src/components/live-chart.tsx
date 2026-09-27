@@ -35,6 +35,20 @@ interface ChartPayload {
   watch?: SignalWatch;
 }
 
+/** Open trade passed in from the page — the exit price is the live price it would close at now. */
+export interface OpenTradeRow {
+  id: string;
+  symbol: string;
+  side: string;
+  leverage: number;
+  entryPrice: number;
+  amount: number;
+  invested: number;
+  stopLossPrice: number | null;
+  takeProfitPrice: number | null;
+  liquidationPrice: number | null;
+}
+
 const POLL_MS = 15_000;
 
 const SIGNAL_TONE: Record<string, string> = {
@@ -134,7 +148,7 @@ function WatchTip({ watch }: { watch: SignalWatch }) {
  * re-renders candles, quote lines, signal marks and trade markers as
  * the worker ticks land. Stops polling once the strategy is inactive.
  */
-export function LiveChart({ liveId, active }: { liveId: string; active: boolean }) {
+export function LiveChart({ liveId, active, openTrades = [] }: { liveId: string; active: boolean; openTrades?: OpenTradeRow[] }) {
   const [data, setData] = useState<ChartPayload | null>(null);
   const [failed, setFailed] = useState(false);
   const [at, setAt] = useState<number | null>(null);
@@ -208,6 +222,42 @@ export function LiveChart({ liveId, active }: { liveId: string; active: boolean 
         hasSignals={data.signals.length > 0}
         levels={data.levels}
       />
+      {openTrades.length > 0 && (
+        <div className="mt-4 rounded-xl border border-border">
+          <div className="border-b border-border px-4 py-2 text-sm font-bold">معاملات باز</div>
+          {openTrades.map((t) => {
+            const exit = w?.price ?? null;
+            const pnl = exit === null
+              ? null
+              : (t.side === "SHORT" ? t.entryPrice - exit : exit - t.entryPrice) * t.amount;
+            const pnlPct = pnl === null || !t.invested ? null : (pnl / t.invested) * 100;
+            return (
+              <div key={t.id} className="flex flex-wrap items-center gap-4 px-4 py-2 text-sm">
+                <span className="ltr">{t.symbol}</span>
+                {t.side === "SHORT"
+                  ? <span className="rounded-full bg-danger/10 px-2 py-0.5 text-[10px] font-bold text-danger">شورت{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</span>
+                  : <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success">لانگ{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</span>}
+                <span>ورود: <b className="ltr">{faNumber(t.entryPrice)}</b></span>
+                <span>خروج فعلی: <b className="ltr">{exit === null ? "—" : faNumber(exit)}</b></span>
+                {pnl !== null && (
+                  <span>
+                    شناور:{" "}
+                    <b className={cn("ltr", pnl >= 0 ? "text-success" : "text-danger")}>
+                      {faNumber(pnl, true)}
+                      {pnlPct !== null ? ` (${faNumber(pnlPct, true)}٪)` : ""}
+                    </b>
+                  </span>
+                )}
+                <span>حجم: <b className="ltr">{faNumber(t.amount, true)}</b></span>
+                <span className="text-xs text-muted">
+                  SL: {faNumber(t.stopLossPrice)} · TP: {faNumber(t.takeProfitPrice)}
+                  {t.liquidationPrice ? ` · لیکویید: ${faNumber(t.liquidationPrice)}` : ""}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
       {active && at && (
         <p className="mt-1 text-[10px] text-muted">
           به‌روزرسانی خودکار هر {POLL_MS / 1000} ثانیه · آخرین بار:{" "}
