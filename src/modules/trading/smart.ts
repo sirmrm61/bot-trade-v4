@@ -50,28 +50,30 @@ export function readLearn(statsJson: string): SmartLearn {
 
 // --- adaptive thresholds -----------------------------------------------------
 // direction: +1 → stricter means larger value; -1 → stricter means smaller.
+// The band is a tight *sensible* adaptation range, NOT the validation range —
+// adapting within e.g. gamma's full [0.01,100] would explode the token map.
 const STRICT_PARAMS: Record<SymbolicKind, [string, number, number, number][]> = {
-  //              [param,            dir, rangeLo, rangeHi]
+  //              [param,            dir, bandLo, bandHi]
   ATM_SME: [
-    ["recoverVt",        +1, -1, 1],
-    ["minPatternWinRate",+1, 0, 1],
-    ["gamma",            +1, 0.01, 100],
-    ["exitTrigger",      -1, -1, 1],
-    ["exitBack",         +1, -1, 1],
-    ["weakenVt",         -1, -1, 1],
+    ["recoverVt",        +1, -0.6, 0],
+    ["minPatternWinRate",+1, 0.3, 0.8],
+    ["gamma",            +1, 0.5, 4],
+    ["exitTrigger",      -1, 0.3, 0.9],
+    ["exitBack",         +1, 0.1, 0.6],
+    ["weakenVt",         -1, 0, 0.6],
   ],
   RMM_BSE: [
-    ["breakoutMt", +1, 0.01, 1],
-    ["volMult",    +1, 0.1, 100],
-    ["squeezeBars",+1, 1, 100],
-    ["exitMt",     +1, -1, 1],
+    ["breakoutMt", +1, 0.5, 0.95],
+    ["volMult",    +1, 1.0, 3],
+    ["squeezeBars",+1, 2, 12],
+    ["exitMt",     +1, 0, 0.5],
   ],
   DZS_HMM: [
-    ["bullProb",      +1, 0.5, 0.99],
-    ["sCross",        +1, 0.01, 1],
-    ["persist",       +1, 1, 20],
-    ["rangeProbExit", -1, 0.1, 0.99],
-    ["bearProbExit",  -1, 0.1, 0.99],
+    ["bullProb",      +1, 0.55, 0.95],
+    ["sCross",        +1, 0.1, 0.7],
+    ["persist",       +1, 1, 6],
+    ["rangeProbExit", -1, 0.3, 0.8],
+    ["bearProbExit",  -1, 0.3, 0.8],
   ],
 };
 
@@ -90,8 +92,11 @@ export function adaptConfig(kind: SymbolicKind, configJson: string, learn: Smart
   for (const [param, dir, lo, hi] of STRICT_PARAMS[kind]) {
     const base = inner[param];
     if (typeof base !== "number") continue;
-    const mag = (hi - lo) * 0.25 * learn.strict; // up to ±25% of the param range
-    let v = base + dir * mag;
+    // a base outside the band is a deliberate choice (e.g. minPatternWinRate=0
+    // disables the pattern gate) — don't adapt it at all
+    if (base < lo || base > hi) continue;
+    const mag = (hi - lo) * 0.25 * learn.strict; // up to ±25% of the band
+    let v = clamp(base + dir * mag, lo, hi);
     if (INT_PARAMS.has(param)) v = Math.round(v);
     inner[param] = v;
   }
@@ -171,7 +176,7 @@ export function recordOutcome(
 // --- backtest integration ----------------------------------------------------
 
 export interface SmartSignalFn {
-  (i: number): "BUY" | "SELL" | "HOLD";
+  (i: number, holding?: boolean): "BUY" | "SELL" | "HOLD";
   onTradeClosed: (pnlPct: number, entryIdx: number, exitIdx: number) => void;
   /** final learn state — tests/UI can inspect what the run learned */
   getLearn: () => SmartLearn;
@@ -193,17 +198,18 @@ export function smartSignalFn(
   let learn: SmartLearn = seed ?? { n: 0, strict: 0, contexts: {}, buckets: {}, w: [] };
   let series = symbolicSeries(kind, candles, configJson);
   let cachedN = -1;
-  // every allowed entry signal with its index — a close resolves to the
-  // latest signal at or before the fill candle (execution delay included)
+  // allowed entry-candidate signals with their index — only recorded while
+  // flat (the engine flags holding=evals); a close resolves to the newest
+  // signal at-or-before the fill candle (execution delay included)
   const pending: { i: number; d: SmartDetail }[] = [];
 
-  const fn = ((i: number) => {
+  const fn = ((i: number, holding = false) => {
     if (cachedN !== learn.n) {
       series = symbolicSeries(kind, candles, adaptConfig(kind, configJson, learn));
       cachedN = learn.n;
     }
     const sig = series.signal[i] ?? "HOLD";
-    if (sig === "HOLD") return sig;
+    if (sig === "HOLD" || holding) return sig; // exit-checks never become entries
     const d = series.detailAt(i);
     if (!d) return sig;
     if (!decideEntry(kind, learn, d).allow) return "HOLD";
@@ -213,15 +219,15 @@ export function smartSignalFn(
   }) as SmartSignalFn;
 
   fn.onTradeClosed = (pnlPct, entryIdx) => {
-    // signals are appended in index order — popping all that predate the
-    // fill leaves the newest one (the entry signal) as `hit`; stale signals
-    // that never became trades are cleaned up at the same time
-    let hit: SmartDetail | null = null;
-    while (pending.length && pending[pending.length - 1].i <= entryIdx) {
-      hit = pending.pop()!.d;
+    // pending contains only flat-state signals — find the newest one
+    // at-or-before the fill, then drop it + all older stale ones
+    let hitIdx = -1;
+    for (let k = pending.length - 1; k >= 0; k--) {
+      if (pending[k].i <= entryIdx) { hitIdx = k; break; }
     }
-    if (!hit) return; // no recorded entry context — skip rather than learn noise
-    learn = recordOutcome(kind, learn, hit, pnlPct);
+    if (hitIdx < 0) return; // no recorded entry context — skip rather than learn noise
+    learn = recordOutcome(kind, learn, pending[hitIdx].d, pnlPct);
+    pending.splice(0, hitIdx + 1);
   };
   fn.getLearn = () => learn;
   return fn;

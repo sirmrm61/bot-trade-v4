@@ -28,9 +28,11 @@ export interface BacktestParams {
   partialFill?: boolean;    // simulate 85% fill
   minCandles?: number;      // warmup window for indicators (default 60)
   /** signal source override — e.g. OBI proxy; when set, `indicators` are unused for signals.
+   *  `holding` tells the fn the eval is an exit-check on an open position —
+   *  learning wrappers use it to only record entry-candidate signals.
    *  May carry `onTradeClosed` — invoked with each closed trade's pnlPct so
    *  learning strategies (smart symbolic) can adapt inside the simulation. */
-  signalFn?: ((i: number) => "BUY" | "SELL" | "HOLD") & {
+  signalFn?: ((i: number, holding?: boolean) => "BUY" | "SELL" | "HOLD") & {
     onTradeClosed?: (pnlPct: number, entryIdx: number, exitIdx: number) => void;
   };
   /** SPOT (default) long-only; FUTURES enables shorts + leverage + liquidation */
@@ -82,9 +84,9 @@ export function runBacktest(p: BacktestParams): BacktestResult {
 
   let balance = p.initialBalance;
   const atrSeries = p.atrStops ? atr(p.candles, p.atrStops.period) : null;
-  const evalSignal = (i: number): "BUY" | "SELL" | "HOLD" =>
+  const evalSignal = (i: number, holding = false): "BUY" | "SELL" | "HOLD" =>
     p.signalFn
-      ? p.signalFn(i)
+      ? p.signalFn(i, holding)
       : computeSignal(p.indicators, p.candles.slice(0, i + 1), p.buyThreshold, p.sellThreshold).signal;
 
   interface Position {
@@ -184,7 +186,7 @@ export function runBacktest(p: BacktestParams): BacktestResult {
 
       if (exitPrice === null) {
         // signal-driven exit — opposite signal closes the position
-        const sig = evalSignal(i);
+        const sig = evalSignal(i, true);
         if ((long && sig === "SELL") || (!long && sig === "BUY")) {
           exitPrice = c.close; exitReason = "SIGNAL";
         }

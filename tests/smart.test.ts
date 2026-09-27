@@ -157,7 +157,7 @@ describe("smart layer — backtest integration", () => {
 
   it("signalFn.onTradeClosed fires for every closed trade", () => {
     const closed: number[] = [];
-    const fn = Object.assign((i: number) => (i === 70 ? "BUY" : i === 110 ? "SELL" : "HOLD") as const, {
+    const fn = Object.assign((i: number): "BUY" | "SELL" | "HOLD" => (i === 70 ? "BUY" : i === 110 ? "SELL" : "HOLD"), {
       onTradeClosed: (pnlPct: number) => closed.push(pnlPct),
     });
     const r = runBacktest({
