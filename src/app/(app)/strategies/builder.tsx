@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Field, HelpTip, Input, Select } from "@/components/client";
+import { Field, HelpTip, Input, Select, SearchableSelect } from "@/components/client";
 import { toast } from "@/components/toast";
 import { TIMEFRAMES, STRATEGY_KINDS, STRATEGY_KIND_LABELS, EXCHANGE_IDS, EXCHANGE_LABELS, type StrategyKind } from "@/shared/constants";
 import { INDICATORS, INDICATOR_MAP } from "@/modules/indicators/registry";
@@ -329,8 +329,11 @@ export function StrategyBuilder({
             options={EXCHANGE_IDS.map((x) => ({ value: x, label: EXCHANGE_LABELS[x] }))} />
         </Field>
         <Field label="نماد (جفت‌ارز)">
-          <Select name="symbol" key={exchange} defaultValue={initial?.exchange === exchange ? initial?.symbol : undefined}
-            options={exPairs.length ? exPairs.map((p) => ({ value: p.symbol, label: p.symbol })) : [{ value: firstSymbol || "BTCIRT", label: firstSymbol || "BTCIRT" }]} />
+          <SearchableSelect name="symbol" key={exchange}
+            defaultValue={initial?.exchange === exchange ? initial?.symbol : firstSymbol}
+            options={exPairs.map((p) => ({ value: p.symbol }))}
+            placeholder="جستجو… مثلاً BTCIRT یا BTC-USDT"
+            required />
         </Field>
         <Field label="توضیحات">
           <Input name="description" defaultValue={initial?.description ?? ""} />

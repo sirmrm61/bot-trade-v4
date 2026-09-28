@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode, type FormEvent } from "react";
 import { cn } from "@/shared/utils";
 import { toast } from "./toast";
 import { ConfirmDialog } from "./confirm-dialog";
@@ -239,5 +239,94 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement> & { 
     <select {...rest} className={cn(inputCls, props.className)}>
       {options ? options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>) : children}
     </select>
+  );
+}
+
+/** Filterable dropdown — a plain <select> can't search through ~1600 pairs.
+ *  The picked value lands in a hidden <input name> so FormData/applyFields keep working. */
+export function SearchableSelect({
+  name, options, defaultValue, placeholder, required, dir = "ltr", className,
+}: {
+  name: string;
+  options: { value: string; label?: string }[];
+  defaultValue?: string;
+  placeholder?: string;
+  required?: boolean;
+  dir?: string;
+  className?: string;
+}) {
+  const [value, setValue] = useState(defaultValue ?? "");
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toUpperCase();
+    const list = q
+      ? options.filter((o) => o.value.toUpperCase().includes(q) || (o.label ?? "").toUpperCase().includes(q))
+      : options;
+    return list.slice(0, 80);
+  }, [options, query]);
+
+  function pick(v: string) {
+    setValue(v);
+    setQuery("");
+    setOpen(false);
+  }
+
+  return (
+    <div ref={box} className="relative">
+      <input type="hidden" name={name} value={value} required={required} />
+      <input
+        className={cn(inputCls, className)}
+        dir={dir}
+        value={open ? query : value}
+        placeholder={placeholder ?? "جستجو…"}
+        autoComplete="off"
+        onFocus={() => setOpen(true)}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && open) {
+            e.preventDefault();
+            if (filtered.length) pick(filtered[0].value);
+            else if (query.trim()) pick(query.trim().toUpperCase());
+          }
+          if (e.key === "Escape") { setOpen(false); setQuery(""); }
+        }}
+        onBlur={() => {
+          // free-text fallback — lets users type a symbol the list doesn't show
+          const q = query.trim().toUpperCase();
+          if (q && !value) setValue(q);
+        }}
+      />
+      {open && (
+        <div className="absolute z-30 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-border bg-card shadow-lg">
+          {filtered.length === 0 && (
+            <div className="px-3 py-2 text-xs text-muted">نتیجه‌ای نیست — همین متن به‌عنوان نماد استفاده می‌شود</div>
+          )}
+          {filtered.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); pick(o.value); }}
+              className={cn(
+                "block w-full px-3 py-2 text-start text-sm hover:bg-slate-100 dark:hover:bg-slate-800",
+                o.value === value && "bg-primary/10 font-bold",
+              )}
+            >
+              {o.label ?? o.value}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Field, Input, Select } from "@/components/client";
+import { Field, Input, Select, SearchableSelect } from "@/components/client";
 import { toast } from "@/components/toast";
 import { TIMEFRAMES } from "@/shared/constants";
 
@@ -73,7 +73,7 @@ export function SmartSelectForm({ pairs }: { pairs: { symbol: string }[] }) {
     <div>
       <form onSubmit={submit} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="نماد">
-          <Select name="symbol" required options={pairs.map((p) => ({ value: p.symbol, label: p.symbol }))} dir="ltr" />
+          <SearchableSelect name="symbol" required options={pairs.map((p) => ({ value: p.symbol }))} placeholder="جستجو…" dir="ltr" />
         </Field>
         <Field label="تایم‌فریم">
           <Select name="timeframe" required options={TIMEFRAMES.map((t) => ({ value: t, label: t }))} dir="ltr" />
