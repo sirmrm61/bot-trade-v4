@@ -330,3 +330,39 @@ export function SearchableSelect({
     </div>
   );
 }
+
+/** Centered overlay dialog — closes on backdrop click or Escape. */
+export function Modal({
+  open, onClose, title, children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: ReactNode;
+  children: ReactNode;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4 backdrop-blur-sm"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="mx-auto my-6 w-full max-w-4xl rounded-2xl border border-border bg-card p-5 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+          <h2 className="text-lg font-bold">{title}</h2>
+          <button type="button" onClick={onClose} aria-label="بستن"
+            className="rounded-lg px-2 py-1 text-xl leading-none text-muted hover:bg-slate-100 dark:hover:bg-slate-800">
+            ×
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Card, CardTitle, Badge, EmptyState, Table } from "@/components/ui";
+import { Modal } from "@/components/client";
+import { StrategyBuilder } from "@/app/(app)/strategies/builder";
 import { cn, faNumber, faPercent } from "@/shared/utils";
 import { jalaliDateTime } from "@/shared/jalali";
 import type { PairRank, RankResult } from "@/modules/scalping/types";
@@ -41,7 +43,7 @@ const DEFAULT_FILTERS: Filters = {
   showExcluded: true,
 };
 
-export function ScalpPanel() {
+export function ScalpPanel({ pairs }: { pairs: { symbol: string; exchange?: string }[] }) {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [weights, setWeights] = useState<Record<string, string>>(
     Object.fromEntries(CRITERION_KEYS.map((k) => [k, String(SCALPING_DEFAULTS.weights[k])])),
@@ -51,6 +53,7 @@ export function ScalpPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [createFor, setCreateFor] = useState<PairRank | null>(null);
 
   const load = useCallback(async (f: Filters, w: Record<string, string>) => {
     setLoading(true);
@@ -238,22 +241,62 @@ export function ScalpPanel() {
       {/* table */}
       {shown.length > 0 && (
         <Table headers={["#", "جفت", "صرافی", "بازار", "امتیاز", "حجم ۲۴س", "اسپرد", "لغزش", "نوسان", "هزینه رفت‌وبرگشت", "کیفیت داده", ""]}>
-          {shown.map((p, i) => (
-            <PairRow
-              key={`${p.exchange}:${p.symbol}`}
-              p={p}
-              idx={i}
-              expanded={expanded === p.symbol}
-              onToggle={() => setExpanded(expanded === p.symbol ? null : p.symbol)}
-            />
-          ))}
+          {shown.map((p, i) => {
+            const rowKey = `${p.exchange}:${p.symbol}`;
+            return (
+              <PairRow
+                key={rowKey}
+                p={p}
+                idx={i}
+                expanded={expanded === rowKey}
+                onToggle={() => setExpanded(expanded === rowKey ? null : rowKey)}
+                onCreate={() => setCreateFor(p)}
+              />
+            );
+          })}
         </Table>
       )}
+
+      <Modal
+        open={createFor !== null}
+        onClose={() => setCreateFor(null)}
+        title={createFor ? `استراتژی جدید برای ${createFor.symbol}` : ""}
+      >
+        {createFor && (
+          <StrategyBuilder
+            key={`${createFor.exchange}:${createFor.symbol}`}
+            endpoint="/api/strategies"
+            submitLabel="ایجاد استراتژی"
+            pairs={pairs}
+            initial={{
+              name: `اسکالپ ${createFor.symbol}`,
+              description: `ساخته‌شده از اسکالپ اسکنر — امتیاز ${createFor.score ?? "—"}`,
+              symbol: createFor.symbol,
+              exchange: createFor.exchange,
+              market: createFor.marketType === "PERPETUAL" ? "FUTURES" : "SPOT",
+              leverage: Number(filters.leverage) || undefined,
+              timeframe: filters.candleTimeframe,
+              kind: "SIGNAL",
+              buyThreshold: 0.35,
+              sellThreshold: -0.35,
+              riskPerTradePct: 1,
+              stopLossPct: 1,
+              takeProfitPct: 2,
+              trailingStop: false,
+              maxPositionPct: 100,
+              orderType: filters.costMode === "MAKER" ? "LIMIT" : "MARKET",
+              indicators: [],
+            }}
+          />
+        )}
+      </Modal>
     </div>
   );
 }
 
-function PairRow({ p, idx, expanded, onToggle }: { p: PairRank; idx: number; expanded: boolean; onToggle: () => void }) {
+function PairRow({ p, idx, expanded, onToggle, onCreate }: {
+  p: PairRank; idx: number; expanded: boolean; onToggle: () => void; onCreate: () => void;
+}) {
   const m = p.metrics;
   return (
     <>
@@ -302,7 +345,7 @@ function PairRow({ p, idx, expanded, onToggle }: { p: PairRank; idx: number; exp
       {expanded && (
         <tr>
           <td colSpan={12} className="bg-slate-50 px-4 py-4 dark:bg-slate-800/30">
-            <PairDetail p={p} />
+            <PairDetail p={p} onCreate={onCreate} />
           </td>
         </tr>
       )}
@@ -310,10 +353,20 @@ function PairRow({ p, idx, expanded, onToggle }: { p: PairRank; idx: number; exp
   );
 }
 
-function PairDetail({ p }: { p: PairRank }) {
+function PairDetail({ p, onCreate }: { p: PairRank; onCreate: () => void }) {
   const m = p.metrics;
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={onCreate}
+          className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:opacity-90"
+        >
+          ایجاد استراتژی روی این جفت
+        </button>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
       <div>
         <div className="mb-2 text-sm font-bold">جزئیات معیارها</div>
         <div className="space-y-1.5">
@@ -400,6 +453,7 @@ function PairDetail({ p }: { p: PairRank }) {
             این امتیاز با بخشی از معیارها محاسبه شده — برای تحلیل کامل، جفت باید در لیست کوتاه نقدشونده‌ها باشد.
           </div>
         )}
+      </div>
       </div>
     </div>
   );
