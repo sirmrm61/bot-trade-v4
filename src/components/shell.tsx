@@ -7,7 +7,7 @@ import { cn } from "@/shared/utils";
 import {
   Gauge, Wallet, Robot, Flask, Lightning, ArrowsLeftRight, Storefront,
   ShoppingBag, UsersThree, Bell, Question, SignOut, UserCircle, Key, ShieldCheck,
-  Moon, Sun, List, ChartLineUp, GearSix, HardDrives,
+  Moon, Sun, List, ChartLineUp, GearSix, HardDrives, Crosshair,
 } from "@phosphor-icons/react";
 
 const NAV = [
@@ -19,6 +19,7 @@ const NAV = [
   { href: "/backtests", label: "بک‌تست‌ها", icon: Flask },
   { href: "/live", label: "معاملات زنده", icon: Lightning },
   { href: "/trades", label: "تاریخچه معاملات", icon: ArrowsLeftRight },
+  { href: "/scalping", label: "اسکالپ اسکنر", icon: Crosshair },
   { href: "/marketplace", label: "بازار استراتژی", icon: Storefront },
   { href: "/purchases", label: "خریدهای من", icon: ShoppingBag },
   { href: "/referrals", label: "دعوت دوستان", icon: UsersThree },

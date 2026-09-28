@@ -184,7 +184,7 @@ export class NobitexAdapter implements ExchangeAdapter {
       ask: Number(s.bestSell ?? 0),
       high24h: Number(s.dayHigh ?? 0),
       low24h: Number(s.dayLow ?? 0),
-      volume24h: Number(s.dayVolume ?? 0),
+      volume24h: Number(s.volumeSrc ?? s.dayVolume ?? 0),
       change24hPct: Number(s.dayChange ?? 0),
       ts: Date.now(),
     };
@@ -440,7 +440,7 @@ export function normalizeOrderBook(data: Record<string, unknown>, symbol: string
   return {
     bids: (raw.bids ?? []).map(([p, a]) => [Number(p), Number(a)]),
     asks: (raw.asks ?? []).map(([p, a]) => [Number(p), Number(a)]),
-    ts: Date.now(),
+    ts: Number(data.lastUpdate ?? 0) || Date.now(),
   };
 }
 

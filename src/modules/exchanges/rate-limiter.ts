@@ -69,7 +69,12 @@ async function redisAcquire(key: string, rule: LimitRule): Promise<boolean> {
 async function acquire(key: string, rule: LimitRule): Promise<boolean> {
   try {
     if (redis.status === "ready" || redis.status === "connecting") {
-      return await redisAcquire(key, rule);
+      // maxRetriesPerRequest:null buffers commands forever on a dead Redis —
+      // race a timeout so a hung connection degrades to local buckets
+      return await Promise.race([
+        redisAcquire(key, rule),
+        new Promise<boolean>((res) => setTimeout(() => res(localAcquire(key, rule)), 2_000)),
+      ]);
     }
   } catch {
     /* fall through */
