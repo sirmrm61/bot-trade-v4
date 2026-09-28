@@ -13,7 +13,7 @@ import { notify } from "@/modules/notifications/service";
 export async function reconcileLiveStrategy(liveStrategyId: string) {
   const live = await prisma.liveStrategy.findUnique({ where: { id: liveStrategyId } });
   if (!live) return;
-  const adapter = await adapterForUser(live.userId, "NOBITEX", "reconcile").catch(() => null);
+  const adapter = await adapterForUser(live.userId, live.exchange || "NOBITEX", "reconcile").catch(() => null);
   if (!adapter) return;
 
   const diffs: string[] = [];

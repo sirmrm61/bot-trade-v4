@@ -19,6 +19,10 @@ export interface MarketStatsRow {
   volumeQuote24h: number;
   /** mark/index reference price when the venue publishes one (Nobitex stats include `mark`) */
   markPrice?: number;
+  /** real per-market taker fee % when the venue publishes it (KuCoin allTickers) */
+  takerFeePct?: number;
+  /** real per-market maker fee % */
+  makerFeePct?: number;
   isClosed: boolean;
   ts: number;
 }

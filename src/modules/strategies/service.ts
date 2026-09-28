@@ -1,6 +1,6 @@
 import { prisma } from "@/infrastructure/database/prisma";
 import { AppError } from "@/shared/errors";
-import { INDICATORS, STRATEGY_KINDS, TIMEFRAMES, type StrategyKind } from "@/shared/constants";
+import { INDICATORS, STRATEGY_KINDS, TIMEFRAMES, EXCHANGE_IDS, type StrategyKind } from "@/shared/constants";
 import type { StrategyIndicatorConfig } from "@/modules/signals/engine";
 import { logActivity } from "@/modules/activity/service";
 
@@ -90,6 +90,8 @@ export interface StrategyInput {
   /** SPOT (default) long-only · FUTURES enables shorts + leverage */
   market?: "SPOT" | "FUTURES";
   leverage?: number;
+  /** which exchange's adapter serves market data + orders (default NOBITEX) */
+  exchange?: string;
   indicators: StrategyIndicatorConfig[];
   orderBookImbalance?: ObiConfigInput;
   marketMaking?: MarketMakingConfigInput;
@@ -112,6 +114,12 @@ export function validateStrategyInput(input: StrategyInput) {
   if (!TIMEFRAMES.includes(input.timeframe as never)) throw new AppError("INVALID_TIMEFRAME", 400);
   const kind: StrategyKind = input.kind ?? "SIGNAL";
   if (!STRATEGY_KINDS.includes(kind)) throw new AppError("VALIDATION", 400, { field: "kind" });
+
+  // exchange — must have a registered adapter
+  if (input.exchange !== undefined && !EXCHANGE_IDS.includes(input.exchange.toUpperCase() as never)) {
+    throw new AppError("VALIDATION", 400, { field: "exchange" });
+  }
+  if (input.exchange !== undefined) input.exchange = input.exchange.toUpperCase();
 
   // market type — futures only for directional (non-MM) kinds
   if (input.market !== undefined && !["SPOT", "FUTURES"].includes(input.market)) {

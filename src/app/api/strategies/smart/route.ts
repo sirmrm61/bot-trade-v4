@@ -10,6 +10,7 @@ const schema = z.object({
   initialBalance: z.number().positive(),
   feePct: z.number().min(0).max(5).optional(),
   slippagePct: z.number().min(0).max(5).optional(),
+  exchange: z.string().optional(),
 });
 
 // Admin-only for now — heavy computation across the whole indicator space.
@@ -26,6 +27,7 @@ export const POST = api(async (req, ctx) => {
     initialBalance: input.initialBalance,
     feePct: input.feePct,
     slippagePct: input.slippagePct,
+    exchange: input.exchange,
   });
   return { ok: true, ...result };
 }, { admin: true });

@@ -2529,6 +2529,7 @@ export const ExchangeAccountScalarFieldEnum = {
   label: 'label',
   apiKeyEnc: 'apiKeyEnc',
   apiSecretEnc: 'apiSecretEnc',
+  apiPassphraseEnc: 'apiPassphraseEnc',
   apiKeyMask: 'apiKeyMask',
   status: 'status',
   lastCheckedAt: 'lastCheckedAt',
@@ -2729,6 +2730,7 @@ export const LiveStrategyScalarFieldEnum = {
   versionId: 'versionId',
   pairId: 'pairId',
   symbol: 'symbol',
+  exchange: 'exchange',
   allocatedCapital: 'allocatedCapital',
   mode: 'mode',
   status: 'status',
@@ -2804,6 +2806,7 @@ export type TradeScalarFieldEnum = (typeof TradeScalarFieldEnum)[keyof typeof Tr
 
 export const HistoricalCandleScalarFieldEnum = {
   id: 'id',
+  exchange: 'exchange',
   symbol: 'symbol',
   timeframe: 'timeframe',
   time: 'time',

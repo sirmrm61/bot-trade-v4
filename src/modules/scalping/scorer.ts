@@ -58,9 +58,12 @@ export function scorePair(
       : ctx.irtPerUsd ? usd * ctx.irtPerUsd : null;
 
   const s = snap.stats;
+  // prefer real per-market fees when the venue publishes them (KuCoin tickers)
+  const takerFee = s?.takerFeePct ?? cfg.feePctPerSide;
+  const makerFee = s?.makerFeePct ?? cfg.makerFeePct;
   const metrics: PairMetrics = {
-    feePctPerSide: cfg.feePctPerSide,
-    makerFeePct: cfg.makerFeePct,
+    feePctPerSide: takerFee,
+    makerFeePct: makerFee,
     costMode: cfg.costMode,
     leverage: cfg.leverage,
     marginUsd: ctx.orderSizeUsd,
@@ -167,14 +170,14 @@ export function scorePair(
   const takerLegs = [slip.buy, slip.sell];
   const hasSlips = takerLegs.every((v): v is number => v !== null);
   if (cfg.costMode === "MAKER") {
-    metrics.roundTripCostPct = 2 * cfg.makerFeePct;
+    metrics.roundTripCostPct = 2 * makerFee;
   } else if (cfg.costMode === "MIXED") {
     metrics.roundTripCostPct = hasSlips
-      ? metrics.slippagePct! + cfg.makerFeePct + cfg.feePctPerSide
+      ? metrics.slippagePct! + makerFee + takerFee
       : null;
   } else {
     metrics.roundTripCostPct = hasSlips
-      ? slip.buy! + slip.sell! + 2 * cfg.feePctPerSide
+      ? slip.buy! + slip.sell! + 2 * takerFee
       : null;
   }
 
@@ -272,10 +275,10 @@ export function scorePair(
       score: metrics.roundTripCostPct != null ? inverseScore(metrics.roundTripCostPct, cfg.costRefBadPct) : null,
       note:
         cfg.costMode === "MAKER"
-          ? `میکر: ${faNumber(cfg.makerFeePct, true)}٪ کارمزد هر طرف (بدون لغزش — فرض پرشدن لیمیت)`
+          ? `میکر: ${faNumber(makerFee, true)}٪ کارمزد هر طرف (بدون لغزش — فرض پرشدن لیمیت)`
           : cfg.costMode === "MIXED"
-            ? `ترکیبی: ورود میکر ${faNumber(cfg.makerFeePct, true)}٪ + خروج تیکر ${faNumber(cfg.feePctPerSide, true)}٪`
-            : `تیکر: ${faNumber(cfg.feePctPerSide, true)}٪ کارمزد هر طرف + لغزش`,
+            ? `ترکیبی: ورود میکر ${faNumber(makerFee, true)}٪ + خروج تیکر ${faNumber(takerFee, true)}٪`
+            : `تیکر: ${faNumber(takerFee, true)}٪ کارمزد هر طرف + لغزش`,
     },
   };
 

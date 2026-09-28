@@ -6,11 +6,13 @@ import { cn, faNumber, faPercent } from "@/shared/utils";
 import { jalaliDateTime } from "@/shared/jalali";
 import type { PairRank, RankResult } from "@/modules/scalping/types";
 import { CRITERION_KEYS, CRITERION_LABELS, SCALPING_DEFAULTS } from "@/modules/scalping/config";
+import { EXCHANGE_LABELS } from "@/shared/constants";
 
 const MARKET_LABELS: Record<string, string> = { SPOT: "اسپات", PERPETUAL: "پرپچوال" };
 const TF_OPTIONS = ["1m", "5m", "15m", "1h"];
 
 interface Filters {
+  exchange: string;
   quote: string;
   market: string;
   base: string;
@@ -25,6 +27,7 @@ interface Filters {
 }
 
 const DEFAULT_FILTERS: Filters = {
+  exchange: "all",
   quote: "all",
   market: "all",
   base: "",
@@ -54,6 +57,7 @@ export function ScalpPanel() {
     setError(null);
     try {
       const p = new URLSearchParams({ quote: f.quote, market: f.market });
+      if (f.exchange !== "all") p.set("exchange", f.exchange);
       if (f.base.trim()) p.set("base", f.base.trim());
       if (num(f.minVolumeUsd)) p.set("minVolumeUsd", f.minVolumeUsd);
       if (num(f.orderSizeUsd)) p.set("orderSizeUsd", f.orderSizeUsd);
@@ -96,6 +100,14 @@ export function ScalpPanel() {
       {/* filters */}
       <Card>
         <div className="flex flex-wrap items-end gap-3">
+          <Field label="صرافی">
+            <select className={inputCls} value={filters.exchange}
+              onChange={(e) => setFilters({ ...filters, exchange: e.target.value })}>
+              <option value="all">همه</option>
+              <option value="NOBITEX">نوبیتکس</option>
+              <option value="KUCOIN">کوکوین</option>
+            </select>
+          </Field>
           <Field label="مارکت">
             <select className={inputCls} value={filters.quote}
               onChange={(e) => setFilters({ ...filters, quote: e.target.value })}>
@@ -251,7 +263,7 @@ function PairRow({ p, idx, expanded, onToggle }: { p: PairRank; idx: number; exp
           {p.baseCurrency}
           <span className="text-xs font-normal text-muted">/{p.quoteCurrency}</span>
         </td>
-        <td className="px-4 py-3 text-xs text-muted">{p.exchange}</td>
+        <td className="px-4 py-3 text-xs text-muted">{EXCHANGE_LABELS[p.exchange as keyof typeof EXCHANGE_LABELS] ?? p.exchange}</td>
         <td className="px-4 py-3"><Badge tone="info">{MARKET_LABELS[p.marketType] ?? p.marketType}</Badge></td>
         <td className="px-4 py-3">
           {p.status === "RANKED" ? (

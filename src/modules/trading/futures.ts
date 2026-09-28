@@ -15,6 +15,8 @@ export interface MarketConfig {
   market: MarketKind;
   /** leverage multiplier — 1..10, steps of 0.5 (Nobitex margin rules) */
   leverage: number;
+  /** exchange id — NOBITEX | KUCOIN | … (default NOBITEX for legacy configs) */
+  exchange: string;
 }
 
 export const MAX_LEVERAGE = 10;
@@ -22,12 +24,17 @@ export const MAX_LEVERAGE = 10;
 const MAINTENANCE_BUFFER = 0.9;
 
 export function readMarketConfig(configJson: string): MarketConfig {
-  const c = parseJson<{ market?: string; leverage?: number }>(configJson, {});
+  const c = parseJson<{ market?: string; leverage?: number; exchange?: string }>(configJson, {});
   const market: MarketKind = c.market === "FUTURES" ? "FUTURES" : "SPOT";
   // Nobitex margin leverage moves in 0.5 increments
   const raw = clamp(c.leverage ?? (market === "FUTURES" ? 3 : 1), 1, MAX_LEVERAGE);
   const leverage = Math.round(raw * 2) / 2;
-  return { market, leverage };
+  return { market, leverage, exchange: (c.exchange ?? "NOBITEX").toUpperCase() };
+}
+
+/** Exchange id embedded in a strategy version config (NOBITEX when absent). */
+export function readExchange(configJson: string): string {
+  return readMarketConfig(configJson).exchange;
 }
 
 export function isFutures(configJson: string): boolean {

@@ -9,7 +9,7 @@ import {
   type SmartDetail,
 } from "./smart";
 import { marketMakingTick, paperMarketMakingTick, cancelStrategyOrders } from "./market-making";
-import { readMarketConfig, liquidationPrice, futuresPnl } from "./futures";
+import { readMarketConfig, readExchange, liquidationPrice, futuresPnl } from "./futures";
 import { atr } from "@/modules/indicators/engine";
 import { atrStopsFromIndicators } from "@/modules/backtest/service";
 import { enforceRisk } from "./risk-engine";
@@ -51,14 +51,6 @@ export async function startLiveStrategy(opts: {
     if ((await liveUsage(opts.userId)) >= liveLimit) throw new AppError("LIVE_LIMIT_REACHED", 402);
   }
 
-  // 4. API connection — paper mode only reads public market data, no account needed
-  if (mode === "REAL") {
-    const account = await prisma.exchangeAccount.findUnique({
-      where: { userId_exchange: { userId: opts.userId, exchange: "NOBITEX" } },
-    });
-    if (!account || account.status !== "CONNECTED") throw new AppError("NO_EXCHANGE_ACCOUNT", 412);
-  }
-
   // 5. capital sanity
   if (opts.allocatedCapital <= 0) throw new AppError("VALIDATION", 400, { reason: "capital" });
 
@@ -73,6 +65,14 @@ export async function startLiveStrategy(opts: {
         where: { strategyId: strategy.id }, orderBy: { versionNumber: "desc" },
       });
   if (!version) throw new AppError("STRATEGY_NOT_READY", 400);
+  const exchange = readExchange(version.config);
+  // 4. API connection on the strategy's exchange — paper mode only reads public market data
+  if (mode === "REAL") {
+    const account = await prisma.exchangeAccount.findUnique({
+      where: { userId_exchange: { userId: opts.userId, exchange } },
+    });
+    if (!account || account.status !== "CONNECTED") throw new AppError("NO_EXCHANGE_ACCOUNT", 412);
+  }
   // paper mode never touches real funds so it needs no backtest gate;
   // REAL requires one for every kind (order-book kinds use simulated backtests)
   if (mode === "REAL") {
@@ -89,6 +89,7 @@ export async function startLiveStrategy(opts: {
       strategyId: strategy.id,
       versionId: version.id,
       symbol: version.symbol,
+      exchange,
       allocatedCapital: opts.allocatedCapital,
       mode,
       status: "STARTING",
@@ -152,7 +153,8 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
 
   try {
     // paper mode reads only public market data — no user credentials needed
-    const adapter = paper ? publicAdapter() : await adapterForUser(live.userId, "NOBITEX", "live-engine");
+    const exchange = live.exchange || "NOBITEX";
+    const adapter = paper ? publicAdapter(exchange) : await adapterForUser(live.userId, exchange, "live-engine");
 
     // ---- market making — own quoting loop, handles PAUSED internally
     if (live.version.kind === "MARKET_MAKING") {
@@ -229,6 +231,7 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         timeframe: live.version.timeframe,
         start: new Date(Date.now() - need * tfMs(live.version.timeframe)),
         end: new Date(),
+        exchange,
       });
       if (candles.length < Math.min(60, need / 2)) return;
       const smartOn = smartEnabled(live.version.config);
@@ -258,6 +261,7 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         timeframe: live.version.timeframe,
         start: new Date(Date.now() - 200 * tfMs(live.version.timeframe)),
         end: new Date(),
+        exchange,
       });
       if (candles.length < 60) return;
 
@@ -331,6 +335,7 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         timeframe: live.version.timeframe,
         start: new Date(Date.now() - 200 * tfMs(live.version.timeframe)),
         end: new Date(),
+        exchange,
       });
     }
     const atrNow = atrStops && candles?.length ? atr(candles, atrStops.period).at(-1) : undefined;
@@ -375,6 +380,7 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
           riskPerTradePct: live.version.riskPerTradePct,
           maxPositionPct: live.version.maxPositionPct,
           market: marketCfg.market,
+          exchange,
         },
         adapter,
       );
@@ -587,7 +593,7 @@ async function manageOpenTrade(
   });
 }
 
-async function executeStopPolicy(live: { id: string; userId: string; symbol: string; stopPolicy: string | null; mode: string }) {
+async function executeStopPolicy(live: { id: string; userId: string; symbol: string; exchange: string; stopPolicy: string | null; mode: string }) {
   const paper = live.mode === "PAPER";
   // resting orders never outlive the strategy — market makers especially
   await cancelStrategyOrders(live.id, live.userId).catch(() => {});
@@ -596,8 +602,8 @@ async function executeStopPolicy(live: { id: string; userId: string; symbol: str
       where: { liveStrategyId: live.id, status: "OPEN" },
     });
     const adapter = paper
-      ? publicAdapter()
-      : await adapterForUser(live.userId, "NOBITEX", "stop-policy").catch(() => null);
+      ? publicAdapter(live.exchange || "NOBITEX")
+      : await adapterForUser(live.userId, live.exchange || "NOBITEX", "stop-policy").catch(() => null);
     const price = adapter ? (await adapter.getTicker(live.symbol).catch(() => null))?.last ?? 0 : 0;
     for (const trade of openTrades) {
       const long = trade.side !== "SHORT";

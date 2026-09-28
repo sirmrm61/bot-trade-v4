@@ -14,6 +14,7 @@ import { executeBacktest } from "@/modules/backtest/service";
 import { liveTick } from "@/modules/trading/live-engine";
 import { submitOrder, monitorOrder } from "@/modules/trading/order-engine";
 import { syncPairs } from "@/modules/pairs/service";
+import { EXCHANGE_IDS } from "@/shared/constants";
 import { reconcileAll, recoverOnStartup } from "@/modules/trading/reconciliation";
 import { sweepExpirations } from "@/modules/subscriptions/service";
 import { sendTelegram } from "@/modules/notifications/service";
@@ -113,7 +114,13 @@ async function main() {
     QUEUE_NAMES.MARKET_DATA,
     async (job: Job) => {
       const data = job.data as { type: string };
-      if (data.type === "SYNC_PAIRS") await syncPairs();
+      if (data.type === "SYNC_PAIRS") {
+        // sync every exchange that has an adapter — failures are isolated per exchange
+        for (const ex of EXCHANGE_IDS) {
+          await syncPairs(ex).catch((e) =>
+            logger.warn("pair sync failed", { module: "pairs", exchange: ex, error: String(e) }));
+        }
+      }
     },
     {},
   );

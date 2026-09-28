@@ -25,14 +25,18 @@ const base: Omit<BacktestParams, "candles" | "signalFn"> = {
 const seq = (map: Record<number, "BUY" | "SELL">) => (i: number) => map[i] ?? "HOLD";
 
 describe("readMarketConfig", () => {
-  it("defaults to SPOT leverage 1", () => {
-    expect(readMarketConfig("{}")).toEqual({ market: "SPOT", leverage: 1 });
-    expect(readMarketConfig("not json")).toEqual({ market: "SPOT", leverage: 1 });
+  it("defaults to SPOT leverage 1 + NOBITEX exchange", () => {
+    expect(readMarketConfig("{}")).toEqual({ market: "SPOT", leverage: 1, exchange: "NOBITEX" });
+    expect(readMarketConfig("not json")).toEqual({ market: "SPOT", leverage: 1, exchange: "NOBITEX" });
   });
   it("parses futures + clamps leverage to 0.5 steps and 1..10", () => {
     expect(readMarketConfig('{"market":"FUTURES","leverage":3.4}').leverage).toBe(3.5);
     expect(readMarketConfig('{"market":"FUTURES","leverage":99}').leverage).toBe(10);
     expect(readMarketConfig('{"market":"FUTURES","leverage":0}').leverage).toBe(1);
+  });
+  it("reads the exchange field (uppercased, defaults to NOBITEX)", () => {
+    expect(readMarketConfig('{"exchange":"kucoin"}').exchange).toBe("KUCOIN");
+    expect(readMarketConfig('{"market":"SPOT"}').exchange).toBe("NOBITEX");
   });
 });
 

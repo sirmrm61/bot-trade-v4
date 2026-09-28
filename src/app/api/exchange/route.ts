@@ -1,32 +1,44 @@
+import { api } from "@/infrastructure/http/api";
+import { connectExchange, getBalances, disconnectExchange } from "@/modules/exchanges/account-service";
 import { z } from "zod";
-import { api, body } from "@/infrastructure/http/api";
-import { connectExchange, disconnectExchange } from "@/modules/exchanges/account-service";
-import { prisma } from "@/infrastructure/database/prisma";
 
-const connectSchema = z.object({
-  apiKey: z.string().min(8),
-  apiSecret: z.string().min(4),
-});
-
-export const GET = api(async (_req, ctx) => {
-  const account = await prisma.exchangeAccount.findFirst({
-    where: { userId: ctx.userId },
-    select: { id: true, exchange: true, label: true, apiKeyMask: true, status: true, lastCheckedAt: true, lastError: true, createdAt: true },
-  });
-  return { account };
+const Body = z.object({
+  apiKey: z.string().min(1).optional(),
+  apiSecret: z.string().min(1).optional(),
+  apiPassphrase: z.string().optional(),
+  exchange: z.string().default("NOBITEX"),
+  action: z.enum(["connect", "disconnect"]).default("connect"),
 });
 
 export const POST = api(async (req, ctx) => {
-  const { apiKey, apiSecret } = connectSchema.parse(await body(req));
-  const { account, balances } = await connectExchange({ userId: ctx.userId, apiKey, apiSecret });
+  const body = Body.parse(await req.json());
+  const exchange = body.exchange.toUpperCase();
+  if (body.action === "disconnect") {
+    await disconnectExchange(ctx.userId, exchange);
+    return { disconnected: true };
+  }
+  const { account, balances } = await connectExchange({
+    userId: ctx.userId,
+    apiKey: body.apiKey!,
+    apiSecret: body.apiSecret!,
+    apiPassphrase: body.apiPassphrase,
+    exchange,
+  });
   return {
-    ok: true,
-    account: { id: account.id, exchange: account.exchange, status: account.status, apiKeyMask: account.apiKeyMask },
+    exchange,
     balances,
+    mask: account.apiKeyMask,
+    connectedAt: account.updatedAt ?? account.createdAt,
   };
 });
 
-export const DELETE = api(async (_req, ctx) => {
-  await disconnectExchange(ctx.userId);
-  return { ok: true };
+export const DELETE = api(async (req, ctx) => {
+  const exchange = new URL(req.url).searchParams.get("exchange") ?? "NOBITEX";
+  await disconnectExchange(ctx.userId, exchange);
+  return { disconnected: true };
+});
+
+export const GET = api(async (req, ctx) => {
+  const exchange = new URL(req.url).searchParams.get("exchange") ?? "NOBITEX";
+  return { balances: await getBalances(ctx.userId, exchange) };
 });

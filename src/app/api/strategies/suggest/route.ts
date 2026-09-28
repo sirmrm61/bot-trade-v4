@@ -10,6 +10,7 @@ const schema = z.object({
   timeframe: z.string(),
   kind: z.string(),
   risk: z.enum(["LOW", "MEDIUM", "HIGH"]),
+  exchange: z.string().optional(),
 });
 
 /** Market-aware parameter suggestion — analyzes recent candles for the pair. */
@@ -23,7 +24,7 @@ export const POST = api(async (req, ctx) => {
   const count = 400;
   const end = new Date();
   const start = new Date(end.getTime() - count * tf);
-  const candles = await getCandles({ symbol: input.symbol, timeframe: input.timeframe, start, end });
+  const candles = await getCandles({ symbol: input.symbol, timeframe: input.timeframe, start, end, exchange: input.exchange });
   if (candles.length < 60) throw new AppError("INSUFFICIENT_DATA", 422, { candles: candles.length });
   const stats = marketStats(candles);
   const { fields, notes } = suggestParams(input.kind, input.risk, stats);

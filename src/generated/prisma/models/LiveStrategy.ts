@@ -43,6 +43,7 @@ export type LiveStrategyMinAggregateOutputType = {
   versionId: string | null
   pairId: string | null
   symbol: string | null
+  exchange: string | null
   allocatedCapital: number | null
   mode: string | null
   status: string | null
@@ -64,6 +65,7 @@ export type LiveStrategyMaxAggregateOutputType = {
   versionId: string | null
   pairId: string | null
   symbol: string | null
+  exchange: string | null
   allocatedCapital: number | null
   mode: string | null
   status: string | null
@@ -85,6 +87,7 @@ export type LiveStrategyCountAggregateOutputType = {
   versionId: number
   pairId: number
   symbol: number
+  exchange: number
   allocatedCapital: number
   mode: number
   status: number
@@ -118,6 +121,7 @@ export type LiveStrategyMinAggregateInputType = {
   versionId?: true
   pairId?: true
   symbol?: true
+  exchange?: true
   allocatedCapital?: true
   mode?: true
   status?: true
@@ -139,6 +143,7 @@ export type LiveStrategyMaxAggregateInputType = {
   versionId?: true
   pairId?: true
   symbol?: true
+  exchange?: true
   allocatedCapital?: true
   mode?: true
   status?: true
@@ -160,6 +165,7 @@ export type LiveStrategyCountAggregateInputType = {
   versionId?: true
   pairId?: true
   symbol?: true
+  exchange?: true
   allocatedCapital?: true
   mode?: true
   status?: true
@@ -268,6 +274,7 @@ export type LiveStrategyGroupByOutputType = {
   versionId: string
   pairId: string | null
   symbol: string
+  exchange: string
   allocatedCapital: number
   mode: string
   status: string
@@ -312,6 +319,7 @@ export type LiveStrategyWhereInput = {
   versionId?: Prisma.StringFilter<"LiveStrategy"> | string
   pairId?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   symbol?: Prisma.StringFilter<"LiveStrategy"> | string
+  exchange?: Prisma.StringFilter<"LiveStrategy"> | string
   allocatedCapital?: Prisma.FloatFilter<"LiveStrategy"> | number
   mode?: Prisma.StringFilter<"LiveStrategy"> | string
   status?: Prisma.StringFilter<"LiveStrategy"> | string
@@ -339,6 +347,7 @@ export type LiveStrategyOrderByWithRelationInput = {
   versionId?: Prisma.SortOrder
   pairId?: Prisma.SortOrderInput | Prisma.SortOrder
   symbol?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   allocatedCapital?: Prisma.SortOrder
   mode?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -369,6 +378,7 @@ export type LiveStrategyWhereUniqueInput = Prisma.AtLeast<{
   versionId?: Prisma.StringFilter<"LiveStrategy"> | string
   pairId?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   symbol?: Prisma.StringFilter<"LiveStrategy"> | string
+  exchange?: Prisma.StringFilter<"LiveStrategy"> | string
   allocatedCapital?: Prisma.FloatFilter<"LiveStrategy"> | number
   mode?: Prisma.StringFilter<"LiveStrategy"> | string
   status?: Prisma.StringFilter<"LiveStrategy"> | string
@@ -396,6 +406,7 @@ export type LiveStrategyOrderByWithAggregationInput = {
   versionId?: Prisma.SortOrder
   pairId?: Prisma.SortOrderInput | Prisma.SortOrder
   symbol?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   allocatedCapital?: Prisma.SortOrder
   mode?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -425,6 +436,7 @@ export type LiveStrategyScalarWhereWithAggregatesInput = {
   versionId?: Prisma.StringWithAggregatesFilter<"LiveStrategy"> | string
   pairId?: Prisma.StringNullableWithAggregatesFilter<"LiveStrategy"> | string | null
   symbol?: Prisma.StringWithAggregatesFilter<"LiveStrategy"> | string
+  exchange?: Prisma.StringWithAggregatesFilter<"LiveStrategy"> | string
   allocatedCapital?: Prisma.FloatWithAggregatesFilter<"LiveStrategy"> | number
   mode?: Prisma.StringWithAggregatesFilter<"LiveStrategy"> | string
   status?: Prisma.StringWithAggregatesFilter<"LiveStrategy"> | string
@@ -442,6 +454,7 @@ export type LiveStrategyScalarWhereWithAggregatesInput = {
 export type LiveStrategyCreateInput = {
   id?: string
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -469,6 +482,7 @@ export type LiveStrategyUncheckedCreateInput = {
   versionId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -488,6 +502,7 @@ export type LiveStrategyUncheckedCreateInput = {
 export type LiveStrategyUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -515,6 +530,7 @@ export type LiveStrategyUncheckedUpdateInput = {
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -538,6 +554,7 @@ export type LiveStrategyCreateManyInput = {
   versionId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -555,6 +572,7 @@ export type LiveStrategyCreateManyInput = {
 export type LiveStrategyUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -576,6 +594,7 @@ export type LiveStrategyUncheckedUpdateManyInput = {
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -607,6 +626,7 @@ export type LiveStrategyCountOrderByAggregateInput = {
   versionId?: Prisma.SortOrder
   pairId?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   allocatedCapital?: Prisma.SortOrder
   mode?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -633,6 +653,7 @@ export type LiveStrategyMaxOrderByAggregateInput = {
   versionId?: Prisma.SortOrder
   pairId?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   allocatedCapital?: Prisma.SortOrder
   mode?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -654,6 +675,7 @@ export type LiveStrategyMinOrderByAggregateInput = {
   versionId?: Prisma.SortOrder
   pairId?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   allocatedCapital?: Prisma.SortOrder
   mode?: Prisma.SortOrder
   status?: Prisma.SortOrder
@@ -881,6 +903,7 @@ export type LiveStrategyUpdateOneWithoutTradesNestedInput = {
 export type LiveStrategyCreateWithoutUserInput = {
   id?: string
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -906,6 +929,7 @@ export type LiveStrategyUncheckedCreateWithoutUserInput = {
   versionId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -957,6 +981,7 @@ export type LiveStrategyScalarWhereInput = {
   versionId?: Prisma.StringFilter<"LiveStrategy"> | string
   pairId?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   symbol?: Prisma.StringFilter<"LiveStrategy"> | string
+  exchange?: Prisma.StringFilter<"LiveStrategy"> | string
   allocatedCapital?: Prisma.FloatFilter<"LiveStrategy"> | number
   mode?: Prisma.StringFilter<"LiveStrategy"> | string
   status?: Prisma.StringFilter<"LiveStrategy"> | string
@@ -974,6 +999,7 @@ export type LiveStrategyScalarWhereInput = {
 export type LiveStrategyCreateWithoutPairInput = {
   id?: string
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -999,6 +1025,7 @@ export type LiveStrategyUncheckedCreateWithoutPairInput = {
   strategyId: string
   versionId: string
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1043,6 +1070,7 @@ export type LiveStrategyUpdateManyWithWhereWithoutPairInput = {
 export type LiveStrategyCreateWithoutStrategyInput = {
   id?: string
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1068,6 +1096,7 @@ export type LiveStrategyUncheckedCreateWithoutStrategyInput = {
   versionId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1112,6 +1141,7 @@ export type LiveStrategyUpdateManyWithWhereWithoutStrategyInput = {
 export type LiveStrategyCreateWithoutVersionInput = {
   id?: string
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1137,6 +1167,7 @@ export type LiveStrategyUncheckedCreateWithoutVersionInput = {
   strategyId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1181,6 +1212,7 @@ export type LiveStrategyUpdateManyWithWhereWithoutVersionInput = {
 export type LiveStrategyCreateWithoutOrdersInput = {
   id?: string
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1207,6 +1239,7 @@ export type LiveStrategyUncheckedCreateWithoutOrdersInput = {
   versionId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1241,6 +1274,7 @@ export type LiveStrategyUpdateToOneWithWhereWithoutOrdersInput = {
 export type LiveStrategyUpdateWithoutOrdersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1267,6 +1301,7 @@ export type LiveStrategyUncheckedUpdateWithoutOrdersInput = {
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1285,6 +1320,7 @@ export type LiveStrategyUncheckedUpdateWithoutOrdersInput = {
 export type LiveStrategyCreateWithoutTradesInput = {
   id?: string
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1311,6 +1347,7 @@ export type LiveStrategyUncheckedCreateWithoutTradesInput = {
   versionId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1345,6 +1382,7 @@ export type LiveStrategyUpdateToOneWithWhereWithoutTradesInput = {
 export type LiveStrategyUpdateWithoutTradesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1371,6 +1409,7 @@ export type LiveStrategyUncheckedUpdateWithoutTradesInput = {
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1392,6 +1431,7 @@ export type LiveStrategyCreateManyUserInput = {
   versionId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1409,6 +1449,7 @@ export type LiveStrategyCreateManyUserInput = {
 export type LiveStrategyUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1434,6 +1475,7 @@ export type LiveStrategyUncheckedUpdateWithoutUserInput = {
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1456,6 +1498,7 @@ export type LiveStrategyUncheckedUpdateManyWithoutUserInput = {
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1476,6 +1519,7 @@ export type LiveStrategyCreateManyPairInput = {
   strategyId: string
   versionId: string
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1493,6 +1537,7 @@ export type LiveStrategyCreateManyPairInput = {
 export type LiveStrategyUpdateWithoutPairInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1518,6 +1563,7 @@ export type LiveStrategyUncheckedUpdateWithoutPairInput = {
   strategyId?: Prisma.StringFieldUpdateOperationsInput | string
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1540,6 +1586,7 @@ export type LiveStrategyUncheckedUpdateManyWithoutPairInput = {
   strategyId?: Prisma.StringFieldUpdateOperationsInput | string
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1560,6 +1607,7 @@ export type LiveStrategyCreateManyStrategyInput = {
   versionId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1577,6 +1625,7 @@ export type LiveStrategyCreateManyStrategyInput = {
 export type LiveStrategyUpdateWithoutStrategyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1602,6 +1651,7 @@ export type LiveStrategyUncheckedUpdateWithoutStrategyInput = {
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1624,6 +1674,7 @@ export type LiveStrategyUncheckedUpdateManyWithoutStrategyInput = {
   versionId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1644,6 +1695,7 @@ export type LiveStrategyCreateManyVersionInput = {
   strategyId: string
   pairId?: string | null
   symbol: string
+  exchange?: string
   allocatedCapital: number
   mode?: string
   status?: string
@@ -1661,6 +1713,7 @@ export type LiveStrategyCreateManyVersionInput = {
 export type LiveStrategyUpdateWithoutVersionInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1686,6 +1739,7 @@ export type LiveStrategyUncheckedUpdateWithoutVersionInput = {
   strategyId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1708,6 +1762,7 @@ export type LiveStrategyUncheckedUpdateManyWithoutVersionInput = {
   strategyId?: Prisma.StringFieldUpdateOperationsInput | string
   pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
   mode?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1769,6 +1824,7 @@ export type LiveStrategySelect<ExtArgs extends runtime.Types.Extensions.Internal
   versionId?: boolean
   pairId?: boolean
   symbol?: boolean
+  exchange?: boolean
   allocatedCapital?: boolean
   mode?: boolean
   status?: boolean
@@ -1797,6 +1853,7 @@ export type LiveStrategySelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   versionId?: boolean
   pairId?: boolean
   symbol?: boolean
+  exchange?: boolean
   allocatedCapital?: boolean
   mode?: boolean
   status?: boolean
@@ -1822,6 +1879,7 @@ export type LiveStrategySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   versionId?: boolean
   pairId?: boolean
   symbol?: boolean
+  exchange?: boolean
   allocatedCapital?: boolean
   mode?: boolean
   status?: boolean
@@ -1847,6 +1905,7 @@ export type LiveStrategySelectScalar = {
   versionId?: boolean
   pairId?: boolean
   symbol?: boolean
+  exchange?: boolean
   allocatedCapital?: boolean
   mode?: boolean
   status?: boolean
@@ -1861,7 +1920,7 @@ export type LiveStrategySelectScalar = {
   updatedAt?: boolean
 }
 
-export type LiveStrategyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "strategyId" | "versionId" | "pairId" | "symbol" | "allocatedCapital" | "mode" | "status" | "stopPolicy" | "circuitBreakerFailures" | "lastSignalAt" | "lastError" | "stats" | "startedAt" | "stoppedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["liveStrategy"]>
+export type LiveStrategyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "strategyId" | "versionId" | "pairId" | "symbol" | "exchange" | "allocatedCapital" | "mode" | "status" | "stopPolicy" | "circuitBreakerFailures" | "lastSignalAt" | "lastError" | "stats" | "startedAt" | "stoppedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["liveStrategy"]>
 export type LiveStrategyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   strategy?: boolean | Prisma.StrategyDefaultArgs<ExtArgs>
@@ -1901,6 +1960,7 @@ export type $LiveStrategyPayload<ExtArgs extends runtime.Types.Extensions.Intern
     versionId: string
     pairId: string | null
     symbol: string
+    exchange: string
     allocatedCapital: number
     mode: string
     status: string
@@ -2348,6 +2408,7 @@ export interface LiveStrategyFieldRefs {
   readonly versionId: Prisma.FieldRef<"LiveStrategy", 'String'>
   readonly pairId: Prisma.FieldRef<"LiveStrategy", 'String'>
   readonly symbol: Prisma.FieldRef<"LiveStrategy", 'String'>
+  readonly exchange: Prisma.FieldRef<"LiveStrategy", 'String'>
   readonly allocatedCapital: Prisma.FieldRef<"LiveStrategy", 'Float'>
   readonly mode: Prisma.FieldRef<"LiveStrategy", 'String'>
   readonly status: Prisma.FieldRef<"LiveStrategy", 'String'>

@@ -197,7 +197,7 @@ export const GET = api(async (_req, ctx) => {
     );
     ({ candles, overlays, oscillators, signals } = r);
   } else {
-    const raw = await getCandles({ symbol: live.symbol, timeframe, start, end }).catch(() => []);
+    const raw = await getCandles({ symbol: live.symbol, timeframe, start, end, exchange: live.exchange }).catch(() => []);
     candles = raw.map((c) => ({ time: c.time, open: c.open, high: c.high, low: c.low, close: c.close }));
   }
 

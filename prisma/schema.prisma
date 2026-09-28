@@ -182,10 +182,11 @@ model ExchangeAccount {
   id            String   @id @default(cuid())
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  exchange      String   @default("NOBITEX") // NOBITEX | BINANCE | BYBIT (future)
+  exchange      String   @default("NOBITEX") // NOBITEX | KUCOIN | …
   label         String   @default("نوبیتکس")
   apiKeyEnc     String   // AES-256-GCM encrypted
   apiSecretEnc  String   // AES-256-GCM encrypted
+  apiPassphraseEnc String? // KuCoin needs a third credential (signed passphrase)
   apiKeyMask    String   // e.g. "abcd...wxyz" for display only
   status        String   @default("PENDING") // PENDING | CONNECTED | FAILED | DISCONNECTED
   lastCheckedAt DateTime?
@@ -202,7 +203,7 @@ model ExchangeAccount {
 
 model Pair {
   id             String   @id @default(cuid())
-  symbol         String   @unique // e.g. BTCIRT
+  symbol         String   // exchange-native, e.g. BTCIRT (nobitex) / BTC-USDT (kucoin)
   baseCurrency   String
   quoteCurrency  String
   minAmount      Float?
@@ -221,6 +222,9 @@ model Pair {
 
   backtests      Backtest[]
   liveStrategies LiveStrategy[]
+
+  @@unique([exchange, symbol])
+  @@index([symbol])
 }
 
 // ------------------------------------------------------------
@@ -442,6 +446,7 @@ model LiveStrategy {
   pairId        String?
   pair          Pair?    @relation(fields: [pairId], references: [id])
   symbol        String
+  exchange      String   @default("NOBITEX")
   allocatedCapital Float
   mode          String   @default("REAL") // REAL | PAPER (تست زنده — no real orders)
   status        String   @default("STARTING") // STARTING | RUNNING | PAUSED | DEGRADED | STOPPING | STOPPED | ERROR
@@ -534,6 +539,7 @@ model Trade {
 
 model HistoricalCandle {
   id        String   @id @default(cuid())
+  exchange  String   @default("NOBITEX")
   symbol    String
   timeframe String
   time      DateTime // candle open time
@@ -543,7 +549,7 @@ model HistoricalCandle {
   close     Float
   volume    Float
 
-  @@unique([symbol, timeframe, time])
+  @@unique([exchange, symbol, timeframe, time])
   @@index([symbol, timeframe, time])
 }
 

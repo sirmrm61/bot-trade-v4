@@ -31,6 +31,7 @@ export type ExchangeAccountMinAggregateOutputType = {
   label: string | null
   apiKeyEnc: string | null
   apiSecretEnc: string | null
+  apiPassphraseEnc: string | null
   apiKeyMask: string | null
   status: string | null
   lastCheckedAt: Date | null
@@ -46,6 +47,7 @@ export type ExchangeAccountMaxAggregateOutputType = {
   label: string | null
   apiKeyEnc: string | null
   apiSecretEnc: string | null
+  apiPassphraseEnc: string | null
   apiKeyMask: string | null
   status: string | null
   lastCheckedAt: Date | null
@@ -61,6 +63,7 @@ export type ExchangeAccountCountAggregateOutputType = {
   label: number
   apiKeyEnc: number
   apiSecretEnc: number
+  apiPassphraseEnc: number
   apiKeyMask: number
   status: number
   lastCheckedAt: number
@@ -78,6 +81,7 @@ export type ExchangeAccountMinAggregateInputType = {
   label?: true
   apiKeyEnc?: true
   apiSecretEnc?: true
+  apiPassphraseEnc?: true
   apiKeyMask?: true
   status?: true
   lastCheckedAt?: true
@@ -93,6 +97,7 @@ export type ExchangeAccountMaxAggregateInputType = {
   label?: true
   apiKeyEnc?: true
   apiSecretEnc?: true
+  apiPassphraseEnc?: true
   apiKeyMask?: true
   status?: true
   lastCheckedAt?: true
@@ -108,6 +113,7 @@ export type ExchangeAccountCountAggregateInputType = {
   label?: true
   apiKeyEnc?: true
   apiSecretEnc?: true
+  apiPassphraseEnc?: true
   apiKeyMask?: true
   status?: true
   lastCheckedAt?: true
@@ -196,6 +202,7 @@ export type ExchangeAccountGroupByOutputType = {
   label: string
   apiKeyEnc: string
   apiSecretEnc: string
+  apiPassphraseEnc: string | null
   apiKeyMask: string
   status: string
   lastCheckedAt: Date | null
@@ -232,6 +239,7 @@ export type ExchangeAccountWhereInput = {
   label?: Prisma.StringFilter<"ExchangeAccount"> | string
   apiKeyEnc?: Prisma.StringFilter<"ExchangeAccount"> | string
   apiSecretEnc?: Prisma.StringFilter<"ExchangeAccount"> | string
+  apiPassphraseEnc?: Prisma.StringNullableFilter<"ExchangeAccount"> | string | null
   apiKeyMask?: Prisma.StringFilter<"ExchangeAccount"> | string
   status?: Prisma.StringFilter<"ExchangeAccount"> | string
   lastCheckedAt?: Prisma.DateTimeNullableFilter<"ExchangeAccount"> | Date | string | null
@@ -248,6 +256,7 @@ export type ExchangeAccountOrderByWithRelationInput = {
   label?: Prisma.SortOrder
   apiKeyEnc?: Prisma.SortOrder
   apiSecretEnc?: Prisma.SortOrder
+  apiPassphraseEnc?: Prisma.SortOrderInput | Prisma.SortOrder
   apiKeyMask?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastCheckedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -268,6 +277,7 @@ export type ExchangeAccountWhereUniqueInput = Prisma.AtLeast<{
   label?: Prisma.StringFilter<"ExchangeAccount"> | string
   apiKeyEnc?: Prisma.StringFilter<"ExchangeAccount"> | string
   apiSecretEnc?: Prisma.StringFilter<"ExchangeAccount"> | string
+  apiPassphraseEnc?: Prisma.StringNullableFilter<"ExchangeAccount"> | string | null
   apiKeyMask?: Prisma.StringFilter<"ExchangeAccount"> | string
   status?: Prisma.StringFilter<"ExchangeAccount"> | string
   lastCheckedAt?: Prisma.DateTimeNullableFilter<"ExchangeAccount"> | Date | string | null
@@ -284,6 +294,7 @@ export type ExchangeAccountOrderByWithAggregationInput = {
   label?: Prisma.SortOrder
   apiKeyEnc?: Prisma.SortOrder
   apiSecretEnc?: Prisma.SortOrder
+  apiPassphraseEnc?: Prisma.SortOrderInput | Prisma.SortOrder
   apiKeyMask?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastCheckedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -305,6 +316,7 @@ export type ExchangeAccountScalarWhereWithAggregatesInput = {
   label?: Prisma.StringWithAggregatesFilter<"ExchangeAccount"> | string
   apiKeyEnc?: Prisma.StringWithAggregatesFilter<"ExchangeAccount"> | string
   apiSecretEnc?: Prisma.StringWithAggregatesFilter<"ExchangeAccount"> | string
+  apiPassphraseEnc?: Prisma.StringNullableWithAggregatesFilter<"ExchangeAccount"> | string | null
   apiKeyMask?: Prisma.StringWithAggregatesFilter<"ExchangeAccount"> | string
   status?: Prisma.StringWithAggregatesFilter<"ExchangeAccount"> | string
   lastCheckedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"ExchangeAccount"> | Date | string | null
@@ -319,6 +331,7 @@ export type ExchangeAccountCreateInput = {
   label?: string
   apiKeyEnc: string
   apiSecretEnc: string
+  apiPassphraseEnc?: string | null
   apiKeyMask: string
   status?: string
   lastCheckedAt?: Date | string | null
@@ -335,6 +348,7 @@ export type ExchangeAccountUncheckedCreateInput = {
   label?: string
   apiKeyEnc: string
   apiSecretEnc: string
+  apiPassphraseEnc?: string | null
   apiKeyMask: string
   status?: string
   lastCheckedAt?: Date | string | null
@@ -349,6 +363,7 @@ export type ExchangeAccountUpdateInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   apiKeyEnc?: Prisma.StringFieldUpdateOperationsInput | string
   apiSecretEnc?: Prisma.StringFieldUpdateOperationsInput | string
+  apiPassphraseEnc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apiKeyMask?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -365,6 +380,7 @@ export type ExchangeAccountUncheckedUpdateInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   apiKeyEnc?: Prisma.StringFieldUpdateOperationsInput | string
   apiSecretEnc?: Prisma.StringFieldUpdateOperationsInput | string
+  apiPassphraseEnc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apiKeyMask?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -380,6 +396,7 @@ export type ExchangeAccountCreateManyInput = {
   label?: string
   apiKeyEnc: string
   apiSecretEnc: string
+  apiPassphraseEnc?: string | null
   apiKeyMask: string
   status?: string
   lastCheckedAt?: Date | string | null
@@ -394,6 +411,7 @@ export type ExchangeAccountUpdateManyMutationInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   apiKeyEnc?: Prisma.StringFieldUpdateOperationsInput | string
   apiSecretEnc?: Prisma.StringFieldUpdateOperationsInput | string
+  apiPassphraseEnc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apiKeyMask?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -409,6 +427,7 @@ export type ExchangeAccountUncheckedUpdateManyInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   apiKeyEnc?: Prisma.StringFieldUpdateOperationsInput | string
   apiSecretEnc?: Prisma.StringFieldUpdateOperationsInput | string
+  apiPassphraseEnc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apiKeyMask?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -439,6 +458,7 @@ export type ExchangeAccountCountOrderByAggregateInput = {
   label?: Prisma.SortOrder
   apiKeyEnc?: Prisma.SortOrder
   apiSecretEnc?: Prisma.SortOrder
+  apiPassphraseEnc?: Prisma.SortOrder
   apiKeyMask?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastCheckedAt?: Prisma.SortOrder
@@ -454,6 +474,7 @@ export type ExchangeAccountMaxOrderByAggregateInput = {
   label?: Prisma.SortOrder
   apiKeyEnc?: Prisma.SortOrder
   apiSecretEnc?: Prisma.SortOrder
+  apiPassphraseEnc?: Prisma.SortOrder
   apiKeyMask?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastCheckedAt?: Prisma.SortOrder
@@ -469,6 +490,7 @@ export type ExchangeAccountMinOrderByAggregateInput = {
   label?: Prisma.SortOrder
   apiKeyEnc?: Prisma.SortOrder
   apiSecretEnc?: Prisma.SortOrder
+  apiPassphraseEnc?: Prisma.SortOrder
   apiKeyMask?: Prisma.SortOrder
   status?: Prisma.SortOrder
   lastCheckedAt?: Prisma.SortOrder
@@ -525,6 +547,7 @@ export type ExchangeAccountCreateWithoutUserInput = {
   label?: string
   apiKeyEnc: string
   apiSecretEnc: string
+  apiPassphraseEnc?: string | null
   apiKeyMask: string
   status?: string
   lastCheckedAt?: Date | string | null
@@ -539,6 +562,7 @@ export type ExchangeAccountUncheckedCreateWithoutUserInput = {
   label?: string
   apiKeyEnc: string
   apiSecretEnc: string
+  apiPassphraseEnc?: string | null
   apiKeyMask: string
   status?: string
   lastCheckedAt?: Date | string | null
@@ -582,6 +606,7 @@ export type ExchangeAccountScalarWhereInput = {
   label?: Prisma.StringFilter<"ExchangeAccount"> | string
   apiKeyEnc?: Prisma.StringFilter<"ExchangeAccount"> | string
   apiSecretEnc?: Prisma.StringFilter<"ExchangeAccount"> | string
+  apiPassphraseEnc?: Prisma.StringNullableFilter<"ExchangeAccount"> | string | null
   apiKeyMask?: Prisma.StringFilter<"ExchangeAccount"> | string
   status?: Prisma.StringFilter<"ExchangeAccount"> | string
   lastCheckedAt?: Prisma.DateTimeNullableFilter<"ExchangeAccount"> | Date | string | null
@@ -596,6 +621,7 @@ export type ExchangeAccountCreateManyUserInput = {
   label?: string
   apiKeyEnc: string
   apiSecretEnc: string
+  apiPassphraseEnc?: string | null
   apiKeyMask: string
   status?: string
   lastCheckedAt?: Date | string | null
@@ -610,6 +636,7 @@ export type ExchangeAccountUpdateWithoutUserInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   apiKeyEnc?: Prisma.StringFieldUpdateOperationsInput | string
   apiSecretEnc?: Prisma.StringFieldUpdateOperationsInput | string
+  apiPassphraseEnc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apiKeyMask?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -624,6 +651,7 @@ export type ExchangeAccountUncheckedUpdateWithoutUserInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   apiKeyEnc?: Prisma.StringFieldUpdateOperationsInput | string
   apiSecretEnc?: Prisma.StringFieldUpdateOperationsInput | string
+  apiPassphraseEnc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apiKeyMask?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -638,6 +666,7 @@ export type ExchangeAccountUncheckedUpdateManyWithoutUserInput = {
   label?: Prisma.StringFieldUpdateOperationsInput | string
   apiKeyEnc?: Prisma.StringFieldUpdateOperationsInput | string
   apiSecretEnc?: Prisma.StringFieldUpdateOperationsInput | string
+  apiPassphraseEnc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   apiKeyMask?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
   lastCheckedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -655,6 +684,7 @@ export type ExchangeAccountSelect<ExtArgs extends runtime.Types.Extensions.Inter
   label?: boolean
   apiKeyEnc?: boolean
   apiSecretEnc?: boolean
+  apiPassphraseEnc?: boolean
   apiKeyMask?: boolean
   status?: boolean
   lastCheckedAt?: boolean
@@ -671,6 +701,7 @@ export type ExchangeAccountSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   label?: boolean
   apiKeyEnc?: boolean
   apiSecretEnc?: boolean
+  apiPassphraseEnc?: boolean
   apiKeyMask?: boolean
   status?: boolean
   lastCheckedAt?: boolean
@@ -687,6 +718,7 @@ export type ExchangeAccountSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   label?: boolean
   apiKeyEnc?: boolean
   apiSecretEnc?: boolean
+  apiPassphraseEnc?: boolean
   apiKeyMask?: boolean
   status?: boolean
   lastCheckedAt?: boolean
@@ -703,6 +735,7 @@ export type ExchangeAccountSelectScalar = {
   label?: boolean
   apiKeyEnc?: boolean
   apiSecretEnc?: boolean
+  apiPassphraseEnc?: boolean
   apiKeyMask?: boolean
   status?: boolean
   lastCheckedAt?: boolean
@@ -711,7 +744,7 @@ export type ExchangeAccountSelectScalar = {
   updatedAt?: boolean
 }
 
-export type ExchangeAccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "exchange" | "label" | "apiKeyEnc" | "apiSecretEnc" | "apiKeyMask" | "status" | "lastCheckedAt" | "lastError" | "createdAt" | "updatedAt", ExtArgs["result"]["exchangeAccount"]>
+export type ExchangeAccountOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "exchange" | "label" | "apiKeyEnc" | "apiSecretEnc" | "apiPassphraseEnc" | "apiKeyMask" | "status" | "lastCheckedAt" | "lastError" | "createdAt" | "updatedAt", ExtArgs["result"]["exchangeAccount"]>
 export type ExchangeAccountInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -734,6 +767,7 @@ export type $ExchangeAccountPayload<ExtArgs extends runtime.Types.Extensions.Int
     label: string
     apiKeyEnc: string
     apiSecretEnc: string
+    apiPassphraseEnc: string | null
     apiKeyMask: string
     status: string
     lastCheckedAt: Date | null
@@ -1170,6 +1204,7 @@ export interface ExchangeAccountFieldRefs {
   readonly label: Prisma.FieldRef<"ExchangeAccount", 'String'>
   readonly apiKeyEnc: Prisma.FieldRef<"ExchangeAccount", 'String'>
   readonly apiSecretEnc: Prisma.FieldRef<"ExchangeAccount", 'String'>
+  readonly apiPassphraseEnc: Prisma.FieldRef<"ExchangeAccount", 'String'>
   readonly apiKeyMask: Prisma.FieldRef<"ExchangeAccount", 'String'>
   readonly status: Prisma.FieldRef<"ExchangeAccount", 'String'>
   readonly lastCheckedAt: Prisma.FieldRef<"ExchangeAccount", 'DateTime'>

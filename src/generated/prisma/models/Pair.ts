@@ -360,10 +360,11 @@ export type PairOrderByWithRelationInput = {
 
 export type PairWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  symbol?: string
+  exchange_symbol?: Prisma.PairExchangeSymbolCompoundUniqueInput
   AND?: Prisma.PairWhereInput | Prisma.PairWhereInput[]
   OR?: Prisma.PairWhereInput[]
   NOT?: Prisma.PairWhereInput | Prisma.PairWhereInput[]
+  symbol?: Prisma.StringFilter<"Pair"> | string
   baseCurrency?: Prisma.StringFilter<"Pair"> | string
   quoteCurrency?: Prisma.StringFilter<"Pair"> | string
   minAmount?: Prisma.FloatNullableFilter<"Pair"> | number | null
@@ -381,7 +382,7 @@ export type PairWhereUniqueInput = Prisma.AtLeast<{
   updatedAt?: Prisma.DateTimeFilter<"Pair"> | Date | string
   backtests?: Prisma.BacktestListRelationFilter
   liveStrategies?: Prisma.LiveStrategyListRelationFilter
-}, "id" | "symbol">
+}, "id" | "exchange_symbol">
 
 export type PairOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -577,6 +578,11 @@ export type PairUncheckedUpdateManyInput = {
   syncedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type PairExchangeSymbolCompoundUniqueInput = {
+  exchange: string
+  symbol: string
 }
 
 export type PairCountOrderByAggregateInput = {

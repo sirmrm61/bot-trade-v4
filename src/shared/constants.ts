@@ -21,6 +21,14 @@ export const STRATEGY_KIND_LABELS: Record<StrategyKind, string> = {
   DZS_HMM: "سمبلیک رژیم بازار (DZS-HMM)",
 };
 
+/** Exchanges with an adapter in modules/exchanges — drives strategy exchange picker. */
+export const EXCHANGE_IDS = ["NOBITEX", "KUCOIN"] as const;
+export type ExchangeId = (typeof EXCHANGE_IDS)[number];
+export const EXCHANGE_LABELS: Record<ExchangeId, string> = {
+  NOBITEX: "نوبیتکس",
+  KUCOIN: "کوکوین",
+};
+
 export const STRATEGY_STATUS = {
   DRAFT: "DRAFT",
   BACKTESTING: "BACKTESTING",

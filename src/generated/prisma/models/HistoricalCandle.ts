@@ -44,6 +44,7 @@ export type HistoricalCandleSumAggregateOutputType = {
 
 export type HistoricalCandleMinAggregateOutputType = {
   id: string | null
+  exchange: string | null
   symbol: string | null
   timeframe: string | null
   time: Date | null
@@ -56,6 +57,7 @@ export type HistoricalCandleMinAggregateOutputType = {
 
 export type HistoricalCandleMaxAggregateOutputType = {
   id: string | null
+  exchange: string | null
   symbol: string | null
   timeframe: string | null
   time: Date | null
@@ -68,6 +70,7 @@ export type HistoricalCandleMaxAggregateOutputType = {
 
 export type HistoricalCandleCountAggregateOutputType = {
   id: number
+  exchange: number
   symbol: number
   timeframe: number
   time: number
@@ -98,6 +101,7 @@ export type HistoricalCandleSumAggregateInputType = {
 
 export type HistoricalCandleMinAggregateInputType = {
   id?: true
+  exchange?: true
   symbol?: true
   timeframe?: true
   time?: true
@@ -110,6 +114,7 @@ export type HistoricalCandleMinAggregateInputType = {
 
 export type HistoricalCandleMaxAggregateInputType = {
   id?: true
+  exchange?: true
   symbol?: true
   timeframe?: true
   time?: true
@@ -122,6 +127,7 @@ export type HistoricalCandleMaxAggregateInputType = {
 
 export type HistoricalCandleCountAggregateInputType = {
   id?: true
+  exchange?: true
   symbol?: true
   timeframe?: true
   time?: true
@@ -221,6 +227,7 @@ export type HistoricalCandleGroupByArgs<ExtArgs extends runtime.Types.Extensions
 
 export type HistoricalCandleGroupByOutputType = {
   id: string
+  exchange: string
   symbol: string
   timeframe: string
   time: Date
@@ -256,6 +263,7 @@ export type HistoricalCandleWhereInput = {
   OR?: Prisma.HistoricalCandleWhereInput[]
   NOT?: Prisma.HistoricalCandleWhereInput | Prisma.HistoricalCandleWhereInput[]
   id?: Prisma.StringFilter<"HistoricalCandle"> | string
+  exchange?: Prisma.StringFilter<"HistoricalCandle"> | string
   symbol?: Prisma.StringFilter<"HistoricalCandle"> | string
   timeframe?: Prisma.StringFilter<"HistoricalCandle"> | string
   time?: Prisma.DateTimeFilter<"HistoricalCandle"> | Date | string
@@ -268,6 +276,7 @@ export type HistoricalCandleWhereInput = {
 
 export type HistoricalCandleOrderByWithRelationInput = {
   id?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
   timeframe?: Prisma.SortOrder
   time?: Prisma.SortOrder
@@ -280,10 +289,11 @@ export type HistoricalCandleOrderByWithRelationInput = {
 
 export type HistoricalCandleWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  symbol_timeframe_time?: Prisma.HistoricalCandleSymbolTimeframeTimeCompoundUniqueInput
+  exchange_symbol_timeframe_time?: Prisma.HistoricalCandleExchangeSymbolTimeframeTimeCompoundUniqueInput
   AND?: Prisma.HistoricalCandleWhereInput | Prisma.HistoricalCandleWhereInput[]
   OR?: Prisma.HistoricalCandleWhereInput[]
   NOT?: Prisma.HistoricalCandleWhereInput | Prisma.HistoricalCandleWhereInput[]
+  exchange?: Prisma.StringFilter<"HistoricalCandle"> | string
   symbol?: Prisma.StringFilter<"HistoricalCandle"> | string
   timeframe?: Prisma.StringFilter<"HistoricalCandle"> | string
   time?: Prisma.DateTimeFilter<"HistoricalCandle"> | Date | string
@@ -292,10 +302,11 @@ export type HistoricalCandleWhereUniqueInput = Prisma.AtLeast<{
   low?: Prisma.FloatFilter<"HistoricalCandle"> | number
   close?: Prisma.FloatFilter<"HistoricalCandle"> | number
   volume?: Prisma.FloatFilter<"HistoricalCandle"> | number
-}, "id" | "symbol_timeframe_time">
+}, "id" | "exchange_symbol_timeframe_time">
 
 export type HistoricalCandleOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
   timeframe?: Prisma.SortOrder
   time?: Prisma.SortOrder
@@ -316,6 +327,7 @@ export type HistoricalCandleScalarWhereWithAggregatesInput = {
   OR?: Prisma.HistoricalCandleScalarWhereWithAggregatesInput[]
   NOT?: Prisma.HistoricalCandleScalarWhereWithAggregatesInput | Prisma.HistoricalCandleScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"HistoricalCandle"> | string
+  exchange?: Prisma.StringWithAggregatesFilter<"HistoricalCandle"> | string
   symbol?: Prisma.StringWithAggregatesFilter<"HistoricalCandle"> | string
   timeframe?: Prisma.StringWithAggregatesFilter<"HistoricalCandle"> | string
   time?: Prisma.DateTimeWithAggregatesFilter<"HistoricalCandle"> | Date | string
@@ -328,6 +340,7 @@ export type HistoricalCandleScalarWhereWithAggregatesInput = {
 
 export type HistoricalCandleCreateInput = {
   id?: string
+  exchange?: string
   symbol: string
   timeframe: string
   time: Date | string
@@ -340,6 +353,7 @@ export type HistoricalCandleCreateInput = {
 
 export type HistoricalCandleUncheckedCreateInput = {
   id?: string
+  exchange?: string
   symbol: string
   timeframe: string
   time: Date | string
@@ -352,6 +366,7 @@ export type HistoricalCandleUncheckedCreateInput = {
 
 export type HistoricalCandleUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   timeframe?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -364,6 +379,7 @@ export type HistoricalCandleUpdateInput = {
 
 export type HistoricalCandleUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   timeframe?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -376,6 +392,7 @@ export type HistoricalCandleUncheckedUpdateInput = {
 
 export type HistoricalCandleCreateManyInput = {
   id?: string
+  exchange?: string
   symbol: string
   timeframe: string
   time: Date | string
@@ -388,6 +405,7 @@ export type HistoricalCandleCreateManyInput = {
 
 export type HistoricalCandleUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   timeframe?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -400,6 +418,7 @@ export type HistoricalCandleUpdateManyMutationInput = {
 
 export type HistoricalCandleUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
   symbol?: Prisma.StringFieldUpdateOperationsInput | string
   timeframe?: Prisma.StringFieldUpdateOperationsInput | string
   time?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -410,7 +429,8 @@ export type HistoricalCandleUncheckedUpdateManyInput = {
   volume?: Prisma.FloatFieldUpdateOperationsInput | number
 }
 
-export type HistoricalCandleSymbolTimeframeTimeCompoundUniqueInput = {
+export type HistoricalCandleExchangeSymbolTimeframeTimeCompoundUniqueInput = {
+  exchange: string
   symbol: string
   timeframe: string
   time: Date | string
@@ -418,6 +438,7 @@ export type HistoricalCandleSymbolTimeframeTimeCompoundUniqueInput = {
 
 export type HistoricalCandleCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
   timeframe?: Prisma.SortOrder
   time?: Prisma.SortOrder
@@ -438,6 +459,7 @@ export type HistoricalCandleAvgOrderByAggregateInput = {
 
 export type HistoricalCandleMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
   timeframe?: Prisma.SortOrder
   time?: Prisma.SortOrder
@@ -450,6 +472,7 @@ export type HistoricalCandleMaxOrderByAggregateInput = {
 
 export type HistoricalCandleMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
+  exchange?: Prisma.SortOrder
   symbol?: Prisma.SortOrder
   timeframe?: Prisma.SortOrder
   time?: Prisma.SortOrder
@@ -472,6 +495,7 @@ export type HistoricalCandleSumOrderByAggregateInput = {
 
 export type HistoricalCandleSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  exchange?: boolean
   symbol?: boolean
   timeframe?: boolean
   time?: boolean
@@ -484,6 +508,7 @@ export type HistoricalCandleSelect<ExtArgs extends runtime.Types.Extensions.Inte
 
 export type HistoricalCandleSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  exchange?: boolean
   symbol?: boolean
   timeframe?: boolean
   time?: boolean
@@ -496,6 +521,7 @@ export type HistoricalCandleSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
 
 export type HistoricalCandleSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
+  exchange?: boolean
   symbol?: boolean
   timeframe?: boolean
   time?: boolean
@@ -508,6 +534,7 @@ export type HistoricalCandleSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
 
 export type HistoricalCandleSelectScalar = {
   id?: boolean
+  exchange?: boolean
   symbol?: boolean
   timeframe?: boolean
   time?: boolean
@@ -518,13 +545,14 @@ export type HistoricalCandleSelectScalar = {
   volume?: boolean
 }
 
-export type HistoricalCandleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "symbol" | "timeframe" | "time" | "open" | "high" | "low" | "close" | "volume", ExtArgs["result"]["historicalCandle"]>
+export type HistoricalCandleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "exchange" | "symbol" | "timeframe" | "time" | "open" | "high" | "low" | "close" | "volume", ExtArgs["result"]["historicalCandle"]>
 
 export type $HistoricalCandlePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "HistoricalCandle"
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
+    exchange: string
     symbol: string
     timeframe: string
     time: Date
@@ -957,6 +985,7 @@ export interface Prisma__HistoricalCandleClient<T, Null = never, ExtArgs extends
  */
 export interface HistoricalCandleFieldRefs {
   readonly id: Prisma.FieldRef<"HistoricalCandle", 'String'>
+  readonly exchange: Prisma.FieldRef<"HistoricalCandle", 'String'>
   readonly symbol: Prisma.FieldRef<"HistoricalCandle", 'String'>
   readonly timeframe: Prisma.FieldRef<"HistoricalCandle", 'String'>
   readonly time: Prisma.FieldRef<"HistoricalCandle", 'DateTime'>

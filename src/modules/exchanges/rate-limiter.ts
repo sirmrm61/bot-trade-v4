@@ -25,6 +25,7 @@ const RULES: Record<string, LimitRule> = {
   "endpoint:/market/orders/update-status": { limit: 90, windowMs: 60_000 },
   "endpoint:/market/orders/batch-add": { limit: 300, windowMs: 10 * 60_000 },
   "exchange:nobitex": { limit: 240, windowMs: 60_000 }, // ~4 rps sustained
+  "exchange:kucoin": { limit: 180, windowMs: 60_000 },  // ~3 rps sustained
   user: { limit: 60, windowMs: 60_000 },
   worker: { limit: 120, windowMs: 60_000 },
   default: { limit: 60, windowMs: 60_000 },

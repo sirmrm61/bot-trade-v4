@@ -1,14 +1,9 @@
 import { api } from "@/infrastructure/http/api";
-import { testConnection, getBalances } from "@/modules/exchanges/account-service";
-import { AppError } from "@/shared/errors";
+import { testConnection } from "@/modules/exchanges/account-service";
+import { z } from "zod";
 
-export const POST = api(async (_req, ctx) => {
-  const { ok, balances } = await testConnection(ctx.userId);
-  if (!ok) throw new AppError("EXCHANGE_CONNECTION_FAILED", 502);
+export const POST = api(async (req, ctx) => {
+  const body = z.object({ exchange: z.string().default("NOBITEX") }).parse(await req.json().catch(() => ({})));
+  const { ok, balances } = await testConnection(ctx.userId, body.exchange.toUpperCase());
   return { ok, balances };
-});
-
-export const GET = api(async (_req, ctx) => {
-  const balances = await getBalances(ctx.userId);
-  return { balances };
 });

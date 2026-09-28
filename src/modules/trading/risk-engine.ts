@@ -19,6 +19,8 @@ export interface RiskCheckInput {
   maxPositionPct: number;
   /** FUTURES → notional is the posted margin; shorts skip the base-balance check */
   market?: "SPOT" | "FUTURES";
+  /** exchange the symbol belongs to — defaults to NOBITEX */
+  exchange?: string;
 }
 
 export interface RiskDecision {
@@ -45,6 +47,11 @@ export async function riskCheck(input: RiskCheckInput, adapter: ExchangeAdapter)
   const maxPosition = input.allocatedCapital * (input.maxPositionPct / 100);
   if (notional > maxPosition && entry) violations.push("MAX_POSITION_EXCEEDED");
 
+  // 5-6. Pair min/max — looked up first so base-currency checks use the real base
+  const basePair = await prisma.pair.findUnique({
+    where: { exchange_symbol: { exchange: (input.exchange ?? "NOBITEX").toUpperCase(), symbol: input.symbol } },
+  });
+
   // 4. Available balance on the exchange
   try {
     const balances = await adapter.getBalance();
@@ -53,7 +60,7 @@ export async function riskCheck(input: RiskCheckInput, adapter: ExchangeAdapter)
       const quote = balances.find((b) => b.currency === "IRT" || b.currency === "USDT");
       if (quote && quote.free < notional) violations.push("INSUFFICIENT_EXCHANGE_BALANCE");
     } else {
-      const base = input.symbol.replace(/IRT|USDT$/, "");
+      const base = (basePair?.baseCurrency ?? input.symbol).replace(/IRT|USDT$|-.*$/, "");
       const b = balances.find((x) => x.currency === base);
       if (b && b.free < input.amount) violations.push("INSUFFICIENT_EXCHANGE_BALANCE");
     }
@@ -61,8 +68,7 @@ export async function riskCheck(input: RiskCheckInput, adapter: ExchangeAdapter)
     violations.push("BALANCE_CHECK_FAILED");
   }
 
-  // 5-6. Pair min/max
-  const pair = await prisma.pair.findUnique({ where: { symbol: input.symbol } });
+  const pair = basePair;
   if (pair) {
     if (pair.minAmount && input.amount < pair.minAmount) violations.push("BELOW_PAIR_MIN");
     if (pair.maxAmount && input.amount > pair.maxAmount) violations.push("ABOVE_PAIR_MAX");

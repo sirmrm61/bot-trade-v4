@@ -1,4 +1,5 @@
 import { getCandles } from "@/modules/pairs/service";
+import { readExchange } from "@/modules/trading/futures";
 import { sma, ema, rsi, macd, bollinger, vwap, atr, stochastic, obv, computeIndicator, evaluateCondition, defaultScore, NON_SCORING, type Condition } from "@/modules/indicators/engine";
 import { obiProxySeries } from "@/modules/trading/orderbook-imbalance";
 import { isSymbolicKind, symbolicChartSeries, symbolicSignalFn } from "@/modules/trading/symbolic-engines";
@@ -36,7 +37,7 @@ export async function loadBacktestChart(
   const empty: ChartResult = { candles: [], overlays: [], oscillators: [], signals: [] };
   let candles;
   try {
-    candles = await getCandles({ symbol: bt.symbol, timeframe: bt.timeframe, start: bt.startDate, end: bt.endDate });
+    candles = await getCandles({ symbol: bt.symbol, timeframe: bt.timeframe, start: bt.startDate, end: bt.endDate, exchange: readExchange(config ?? "") });
   } catch {
     return empty;
   }

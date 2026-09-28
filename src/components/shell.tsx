@@ -14,7 +14,7 @@ const NAV = [
   { href: "/dashboard", label: "داشبورد", icon: Gauge },
   { href: "/wallet", label: "کیف پول", icon: Wallet },
   { href: "/plans", label: "پلن‌ها", icon: ChartLineUp },
-  { href: "/account/nobitex", label: "اتصال نوبیتکس", icon: Key },
+  { href: "/account", label: "صرافی‌ها", icon: Key },
   { href: "/strategies", label: "استراتژی‌ها", icon: Robot },
   { href: "/backtests", label: "بک‌تست‌ها", icon: Flask },
   { href: "/live", label: "معاملات زنده", icon: Lightning },

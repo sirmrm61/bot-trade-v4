@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field, HelpTip, Input, Select } from "@/components/client";
 import { toast } from "@/components/toast";
-import { TIMEFRAMES, STRATEGY_KINDS, STRATEGY_KIND_LABELS, type StrategyKind } from "@/shared/constants";
+import { TIMEFRAMES, STRATEGY_KINDS, STRATEGY_KIND_LABELS, EXCHANGE_IDS, EXCHANGE_LABELS, type StrategyKind } from "@/shared/constants";
 import { INDICATORS, INDICATOR_MAP } from "@/modules/indicators/registry";
 
 /**
@@ -65,7 +65,7 @@ export function StrategyBuilder({
   endpoint: string;
   method?: string;
   submitLabel?: string;
-  pairs: { symbol: string }[];
+  pairs: { symbol: string; exchange?: string }[];
   initial?: {
     name: string; description?: string | null; symbol: string; timeframe: string;
     kind?: StrategyKind;
@@ -74,6 +74,7 @@ export function StrategyBuilder({
     trailingStopPct?: number | null; maxPositionPct: number; orderType: string;
     indicators: { name: string; parameters: string; weight: number; enabled: boolean; buyCondition: string; sellCondition: string }[];
     market?: "SPOT" | "FUTURES"; leverage?: number;
+    exchange?: string;
     smart?: boolean;
   };
 }) {
@@ -81,7 +82,10 @@ export function StrategyBuilder({
   const formRef = useRef<HTMLFormElement>(null);
   const [loading, setLoading] = useState(false);
   const [kind, setKind] = useState<StrategyKind>(initial?.kind ?? "SIGNAL");
+  const [exchange, setExchange] = useState((initial?.exchange ?? "NOBITEX").toUpperCase());
   const [market, setMarket] = useState<"SPOT" | "FUTURES">(initial?.market ?? "SPOT");
+  const exPairs = pairs.filter((p) => !p.exchange || p.exchange === exchange);
+  const firstSymbol = exPairs[0]?.symbol ?? pairs[0]?.symbol ?? "";
   const [risk, setRisk] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM");
   const [suggesting, setSuggesting] = useState(false);
   const [suggestNotes, setSuggestNotes] = useState<string[]>([]);
@@ -121,7 +125,7 @@ export function StrategyBuilder({
       const res = await fetch("/api/strategies/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ symbol, timeframe, kind, risk }),
+        body: JSON.stringify({ symbol, timeframe, kind, risk, exchange }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -214,6 +218,7 @@ export function StrategyBuilder({
       trailingStopPct: num("trailingStopPct", 0) || null,
       maxPositionPct: num("maxPositionPct", 100),
       orderType: kind === "MARKET_MAKING" ? "LIMIT" : String(fd.get("orderType") ?? "MARKET"),
+      exchange,
       market: kind === "MARKET_MAKING" ? "SPOT" : market,
       ...(kind !== "MARKET_MAKING" && market === "FUTURES" ? { leverage: num("leverage", 3) } : {}),
       indicators,
@@ -319,9 +324,13 @@ export function StrategyBuilder({
           <Select value={kind} onChange={(e) => setKind(e.target.value as StrategyKind)}
             options={STRATEGY_KINDS.map((k) => ({ value: k, label: STRATEGY_KIND_LABELS[k] }))} />
         </Field>
+        <Field label="صرافی">
+          <Select value={exchange} onChange={(e) => setExchange(e.target.value)}
+            options={EXCHANGE_IDS.map((x) => ({ value: x, label: EXCHANGE_LABELS[x] }))} />
+        </Field>
         <Field label="نماد (جفت‌ارز)">
-          <Select name="symbol" defaultValue={initial?.symbol ?? "BTCIRT"}
-            options={pairs.length ? pairs.map((p) => ({ value: p.symbol, label: p.symbol })) : [{ value: "BTCIRT", label: "BTCIRT" }]} />
+          <Select name="symbol" key={exchange} defaultValue={initial?.exchange === exchange ? initial?.symbol : undefined}
+            options={exPairs.length ? exPairs.map((p) => ({ value: p.symbol, label: p.symbol })) : [{ value: firstSymbol || "BTCIRT", label: firstSymbol || "BTCIRT" }]} />
         </Field>
         <Field label="توضیحات">
           <Input name="description" defaultValue={initial?.description ?? ""} />

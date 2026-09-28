@@ -8,7 +8,7 @@ import { getCandles } from "@/modules/pairs/service";
 import { runBacktest, type BacktestResult } from "./engine";
 import { runMmBacktest } from "./mm-engine";
 import { readMmConfig } from "@/modules/trading/market-making";
-import { readMarketConfig } from "@/modules/trading/futures";
+import { readMarketConfig, readExchange } from "@/modules/trading/futures";
 import { obiBacktestSignal } from "@/modules/trading/orderbook-imbalance";
 import { isSymbolicKind, symbolicSignalFn } from "@/modules/trading/symbolic-engines";
 import { smartEnabled, smartSignalFn } from "@/modules/trading/smart";
@@ -133,6 +133,7 @@ export async function executeBacktest(backtestId: string): Promise<BacktestResul
       timeframe: bt.timeframe,
       start: bt.startDate,
       end: bt.endDate,
+      exchange: readExchange(bt.version.config),
     });
     if (candles.length < 100) throw new AppError("INSUFFICIENT_DATA", 422, { candles: candles.length });
 
@@ -211,6 +212,7 @@ export async function runAndPersist(
       timeframe: bt.timeframe,
       start: bt.startDate,
       end: bt.endDate,
+      exchange: bt.version ? readExchange(bt.version.config) : "NOBITEX",
     }));
   if (data.length < 100) throw new AppError("INSUFFICIENT_DATA", 422, { candles: data.length });
   const v = bt.version!;
@@ -220,7 +222,9 @@ export async function runAndPersist(
   let result: BacktestResult;
   if (kind === "MARKET_MAKING") {
     // simulated MM — quotes rest between candles, fills on range touches
-    const pair = await prisma.pair.findUnique({ where: { symbol: bt.symbol } });
+    const pair = await prisma.pair.findUnique({
+      where: { exchange_symbol: { exchange: marketCfg.exchange, symbol: bt.symbol } },
+    });
     const quoteCur = /IRT$/.test(bt.symbol) ? "IRT" : "USDT";
     result = runMmBacktest({
       candles: data,

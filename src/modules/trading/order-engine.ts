@@ -62,10 +62,13 @@ export async function placeOrder(input: PlaceOrderInput, idemKey?: string) {
 
 /** Worker: submits a PENDING order to the exchange. */
 export async function submitOrder(orderId: string) {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { liveStrategy: { select: { exchange: true } } },
+  });
   if (!order || order.status !== "PENDING") return order;
 
-  const adapter = await adapterForUser(order.userId, "NOBITEX", "order-engine");
+  const adapter = await adapterForUser(order.userId, order.liveStrategy?.exchange ?? "NOBITEX", "order-engine");
   const meta = order.metadata
     ? parseJson<{ market?: string; leverage?: number; positionSide?: "LONG" | "SHORT" }>(order.metadata, {})
     : {};
@@ -134,11 +137,14 @@ function mapExchangeStatus(s: string): string {
  * bounded by LIMIT_MAX_MODIFY / LIMIT_MAX_WAIT_MIN settings.
  */
 export async function monitorOrder(orderId: string): Promise<{ done: boolean; order: unknown }> {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { liveStrategy: { select: { exchange: true } } },
+  });
   if (!order) return { done: true, order: null };
   if (!["SUBMITTED", "PARTIALLY_FILLED"].includes(order.status)) return { done: true, order };
 
-  const adapter = await adapterForUser(order.userId, "NOBITEX", "order-monitor");
+  const adapter = await adapterForUser(order.userId, order.liveStrategy?.exchange ?? "NOBITEX", "order-monitor");
   const exOrder = await adapter.getOrder(order.exchangeOrderId!, order.symbol).catch(() => null);
 
   if (!exOrder) {
@@ -203,10 +209,13 @@ export async function monitorOrder(orderId: string): Promise<{ done: boolean; or
 }
 
 export async function cancelOrder(orderId: string, userId: string) {
-  const order = await prisma.order.findFirst({ where: { id: orderId, userId } });
+  const order = await prisma.order.findFirst({
+    where: { id: orderId, userId },
+    include: { liveStrategy: { select: { exchange: true } } },
+  });
   if (!order) throw new AppError("NOT_FOUND", 404);
   if (order.exchangeOrderId) {
-    const adapter = await adapterForUser(userId, "NOBITEX");
+    const adapter = await adapterForUser(userId, order.liveStrategy?.exchange ?? "NOBITEX");
     await adapter.cancelOrder(order.exchangeOrderId, order.symbol).catch(() => {});
   }
   return prisma.order.update({

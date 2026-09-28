@@ -116,12 +116,13 @@ export async function runSmartSelect(opts: {
   initialBalance: number;
   feePct?: number;
   slippagePct?: number;
+  exchange?: string;
 }) {
   if (!TIMEFRAMES.includes(opts.timeframe as never)) throw new AppError("INVALID_TIMEFRAME", 400);
   const symbol = opts.symbol.toUpperCase();
 
   const candles = await getCandles({
-    symbol, timeframe: opts.timeframe, start: opts.startDate, end: opts.endDate,
+    symbol, timeframe: opts.timeframe, start: opts.startDate, end: opts.endDate, exchange: opts.exchange,
   });
   if (candles.length < 100) throw new AppError("INSUFFICIENT_DATA", 422, { candles: candles.length });
   const n = candles.length;

@@ -140,6 +140,7 @@ type LiveLike = {
   id: string;
   userId: string;
   symbol: string;
+  exchange: string;
   allocatedCapital: number;
   status: string;
   stats: string;
@@ -161,7 +162,9 @@ export async function marketMakingTick(live: LiveLike, adapter: ExchangeAdapter)
     return;
   }
 
-  const pair = await prisma.pair.findUnique({ where: { symbol: live.symbol } });
+  const pair = await prisma.pair.findUnique({
+    where: { exchange_symbol: { exchange: live.exchange || "NOBITEX", symbol: live.symbol } },
+  });
   const cfg = readMmConfig(live.version.config);
 
   // sync internal open orders with the exchange (fills / external cancels)
@@ -341,7 +344,9 @@ export async function paperMarketMakingTick(live: LiveLike, adapter: ExchangeAda
     }
     state.quotes = open;
 
-    const pair = await prisma.pair.findUnique({ where: { symbol: live.symbol } });
+    const pair = await prisma.pair.findUnique({
+      where: { exchange_symbol: { exchange: live.exchange || "NOBITEX", symbol: live.symbol } },
+    });
     const quoteCur = /IRT$/.test(live.symbol) ? "IRT" : "USDT";
     const cfg = readMmConfig(live.version.config);
     const desired = planQuotes({
