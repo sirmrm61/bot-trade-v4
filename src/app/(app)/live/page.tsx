@@ -3,6 +3,7 @@ import { currentSession } from "@/modules/auth/session";
 import { Card, PageHeader, StatusBadge, EmptyState, StatCard, Badge } from "@/components/ui";
 import { jalaliDateTime } from "@/shared/jalali";
 import { toman, faNumber, parseJson } from "@/shared/utils";
+import { EXCHANGE_LABELS } from "@/shared/constants";
 import { PauseButton, StopButtons } from "./actions";
 import { LiveChart } from "@/components/live-chart";
 
@@ -57,6 +58,7 @@ export default async function LivePage() {
                       <StatusBadge status={l.status} />
                       {l.mode === "PAPER" && <Badge tone="warning">تست</Badge>}
                       <span className="text-xs text-muted ltr">{l.symbol} · {l.version.timeframe} · v{l.version.versionNumber}</span>
+                      <Badge tone="info">{EXCHANGE_LABELS[(l.exchange ?? "NOBITEX") as keyof typeof EXCHANGE_LABELS] ?? l.exchange}</Badge>
                     </div>
                     <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted">
                       <span>سرمایه: <b className="text-foreground">{toman(l.allocatedCapital)}</b></span>
