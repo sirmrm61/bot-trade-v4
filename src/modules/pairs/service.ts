@@ -12,12 +12,11 @@ export async function syncPairs(exchange = "NOBITEX") {
   exchange = exchange.toUpperCase();
   const adapter = publicAdapter(exchange);
   const markets = await adapter.getMarkets();
-  const seen = new Set<string>();
+  const syncStart = new Date();
   let upserted = 0;
 
   for (const m of markets) {
     if (!m.symbol || !m.baseCurrency || !m.quoteCurrency) continue;
-    seen.add(m.symbol);
     await prisma.pair.upsert({
       where: { exchange_symbol: { exchange, symbol: m.symbol } },
       create: {
@@ -52,9 +51,10 @@ export async function syncPairs(exchange = "NOBITEX") {
     upserted++;
   }
 
-  // deactivate markets that disappeared from the exchange
+  // deactivate markets that disappeared — anything not touched by this sync run
+  // (a notIn list of ~1k symbols overflows sqlite's parameter limit)
   const deactivated = await prisma.pair.updateMany({
-    where: { exchange, symbol: { notIn: [...seen] }, active: true },
+    where: { exchange, syncedAt: { lt: syncStart }, active: true },
     data: { active: false, tradingStatus: "DELISTED" },
   });
 
