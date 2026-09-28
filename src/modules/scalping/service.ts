@@ -133,10 +133,11 @@ async function buildSnapshot(
   };
   if (!enrich || r.isClosed) return snap;
 
-  const [book, candles, funding] = await Promise.all([
+  const [book, candles, funding, oi] = await Promise.all([
     src.getOrderBook(r.symbol).catch(() => null),
     src.getCandles(r.symbol, cfg.candleTimeframe, cfg.candleLookback).catch(() => null),
-    src.getFundingRate ? src.getFundingRate(r.symbol).catch(() => null) : Promise.resolve(null),
+    src.getFundingInfo ? src.getFundingInfo(r.symbol).catch(() => null) : Promise.resolve(null),
+    src.getOpenInterest ? src.getOpenInterest(r.symbol).catch(() => null) : Promise.resolve(null),
   ]);
   if (book) {
     snap.book = book;
@@ -146,7 +147,8 @@ async function buildSnapshot(
     snap.candles = candles;
     snap.candleAgeMs = now - candles[candles.length - 1].time;
   }
-  if (funding !== undefined && funding !== null) snap.fundingRate = funding;
+  if (funding) snap.funding = funding;
+  if (oi !== null) snap.openInterestUsd = oi;
   return snap;
 }
 

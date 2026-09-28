@@ -15,6 +15,9 @@ export interface ScalpWeights {
   cost: number;
 }
 
+/** TAKER = market in/out · MAKER = limit in/out · MIXED = limit in, market out */
+export type CostMode = "TAKER" | "MAKER" | "MIXED";
+
 export interface ScalpConfig {
   weights: ScalpWeights;
 
@@ -29,8 +32,17 @@ export interface ScalpConfig {
   volMinPct: number;         // volatility below → 0 (movement can't cover costs)
   volRefPct: number;         // realized per-candle vol → 100 (linear cap)
   volDayRefPct: number;      // 24h range fallback for pairs without candles → 100
-  feePctPerSide: number;     // estimated taker fee per side (user-adjustable)
+  feePctPerSide: number;     // estimated TAKER fee per side (user-adjustable)
+  makerFeePct: number;       // estimated MAKER fee per side
+  costMode: CostMode;        // which order style feeds the round-trip estimate
+  leverage: number;          // hypothetical leverage — notional = orderSizeUsd × leverage
   costRefBadPct: number;     // round-trip cost ≥ → 0 (linear)
+
+  // --- perpetual-futures checks (applied when the venue exposes the data) ---
+  markGapWarnPct: number;    // |mark − last| % above → slippage/liquidation warning
+  fundingWarnPct: number;    // |funding rate| % per settlement above → warning
+  minOpenInterestUsd: number; // OI below → exclude (0 = off; only when venue reports OI)
+  minVolToOiRatio: number;   // volume24h/OI below → exclude (0 = off)
 
   // --- hard thresholds → pair is EXCLUDED ---
   hardMinVolumeUsd: number;
@@ -65,7 +77,15 @@ export const SCALPING_DEFAULTS: ScalpConfig = {
   // Nobitex spot taker fee is volume-tiered up to ~0.35%; default to the
   // conservative upper bound — users on lower tiers can lower it in settings.
   feePctPerSide: 0.35,
+  makerFeePct: 0.30,
+  costMode: "TAKER",
+  leverage: 1,
   costRefBadPct: 2.0,
+
+  markGapWarnPct: 0.5,
+  fundingWarnPct: 0.1,
+  minOpenInterestUsd: 0,
+  minVolToOiRatio: 0,
 
   hardMinVolumeUsd: 10_000,
   maxSpreadPct: 1.5,
@@ -113,7 +133,13 @@ export function mergeScalpConfig(overrides: Record<string, unknown> = {}): Scalp
   num("volRefPct", 0.01, 50);
   num("volDayRefPct", 0.1, 100);
   num("feePctPerSide", 0, 5);
+  num("makerFeePct", 0, 5);
+  num("leverage", 1, 25);
   num("costRefBadPct", 0.1, 50);
+  num("markGapWarnPct", 0.05, 20);
+  num("fundingWarnPct", 0.001, 10);
+  num("minOpenInterestUsd", 0, 1e12);
+  num("minVolToOiRatio", 0, 100);
   num("hardMinVolumeUsd", 0, 1e12);
   num("maxSpreadPct", 0.05, 20);
   num("maxCostPct", 0.1, 50);
@@ -127,6 +153,9 @@ export function mergeScalpConfig(overrides: Record<string, unknown> = {}): Scalp
 
   const tf = String(overrides.candleTimeframe ?? "");
   if (["1m", "3m", "5m", "15m", "30m", "1h"].includes(tf)) cfg.candleTimeframe = tf;
+
+  const mode = String(overrides.costMode ?? "").toUpperCase();
+  if (mode === "TAKER" || mode === "MAKER" || mode === "MIXED") cfg.costMode = mode;
 
   const w = (overrides.weights ?? {}) as Record<string, unknown>;
   for (const k of CRITERION_KEYS) {

@@ -58,7 +58,14 @@ export function scorePair(
       : ctx.irtPerUsd ? usd * ctx.irtPerUsd : null;
 
   const s = snap.stats;
-  const metrics: PairMetrics = { feePctPerSide: cfg.feePctPerSide };
+  const metrics: PairMetrics = {
+    feePctPerSide: cfg.feePctPerSide,
+    makerFeePct: cfg.makerFeePct,
+    costMode: cfg.costMode,
+    leverage: cfg.leverage,
+    marginUsd: ctx.orderSizeUsd,
+    notionalUsd: ctx.orderSizeUsd * cfg.leverage,
+  };
 
   // ---------- extract raw metrics ----------
   let bid = s?.bid ?? 0;
@@ -89,9 +96,42 @@ export function scorePair(
   }
   metrics.dayRangePct = s && mid !== null ? dayRangePct(s.high24h, s.low24h, mid) : null;
 
+  // mark vs last gap — stop-slippage / unexpected-liquidation risk gauge
+  if (s?.markPrice && s.markPrice > 0 && s.last > 0) {
+    metrics.markPrice = s.markPrice;
+    metrics.markLastGapPct = (Math.abs(s.markPrice - s.last) / s.last) * 100;
+    if (metrics.markLastGapPct > cfg.markGapWarnPct) {
+      issues.push(`فاصله مارک/لست غیرعادی (${faNumber(metrics.markLastGapPct, true)}٪) — ریسک لغزش حد ضرر و لیکوییدیشن`);
+    }
+  }
+
+  // perpetual funding — only when the venue reports it
+  if (snap.funding !== undefined && snap.funding !== null) {
+    metrics.fundingRate = snap.funding.rate;
+    metrics.fundingNextRate = snap.funding.nextRate ?? null;
+    metrics.fundingCountdownMs =
+      snap.funding.nextSettlementTs ? Math.max(0, snap.funding.nextSettlementTs - ctx.now) : null;
+    if (Math.abs(snap.funding.rate) > cfg.fundingWarnPct) {
+      issues.push(`فاندینگ‌ریت غیرعادی (${faNumber(snap.funding.rate, true)}٪) — هزینه نگه‌داری پوزیشن بالاست`);
+    }
+  } else if (snap.marketType === "PERPETUAL") {
+    issues.push("فاندینگ‌ریت در این صرافی در دسترس نیست");
+  }
+
+  // open interest — only when the venue reports it
+  metrics.openInterestUsd = snap.openInterestUsd ?? null;
+  if (metrics.openInterestUsd !== null && metrics.openInterestUsd > 0 &&
+      metrics.volumeUsd24h !== null && metrics.volumeUsd24h !== undefined) {
+    metrics.volToOi = metrics.volumeUsd24h / metrics.openInterestUsd;
+  }
+  if (snap.marketType === "PERPETUAL" && metrics.openInterestUsd === null) {
+    issues.push("سود باز (OI) در این صرافی در دسترس نیست");
+  }
+
+  const slip: { buy: number | null; sell: number | null } = { buy: null, sell: null };
   if (bookUsable && mid !== null) {
     metrics.depthUsd = toUsd(bookDepthQuote(snap.book!, mid, cfg.depthBandPct));
-    const notional = fromUsd(ctx.orderSizeUsd);
+    const notional = fromUsd(metrics.notionalUsd!);
     if (notional !== null) {
       const wb = walkBook(snap.book!, "buy", notional, mid);
       const ws = walkBook(snap.book!, "sell", notional, mid);
@@ -106,23 +146,46 @@ export function scorePair(
       };
       const lb = legSlip(wb);
       const ls = legSlip(ws);
+      slip.buy = lb.slip;
+      slip.sell = ls.slip;
       metrics.slippageBuyPct = lb.slip;
       metrics.slippageSellPct = ls.slip;
       const legs = [lb.slip, ls.slip].filter((v): v is number => v !== null);
       metrics.slippagePct = legs.length ? legs.reduce((a, b) => a + b, 0) / legs.length : null;
       if (lb.starved || ls.starved) {
-        reasons.push("عمق دفتر سفارش برای اندازه سفارش انتخاب‌شده کافی نیست");
+        reasons.push("عمق دفتر سفارش برای اندازه پوزیشن فرضی کافی نیست");
       } else if (!wb.fullyFilled || !ws.fullyFilled) {
         issues.push("بخشی از سفارش فرضی در دفتر پر نمی‌شود — لغزش واقعی بیشتر از برآورد است");
       }
     } else {
       issues.push("بدون نرخ تبدیل، لغزش برای اندازه دلاری قابل محاسبه نیست");
     }
-    metrics.roundTripCostPct =
-      metrics.slippageBuyPct !== null && metrics.slippageBuyPct !== undefined &&
-      metrics.slippageSellPct !== null && metrics.slippageSellPct !== undefined
-        ? metrics.slippageBuyPct + metrics.slippageSellPct + 2 * cfg.feePctPerSide
-        : null;
+  }
+
+  // round-trip cost depends on order style — maker orders rest at best bid/ask
+  // (no crossing slippage) but risk non-fill; taker pays slippage + taker fee.
+  const takerLegs = [slip.buy, slip.sell];
+  const hasSlips = takerLegs.every((v): v is number => v !== null);
+  if (cfg.costMode === "MAKER") {
+    metrics.roundTripCostPct = 2 * cfg.makerFeePct;
+  } else if (cfg.costMode === "MIXED") {
+    metrics.roundTripCostPct = hasSlips
+      ? metrics.slippagePct! + cfg.makerFeePct + cfg.feePctPerSide
+      : null;
+  } else {
+    metrics.roundTripCostPct = hasSlips
+      ? slip.buy! + slip.sell! + 2 * cfg.feePctPerSide
+      : null;
+  }
+
+  // break-even: the price move (%) needed to earn back the round-trip cost,
+  // and the same cost expressed against margin (cost × leverage)
+  if (metrics.roundTripCostPct !== null && metrics.roundTripCostPct !== undefined) {
+    metrics.breakEvenMovePct = metrics.roundTripCostPct;
+    metrics.breakEvenMarginPct = metrics.roundTripCostPct * cfg.leverage;
+    if (metrics.breakEvenMarginPct >= 100) {
+      issues.push("هزینه رفت‌وبرگشت با این اهرم از کل مارجین بیشتر است");
+    }
   }
 
   const tfMillis = tfMs(cfg.candleTimeframe);
@@ -157,6 +220,14 @@ export function scorePair(
   }
   if (metrics.roundTripCostPct !== null && metrics.roundTripCostPct !== undefined && metrics.roundTripCostPct > cfg.maxCostPct) {
     reasons.push(`هزینه رفت‌وبرگشت بالاتر از حد مجاز (${faNumber(cfg.maxCostPct, true)}٪)`);
+  }
+  if (cfg.minOpenInterestUsd > 0 && metrics.openInterestUsd !== null &&
+      metrics.openInterestUsd !== undefined && metrics.openInterestUsd < cfg.minOpenInterestUsd) {
+    reasons.push(`سود باز زیر حداقل (${faNumber(cfg.minOpenInterestUsd)}$)`);
+  }
+  if (cfg.minVolToOiRatio > 0 && metrics.volToOi !== null &&
+      metrics.volToOi !== undefined && metrics.volToOi < cfg.minVolToOiRatio) {
+    reasons.push(`نسبت حجم به سود باز زیر حداقل (${faNumber(cfg.minVolToOiRatio, true)})`);
   }
 
   // ---------- criteria ----------
@@ -199,7 +270,12 @@ export function scorePair(
       raw: metrics.roundTripCostPct ?? null,
       unit: PCT,
       score: metrics.roundTripCostPct != null ? inverseScore(metrics.roundTripCostPct, cfg.costRefBadPct) : null,
-      note: `شامل ${faNumber(cfg.feePctPerSide, true)}٪ کارمزد هر طرف`,
+      note:
+        cfg.costMode === "MAKER"
+          ? `میکر: ${faNumber(cfg.makerFeePct, true)}٪ کارمزد هر طرف (بدون لغزش — فرض پرشدن لیمیت)`
+          : cfg.costMode === "MIXED"
+            ? `ترکیبی: ورود میکر ${faNumber(cfg.makerFeePct, true)}٪ + خروج تیکر ${faNumber(cfg.feePctPerSide, true)}٪`
+            : `تیکر: ${faNumber(cfg.feePctPerSide, true)}٪ کارمزد هر طرف + لغزش`,
     },
   };
 

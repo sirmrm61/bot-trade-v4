@@ -214,6 +214,69 @@ describe("scorePair", () => {
     expect(r.score).toBe(Math.round(liq.score!));
   });
 
+  it("leverage scales the notional and the break-even margin cost", () => {
+    const c = mergeScalpConfig({ leverage: 5 });
+    const r = scorePair(snap({ book: book(), bookTs: CTX.now, candles: candles() }), c, CTX);
+    expect(r.metrics.notionalUsd).toBe(500);
+    expect(r.metrics.breakEvenMovePct).toBeCloseTo(r.metrics.roundTripCostPct!, 6);
+    expect(r.metrics.breakEvenMarginPct).toBeCloseTo(r.metrics.roundTripCostPct! * 5, 6);
+  });
+
+  it("MAKER mode drops slippage from the round-trip cost", () => {
+    const c = mergeScalpConfig({ costMode: "MAKER", makerFeePct: 0.2 });
+    const r = scorePair(snap({ book: book(), bookTs: CTX.now, candles: candles() }), c, CTX);
+    expect(r.metrics.roundTripCostPct).toBeCloseTo(0.4, 6); // 2 × 0.2
+    expect(r.criteria.find((x) => x.key === "cost")!.note).toContain("میکر");
+  });
+
+  it("MIXED mode charges one slippage leg + maker + taker fee", () => {
+    const c = mergeScalpConfig({ costMode: "MIXED", makerFeePct: 0.2, feePctPerSide: 0.35 });
+    const r = scorePair(snap({ book: book(), bookTs: CTX.now, candles: candles() }), c, CTX);
+    expect(r.metrics.roundTripCostPct).toBeCloseTo(
+      r.metrics.slippagePct! + 0.2 + 0.35, 6);
+  });
+
+  it("warns on abnormal mark/last gap", () => {
+    const s = snap({ book: book(), bookTs: CTX.now, candles: candles() });
+    s.stats!.markPrice = 103; // 3% above last=100
+    const r = scorePair(s, cfg, CTX);
+    expect(r.metrics.markLastGapPct).toBeCloseTo(3, 1);
+    expect(r.dataQuality.issues.join()).toContain("مارک/لست");
+  });
+
+  it("excludes on low open interest only when the venue reports it", () => {
+    const c = mergeScalpConfig({ minOpenInterestUsd: 1_000_000 });
+    const withOi = scorePair(
+      snap({ book: book(), bookTs: CTX.now, candles: candles(), openInterestUsd: 100 }), c, CTX);
+    expect(withOi.status).toBe("EXCLUDED");
+    expect(withOi.reasons.join()).toContain("سود باز");
+    // same pair, venue without OI → not excluded for it
+    const noOi = scorePair(
+      snap({ book: book(), bookTs: CTX.now, candles: candles(), openInterestUsd: null }), c, CTX);
+    expect(noOi.reasons.join()).not.toContain("سود باز");
+  });
+
+  it("warns on abnormal funding rate and reports countdown", () => {
+    const s = snap({
+      book: book(), bookTs: CTX.now, candles: candles(),
+      marketType: "PERPETUAL",
+      funding: { rate: 0.5, nextRate: 0.4, nextSettlementTs: CTX.now + 3_600_000 },
+      openInterestUsd: 5_000_000,
+    });
+    const r = scorePair(s, cfg, CTX);
+    expect(r.metrics.fundingRate).toBe(0.5);
+    expect(r.metrics.fundingCountdownMs).toBe(3_600_000);
+    expect(r.dataQuality.issues.join()).toContain("فاندینگ");
+  });
+
+  it("flags missing funding/OI honestly on perpetuals", () => {
+    const r = scorePair(
+      snap({ book: book(), bookTs: CTX.now, candles: candles(), marketType: "PERPETUAL", funding: null, openInterestUsd: null }),
+      cfg, CTX);
+    expect(r.dataQuality.issues.join()).toContain("فاندینگ");
+    expect(r.dataQuality.issues.join()).toContain("سود باز");
+  });
+
   it("mergeScalpConfig clamps garbage input", () => {
     const c = mergeScalpConfig({ orderSizeUsd: -5, bookLimit: 9999, candleTimeframe: "7d", weights: { liquidity: 500 } });
     expect(c.orderSizeUsd).toBe(1);

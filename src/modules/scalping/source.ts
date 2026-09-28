@@ -28,6 +28,7 @@ export class NobitexDataSource implements MarketDataSource {
         low24h: num(s.dayLow),
         change24hPct: num(s.dayChange),
         volumeQuote24h: num(s.volumeDst),
+        markPrice: num(s.mark) || undefined,
         isClosed: Boolean(s.isClosed) || !m.active,
         ts,
       });
@@ -44,7 +45,12 @@ export class NobitexDataSource implements MarketDataSource {
   }
 
   /** Nobitex margin is borrow-based, not perpetual — no funding rate exists. */
-  async getFundingRate(): Promise<number | null> {
+  async getFundingInfo() {
+    return null;
+  }
+
+  /** No public open-interest endpoint on Nobitex. */
+  async getOpenInterest() {
     return null;
   }
 }

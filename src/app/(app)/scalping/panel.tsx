@@ -16,6 +16,9 @@ interface Filters {
   base: string;
   minVolumeUsd: string;
   orderSizeUsd: string;
+  leverage: string;
+  costMode: string;
+  makerFeePct: string;
   candleTimeframe: string;
   feePct: string;
   showExcluded: boolean;
@@ -27,6 +30,9 @@ const DEFAULT_FILTERS: Filters = {
   base: "",
   minVolumeUsd: "",
   orderSizeUsd: String(SCALPING_DEFAULTS.orderSizeUsd),
+  leverage: String(SCALPING_DEFAULTS.leverage),
+  costMode: SCALPING_DEFAULTS.costMode,
+  makerFeePct: String(SCALPING_DEFAULTS.makerFeePct),
   candleTimeframe: SCALPING_DEFAULTS.candleTimeframe,
   feePct: String(SCALPING_DEFAULTS.feePctPerSide),
   showExcluded: true,
@@ -51,6 +57,9 @@ export function ScalpPanel() {
       if (f.base.trim()) p.set("base", f.base.trim());
       if (num(f.minVolumeUsd)) p.set("minVolumeUsd", f.minVolumeUsd);
       if (num(f.orderSizeUsd)) p.set("orderSizeUsd", f.orderSizeUsd);
+      if (num(f.leverage)) p.set("leverage", f.leverage);
+      p.set("costMode", f.costMode);
+      if (num(f.makerFeePct)) p.set("makerFeePct", f.makerFeePct);
       if (f.candleTimeframe) p.set("candleTimeframe", f.candleTimeframe);
       if (num(f.feePct)) p.set("feePct", f.feePct);
       for (const k of CRITERION_KEYS) if (num(w[k])) p.set(`w_${k}`, w[k]);
@@ -111,9 +120,25 @@ export function ScalpPanel() {
             <input className={inputCls} inputMode="numeric" value={filters.minVolumeUsd}
               onChange={(e) => setFilters({ ...filters, minVolumeUsd: e.target.value })} />
           </Field>
-          <Field label="اندازه سفارش فرضی ($)">
+          <Field label="مارجین فرضی ($)">
             <input className={inputCls} inputMode="numeric" value={filters.orderSizeUsd}
               onChange={(e) => setFilters({ ...filters, orderSizeUsd: e.target.value })} />
+          </Field>
+          <Field label="اهرم">
+            <input className={inputCls} inputMode="decimal" value={filters.leverage}
+              onChange={(e) => setFilters({ ...filters, leverage: e.target.value })} />
+          </Field>
+          <Field label="سبک ورود">
+            <select className={inputCls} value={filters.costMode}
+              onChange={(e) => setFilters({ ...filters, costMode: e.target.value })}>
+              <option value="TAKER">تیکر (مارکت)</option>
+              <option value="MAKER">میکر (لیمیت)</option>
+              <option value="MIXED">ترکیبی</option>
+            </select>
+          </Field>
+          <Field label="کارمزد میکر (٪)">
+            <input className={inputCls} inputMode="decimal" value={filters.makerFeePct}
+              onChange={(e) => setFilters({ ...filters, makerFeePct: e.target.value })} />
           </Field>
           <Field label="بازه تحلیل">
             <select className={inputCls} value={filters.candleTimeframe}
@@ -121,7 +146,7 @@ export function ScalpPanel() {
               {TF_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </Field>
-          <Field label="کارمزد هر طرف (٪)">
+          <Field label="کارمزد تیکر (٪)">
             <input className={inputCls} inputMode="decimal" value={filters.feePct}
               onChange={(e) => setFilters({ ...filters, feePct: e.target.value })} />
           </Field>
@@ -161,7 +186,10 @@ export function ScalpPanel() {
               می‌شود (مثلاً اسپرد صفر = ۱۰۰، اسپرد ۱٪ یا بیشتر = ۰). امتیاز کل = میانگین وزنی معیارهایی که
               داده‌ی معتبر و تازه دارند؛ وزن معیارهای فاقد داده بازتوزیع می‌شود و ردیف به‌عنوان «داده ناقص»
               علامت می‌خورد. جفت‌هایی که آستانه‌های حداقلی را نقض کنند (حجم ناچیز، اسپرد یا هزینه بیش از حد)
-              حذف می‌شوند. هزینه رفت‌وبرگشت = لغزش خرید + لغزش فروش + دو برابر کارمزد.
+              حذف می‌شوند. هزینه رفت‌وبرگشت بسته به سبک ورود: تیکر = لغزش خرید + فروش + دو برابر کارمزد تیکر؛
+              میکر = دو برابر کارمزد میکر (بدون لغزش، با ریسک پر نشدن)؛ ترکیبی = ورود میکر + خروج تیکر.
+              ارزش پوزیشن = مارجین × اهرم و «حداقل حرکت سودآور» همان هزینه رفت‌وبرگشت به درصد قیمت است
+              (روی مارجین با ضرب در اهرم محاسبه می‌شود).
             </p>
           </div>
         )}
@@ -293,9 +321,46 @@ function PairDetail({ p }: { p: PairRank }) {
             </div>
           ))}
         </div>
-        <div className="mt-3 text-xs text-muted">
-          آخرین به‌روزرسانی داده: {jalaliDateTime(p.updatedAt)}
-          {" · "}فاندینگ‌ریت: {p.marketType === "PERPETUAL" ? "—" : "ناموجود (بازار اسپات)"}
+        <div className="mt-3 space-y-1 text-xs text-muted">
+          <div>آخرین به‌روزرسانی داده: {jalaliDateTime(p.updatedAt)}</div>
+          <div>
+            ارزش پوزیشن فرضی: ${faNumber(Math.round(m.notionalUsd ?? 0))}
+            {(m.leverage ?? 1) > 1 && <> (مارجین ${faNumber(Math.round(m.marginUsd ?? 0))} × اهرم {faNumber(m.leverage)})</>}
+          </div>
+          {m.breakEvenMovePct != null && (
+            <div>
+              حداقل حرکت سودآور: {faPercent(m.breakEvenMovePct)}
+              {(m.leverage ?? 1) > 1 && m.breakEvenMarginPct != null && (
+                <> — معادل {faPercent(m.breakEvenMarginPct)} از مارجین</>
+              )}
+            </div>
+          )}
+          {m.markLastGapPct != null && (
+            <div>
+              فاصله مارک/لست: {faPercent(m.markLastGapPct)}
+            </div>
+          )}
+          <div>
+            فاندینگ‌ریت:{" "}
+            {m.fundingRate != null ? (
+              <>
+                {faPercent(m.fundingRate)}
+                {m.fundingNextRate != null && <> · پیش‌بینی بعدی: {faPercent(m.fundingNextRate)}</>}
+                {m.fundingCountdownMs != null && <> · تسویه در {formatCountdown(m.fundingCountdownMs)}</>}
+              </>
+            ) : (
+              <>ناموجود در این صرافی</>
+            )}
+          </div>
+          <div>
+            سود باز (OI):{" "}
+            {m.openInterestUsd != null ? (
+              <>${faNumber(Math.round(m.openInterestUsd))}
+                {m.volToOi != null && <> · نسبت حجم/OI: {faNumber(m.volToOi, true)}</>}</>
+            ) : (
+              <>ناموجود در این صرافی</>
+            )}
+          </div>
           {m.volatilityEstimated && <div>* نوسان بر اساس بازه ۲۴ساعته برآورد شده (کندل در دسترس نبود)</div>}
         </div>
       </div>
@@ -342,4 +407,11 @@ const inputCls =
 
 function num(s: string) {
   return s.trim() !== "" && Number.isFinite(Number(s));
+}
+
+function formatCountdown(ms: number): string {
+  const totalMin = Math.floor(ms / 60_000);
+  const h = Math.floor(totalMin / 60);
+  const min = totalMin % 60;
+  return h > 0 ? `${faNumber(h)}س ${faNumber(min)}د` : `${faNumber(min)} دقیقه`;
 }
