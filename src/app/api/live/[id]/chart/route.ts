@@ -113,7 +113,7 @@ function buildWatch(
       const liq = price ? liquidationPrice(price, "LONG", marketCfg.leverage) : null;
       lines.push({
         tone: "info",
-        text: `بازار فیوچرز — لورج ${marketCfg.leverage}× · شورت روی سیگنال فروش · لیکوییدیشن ≈ ${liq ? faNumber(liq) : "—"} (لانگ از قیمت فعلی)`,
+        text: `بازار پرپچوال — لورج ${marketCfg.leverage}× · شورت روی سیگنال فروش · لیکوییدیشن ≈ ${liq ? faNumber(liq) : "—"} (لانگ از قیمت فعلی)`,
       });
     }
     lines.push({

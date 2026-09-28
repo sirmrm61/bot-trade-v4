@@ -549,7 +549,7 @@ export function StrategyBuilder({
               <Input name="longPatterns" defaultValue="EEC,EED" dir="ltr" />
             </Field>
             <Field label="الگوهای فروش" hint="توکن‌های ۳تایی — مثل AAC,AAB"
-              help="الگوهای توکن برای خروج/فروش — پیش‌فرض AAC,AAB یعنی دو صعود شدید بعد تضعیف. در بازار فیوچرز این سیگنال‌ها پوزیشن شورت باز می‌کنند.">
+              help="الگوهای توکن برای خروج/فروش — پیش‌فرض AAC,AAB یعنی دو صعود شدید بعد تضعیف. در بازار پرپچوال این سیگنال‌ها پوزیشن شورت باز می‌کنند.">
               <Input name="shortPatterns" defaultValue="AAC,AAB" dir="ltr" />
             </Field>
             <Field label="پنجره آمار الگو" hint="تعداد کندل‌های گذشته برای محاسبه احتمال"
@@ -722,9 +722,9 @@ export function StrategyBuilder({
                 options={[{ value: "MARKET", label: "بازار (Market)" }, { value: "LIMIT", label: "محدود (Limit)" }]} />
             </Field>
             <Field label="بازار"
-              help="اسپات: فقط خرید (لانگ) با موجودی واقعی. فیوچرز: معاملات تعهدی نوبیتکس — امکان شورت (سود از ریزش) و ضریب اهرمی. در فیوچرز رسیدن قیمت به سطح لیکوییدیشن کل مارجین را می‌سوزاند.">
+              help="اسپات: فقط خرید (لانگ) با موجودی واقعی. پرپچوال: معاملات تعهدی نوبیتکس — امکان شورت (سود از ریزش) و ضریب اهرمی. در پرپچوال رسیدن قیمت به سطح لیکوییدیشن کل مارجین را می‌سوزاند.">
               <Select value={market} onChange={(e) => setMarket(e.target.value as "SPOT" | "FUTURES")}
-                options={[{ value: "SPOT", label: "اسپات" }, { value: "FUTURES", label: "فیوچرز (تعهدی)" }]} />
+                options={[{ value: "SPOT", label: "اسپات" }, { value: "FUTURES", label: "پرپچوال" }]} />
             </Field>
             {market === "FUTURES" && (
             <Field label="لورج (اهرم)"
