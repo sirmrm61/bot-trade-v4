@@ -205,6 +205,9 @@ export class KucoinAdapter implements ExchangeAdapter {
   }
 
   async getCandles(symbol: string, timeframe: string, since?: number, limit = 500, until?: number): Promise<Candle[]> {
+    // spot markets are always dashed (BTC-USDT); futures contracts never are
+    // (ZECUSDTM) — route them to the futures kline endpoint or spot returns 400100
+    if (!symbol.includes("-")) return this.getFuturesCandles(symbol, timeframe, since, limit, until);
     const type = TIMEFRAME_TO_TYPE[timeframe] ?? "1hour";
     const params: Record<string, string> = { type, symbol: symbol.toUpperCase() };
     if (since) params.startAt = String(Math.floor(since / 1000));
@@ -331,13 +334,13 @@ export class KucoinAdapter implements ExchangeAdapter {
   }
 
   /** Futures klines (public) — rows [ts_ms, open, high, low, close, volume]. */
-  async getFuturesCandles(symbol: string, timeframe: string, since?: number, limit = 200): Promise<Candle[]> {
+  async getFuturesCandles(symbol: string, timeframe: string, since?: number, limit = 200, until?: number): Promise<Candle[]> {
     const gran = FUTURES_GRANULARITY_MIN[timeframe] ?? 60;
     const params: Record<string, string> = {
       granularity: String(gran),
       symbol: symbol.toUpperCase(),
       from: String(since ?? Date.now() - limit * gran * 60_000),
-      to: String(Date.now()),
+      to: String(until ?? Date.now()),
     };
     const data = await this.request<{ data?: (number | string)[][] }>(
       "GET", "/api/v1/kline/query", { futures: true, params });
@@ -347,6 +350,7 @@ export class KucoinAdapter implements ExchangeAdapter {
         open: Number(r[1]), high: Number(r[2]), low: Number(r[3]),
         close: Number(r[4]), volume: Number(r[5]),
       }))
+      .filter((c) => (!since || c.time >= since) && (!until || c.time <= until))
       .sort((a, b) => a.time - b.time)
       .slice(-limit);
   }

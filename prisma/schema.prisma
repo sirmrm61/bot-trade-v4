@@ -462,6 +462,7 @@ model LiveStrategy {
 
   orders Order[]
   trades Trade[]
+  signalLogs SignalLog[]
 
   @@index([userId])
   @@index([status])
@@ -551,6 +552,34 @@ model HistoricalCandle {
 
   @@unique([exchange, symbol, timeframe, time])
   @@index([symbol, timeframe, time])
+}
+
+// ------------------------------------------------------------
+// Signal Log — feature snapshots at decision time (ML dataset)
+// ------------------------------------------------------------
+
+model SignalLog {
+  id             String   @id @default(cuid())
+  liveStrategyId String?
+  liveStrategy   LiveStrategy? @relation(fields: [liveStrategyId], references: [id], onDelete: SetNull)
+  userId         String
+  exchange       String
+  symbol         String
+  kind           String   // strategy kind that evaluated the signal
+  signal         String   // raw engine output: BUY | SELL
+  score          Float?
+  side           String?  // LONG | SHORT after market-type resolution
+  decision       String   // ENTERED | VETO_SMART | SKIP_SPOT_SHORT | SKIP_OPEN_POSITION | SKIP_OPEN_ORDER
+  features       String   // JSON — indicator breakdown / symbolic x+context / obi snapshot
+  context        String?  // symbolic pattern / regime / channel label
+  tradeId        String?
+  outcomePnlPct  Float?   // backfilled when the resulting trade closes
+  outcomeReason  String?  // its exitReason
+  createdAt      DateTime @default(now())
+
+  @@index([liveStrategyId, createdAt])
+  @@index([symbol, kind, decision])
+  @@index([tradeId])
 }
 
 // ------------------------------------------------------------

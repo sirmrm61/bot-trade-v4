@@ -118,6 +118,11 @@ export type Trade = Prisma.TradeModel
  */
 export type HistoricalCandle = Prisma.HistoricalCandleModel
 /**
+ * Model SignalLog
+ * 
+ */
+export type SignalLog = Prisma.SignalLogModel
+/**
  * Model Referral
  * 
  */

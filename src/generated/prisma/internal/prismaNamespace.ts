@@ -417,6 +417,7 @@ export const ModelName = {
   Order: 'Order',
   Trade: 'Trade',
   HistoricalCandle: 'HistoricalCandle',
+  SignalLog: 'SignalLog',
   Referral: 'Referral',
   Notification: 'Notification',
   ActivityLog: 'ActivityLog',
@@ -438,7 +439,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "jobRecord"
+    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "jobRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1922,6 +1923,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    SignalLog: {
+      payload: Prisma.$SignalLogPayload<ExtArgs>
+      fields: Prisma.SignalLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SignalLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SignalLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload>
+        }
+        findFirst: {
+          args: Prisma.SignalLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SignalLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload>
+        }
+        findMany: {
+          args: Prisma.SignalLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload>[]
+        }
+        create: {
+          args: Prisma.SignalLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload>
+        }
+        createMany: {
+          args: Prisma.SignalLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SignalLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload>[]
+        }
+        delete: {
+          args: Prisma.SignalLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload>
+        }
+        update: {
+          args: Prisma.SignalLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.SignalLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SignalLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SignalLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.SignalLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SignalLogPayload>
+        }
+        aggregate: {
+          args: Prisma.SignalLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSignalLog>
+        }
+        groupBy: {
+          args: Prisma.SignalLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SignalLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SignalLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SignalLogCountAggregateOutputType> | number
+        }
+      }
+    }
     Referral: {
       payload: Prisma.$ReferralPayload<ExtArgs>
       fields: Prisma.ReferralFieldRefs
@@ -2820,6 +2895,28 @@ export const HistoricalCandleScalarFieldEnum = {
 export type HistoricalCandleScalarFieldEnum = (typeof HistoricalCandleScalarFieldEnum)[keyof typeof HistoricalCandleScalarFieldEnum]
 
 
+export const SignalLogScalarFieldEnum = {
+  id: 'id',
+  liveStrategyId: 'liveStrategyId',
+  userId: 'userId',
+  exchange: 'exchange',
+  symbol: 'symbol',
+  kind: 'kind',
+  signal: 'signal',
+  score: 'score',
+  side: 'side',
+  decision: 'decision',
+  features: 'features',
+  context: 'context',
+  tradeId: 'tradeId',
+  outcomePnlPct: 'outcomePnlPct',
+  outcomeReason: 'outcomeReason',
+  createdAt: 'createdAt'
+} as const
+
+export type SignalLogScalarFieldEnum = (typeof SignalLogScalarFieldEnum)[keyof typeof SignalLogScalarFieldEnum]
+
+
 export const ReferralScalarFieldEnum = {
   id: 'id',
   referrerId: 'referrerId',
@@ -3139,6 +3236,7 @@ export type GlobalOmitConfig = {
   order?: Prisma.OrderOmit
   trade?: Prisma.TradeOmit
   historicalCandle?: Prisma.HistoricalCandleOmit
+  signalLog?: Prisma.SignalLogOmit
   referral?: Prisma.ReferralOmit
   notification?: Prisma.NotificationOmit
   activityLog?: Prisma.ActivityLogOmit

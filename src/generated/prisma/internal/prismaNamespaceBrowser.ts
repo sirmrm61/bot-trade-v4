@@ -71,6 +71,7 @@ export const ModelName = {
   Order: 'Order',
   Trade: 'Trade',
   HistoricalCandle: 'HistoricalCandle',
+  SignalLog: 'SignalLog',
   Referral: 'Referral',
   Notification: 'Notification',
   ActivityLog: 'ActivityLog',
@@ -508,6 +509,28 @@ export const HistoricalCandleScalarFieldEnum = {
 } as const
 
 export type HistoricalCandleScalarFieldEnum = (typeof HistoricalCandleScalarFieldEnum)[keyof typeof HistoricalCandleScalarFieldEnum]
+
+
+export const SignalLogScalarFieldEnum = {
+  id: 'id',
+  liveStrategyId: 'liveStrategyId',
+  userId: 'userId',
+  exchange: 'exchange',
+  symbol: 'symbol',
+  kind: 'kind',
+  signal: 'signal',
+  score: 'score',
+  side: 'side',
+  decision: 'decision',
+  features: 'features',
+  context: 'context',
+  tradeId: 'tradeId',
+  outcomePnlPct: 'outcomePnlPct',
+  outcomeReason: 'outcomeReason',
+  createdAt: 'createdAt'
+} as const
+
+export type SignalLogScalarFieldEnum = (typeof SignalLogScalarFieldEnum)[keyof typeof SignalLogScalarFieldEnum]
 
 
 export const ReferralScalarFieldEnum = {

@@ -9,6 +9,7 @@ import {
   type SmartDetail,
 } from "./smart";
 import { marketMakingTick, paperMarketMakingTick, cancelStrategyOrders } from "./market-making";
+import { logSignal, shouldLogEpisode, attachTradeOutcome, type SignalDecision } from "./signal-log";
 import { readMarketConfig, readExchange, liquidationPrice, futuresPnl } from "./futures";
 import { atr } from "@/modules/indicators/engine";
 import { atrStopsFromIndicators } from "@/modules/backtest/service";
@@ -160,7 +161,7 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     if (live.version.kind === "MARKET_MAKING") {
       if (paper) await paperMarketMakingTick(live, adapter);
       else await marketMakingTick(live, adapter);
-      if (live.circuitBreakerFailures > 0) {
+      if (live.circuitBreakerFailures > 0 || live.status === "STARTING") {
         await prisma.liveStrategy.update({
           where: { id: live.id }, data: { circuitBreakerFailures: 0, status: "RUNNING" },
         });
@@ -207,12 +208,16 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
 
     // ---- signal evaluation
     let signal: "BUY" | "SELL" | "HOLD";
+    let rawSignal: "BUY" | "SELL" | "HOLD" = "HOLD"; // engine output before smart veto — what gets logged
     let score: number;
     let obiEma: number | undefined;
     let symLabel = "";
     let symNote: string | undefined;
     let smartPending: SmartDetail | null = null; // features captured at entry — consumed on close
     let smartSizeMult = 1;
+    let smartVeto: string | undefined;
+    let sigFeats: Record<string, unknown> = {};
+    let sigContext: string | undefined;
     let candles: Awaited<ReturnType<typeof getCandles>> | null = null;
 
     if (live.version.kind === "ORDER_BOOK_IMBALANCE") {
@@ -223,6 +228,8 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       score = obiEma;
       signal = score >= live.version.buyThreshold ? "BUY"
         : score <= live.version.sellThreshold ? "SELL" : "HOLD";
+      rawSignal = signal;
+      sigFeats = { obiEma, depthLevels: obiCfg.depthLevels, obiEmaPeriod: obiCfg.emaPeriod };
     } else if (isSymbolicKind(live.version.kind)) {
       // symbolic engines are candle-native — fetch enough history for their windows
       const need = Math.max(200, symbolicWarmup(live.version.kind, live.version.config));
@@ -241,15 +248,22 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         : live.version.config;
       const r = symbolicLast(live.version.kind, candles, effConfig);
       signal = r.signal;
+      rawSignal = r.signal;
       score = r.score;
       symLabel = r.label;
+      sigContext = r.detail?.context;
+      sigFeats = { x: r.detail?.x, bucket: r.detail?.bucket, label: r.label };
       if (learn && r.detail && signal !== "HOLD") {
         const d = decideEntry(live.version.kind, learn, r.detail);
         smartPending = r.detail;
         smartSizeMult = d.sizeMult;
+        sigFeats.smartScore = d.smartScore;
+        sigFeats.sizeMult = d.sizeMult;
+        sigFeats.learnN = learn.n;
         if (!d.allow) {
           signal = "HOLD";
           smartPending = null;
+          smartVeto = d.veto ?? "smart";
           symNote = d.veto === "score" ? "وتوی هوشمند (امتیاز پایین)" : `وتوی هوشمند (${r.label})`;
         } else if (learn.n > 0) {
           symNote = `هوشمند: امتیاز ${(d.smartScore * 100) | 0}٪ · سایز ×${d.sizeMult.toFixed(2)}`;
@@ -277,9 +291,11 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         indicators, candles, live.version.buyThreshold, live.version.sellThreshold,
       );
       signal = r.signal;
+      rawSignal = r.signal;
       score = r.score;
+      sigFeats = { breakdown: r.breakdown };
     }
-    const prevStats = parseJson<Record<string, unknown> & { obiHist?: { t: number; v: number }[] }>(live.stats, {});
+    const prevStats = parseJson<Record<string, unknown> & { obiHist?: { t: number; v: number }[]; sigEp?: string | null }>(live.stats, {});
     const obiHist = obiEma !== undefined
       ? [...(prevStats.obiHist ?? []), { t: Date.now(), v: obiEma }].slice(-200)
       : prevStats.obiHist;
@@ -287,8 +303,10 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       where: { id: live.id },
       data: {
         lastSignalAt: new Date(),
+        ...(live.status === "STARTING" ? { status: "RUNNING" } : {}),
         stats: JSON.stringify({
           ...prevStats, // learn + pendingCtx survive every tick
+          sigEp: rawSignal === "HOLD" ? null : rawSignal, // signal-episode dedupe key
           lastScore: score,
           lastSignal: signal,
           ...(symLabel ? { symLabel } : {}),
@@ -299,10 +317,33 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       },
     });
 
+    // SignalLog — one row per signal episode (raw signal changes) or per entry.
+    // Analytics only: every write inside is swallowed.
+    const logDecision = (decision: SignalDecision, side?: "LONG" | "SHORT" | null, tradeId?: string) =>
+      shouldLogEpisode(prevStats.sigEp, rawSignal, decision === "ENTERED")
+        ? logSignal({
+            liveStrategyId: live.id,
+            userId: live.userId,
+            exchange,
+            symbol: live.symbol,
+            kind: live.version.kind,
+            signal: rawSignal as "BUY" | "SELL",
+            score,
+            side: side ?? null,
+            decision,
+            features: { ...sigFeats, ...(smartVeto ? { veto: smartVeto } : {}) },
+            context: sigContext,
+            tradeId,
+          })
+        : Promise.resolve();
+
     // signal → direction. shorts only exist in futures mode
     const side: "LONG" | "SHORT" | null =
       signal === "BUY" ? "LONG" : futures && signal === "SELL" ? "SHORT" : null;
-    if (!side) return;
+    if (!side) {
+      await logDecision(smartVeto ? "VETO_SMART" : "SKIP_SPOT_SHORT");
+      return;
+    }
     const long = side === "LONG";
 
     if (futures && !paper && !adapter.createFuturesOrder) {
@@ -313,14 +354,20 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     const openPosition = await prisma.trade.findFirst({
       where: { liveStrategyId: live.id, symbol: live.symbol, status: "OPEN" },
     });
-    if (openPosition) return;
+    if (openPosition) {
+      await logDecision("SKIP_OPEN_POSITION", side);
+      return;
+    }
     const openOrder = await prisma.order.findFirst({
       where: {
         liveStrategyId: live.id, symbol: live.symbol,
         status: { in: ["PENDING", "SUBMITTED", "PARTIALLY_FILLED"] },
       },
     });
-    if (openOrder) return;
+    if (openOrder) {
+      await logDecision("SKIP_OPEN_ORDER", side);
+      return;
+    }
     if (live.lastSignalAt && live.stats) {
       const prev = parseJson<{ lastSignal?: string; lastScore?: number }>(live.stats, {});
       // skip identical consecutive signals handled naturally by position checks
@@ -403,6 +450,7 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         trailingPeak: ticker.last,
       },
     });
+    await logDecision("ENTERED", side, trade.id);
     // stash the entry's learning context — consumed by recordOutcome on close
     if (smartPending) {
       const s = await prisma.liveStrategy.findUnique({ where: { id: live.id }, select: { stats: true } });
@@ -452,7 +500,8 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       where: { id: live.id },
       data: { circuitBreakerFailures: failures, status, lastError: code },
     });
-    if (status === "DEGRADED") {
+    // notify only on the transition into DEGRADED — not on every failed tick
+    if (status === "DEGRADED" && live.status !== "DEGRADED") {
       await notify({
         userId: live.userId, type: "API_ERROR", severity: "ERROR",
         title: "خطای صرافی", body: "استراتژی به دلیل خطاهای متوالی صرافی در وضعیت کاهش‌یافته قرار گرفت.",
@@ -556,6 +605,7 @@ async function manageOpenTrade(
       closedAt: new Date(),
     },
   });
+  await attachTradeOutcome(trade.id, pnlPct, exitReason);
   // smart layer — fold this outcome into the strategy's learn state
   if (isSymbolicKind(version.kind) && smartEnabled(version.config)) {
     try {
@@ -637,6 +687,7 @@ async function executeStopPolicy(live: { id: string; userId: string; symbol: str
           ...(paper ? { pnl, pnlPct: trade.invested > 0 ? (pnl / trade.invested) * 100 : 0 } : {}),
         },
       });
+      await attachTradeOutcome(trade.id, trade.invested > 0 ? (pnl / trade.invested) * 100 : 0, "STOP_POLICY");
     }
   }
   // KEEP_MANAGING → leave open trades; they get monitored until closed

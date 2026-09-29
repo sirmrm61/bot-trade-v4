@@ -338,6 +338,7 @@ export type LiveStrategyWhereInput = {
   pair?: Prisma.XOR<Prisma.PairNullableScalarRelationFilter, Prisma.PairWhereInput> | null
   orders?: Prisma.OrderListRelationFilter
   trades?: Prisma.TradeListRelationFilter
+  signalLogs?: Prisma.SignalLogListRelationFilter
 }
 
 export type LiveStrategyOrderByWithRelationInput = {
@@ -366,6 +367,7 @@ export type LiveStrategyOrderByWithRelationInput = {
   pair?: Prisma.PairOrderByWithRelationInput
   orders?: Prisma.OrderOrderByRelationAggregateInput
   trades?: Prisma.TradeOrderByRelationAggregateInput
+  signalLogs?: Prisma.SignalLogOrderByRelationAggregateInput
 }
 
 export type LiveStrategyWhereUniqueInput = Prisma.AtLeast<{
@@ -397,6 +399,7 @@ export type LiveStrategyWhereUniqueInput = Prisma.AtLeast<{
   pair?: Prisma.XOR<Prisma.PairNullableScalarRelationFilter, Prisma.PairWhereInput> | null
   orders?: Prisma.OrderListRelationFilter
   trades?: Prisma.TradeListRelationFilter
+  signalLogs?: Prisma.SignalLogListRelationFilter
 }, "id">
 
 export type LiveStrategyOrderByWithAggregationInput = {
@@ -473,6 +476,7 @@ export type LiveStrategyCreateInput = {
   pair?: Prisma.PairCreateNestedOneWithoutLiveStrategiesInput
   orders?: Prisma.OrderCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyUncheckedCreateInput = {
@@ -497,6 +501,7 @@ export type LiveStrategyUncheckedCreateInput = {
   updatedAt?: Date | string
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogUncheckedCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyUpdateInput = {
@@ -521,6 +526,7 @@ export type LiveStrategyUpdateInput = {
   pair?: Prisma.PairUpdateOneWithoutLiveStrategiesNestedInput
   orders?: Prisma.OrderUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateInput = {
@@ -545,6 +551,7 @@ export type LiveStrategyUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUncheckedUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUncheckedUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyCreateManyInput = {
@@ -900,6 +907,22 @@ export type LiveStrategyUpdateOneWithoutTradesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.LiveStrategyUpdateToOneWithWhereWithoutTradesInput, Prisma.LiveStrategyUpdateWithoutTradesInput>, Prisma.LiveStrategyUncheckedUpdateWithoutTradesInput>
 }
 
+export type LiveStrategyCreateNestedOneWithoutSignalLogsInput = {
+  create?: Prisma.XOR<Prisma.LiveStrategyCreateWithoutSignalLogsInput, Prisma.LiveStrategyUncheckedCreateWithoutSignalLogsInput>
+  connectOrCreate?: Prisma.LiveStrategyCreateOrConnectWithoutSignalLogsInput
+  connect?: Prisma.LiveStrategyWhereUniqueInput
+}
+
+export type LiveStrategyUpdateOneWithoutSignalLogsNestedInput = {
+  create?: Prisma.XOR<Prisma.LiveStrategyCreateWithoutSignalLogsInput, Prisma.LiveStrategyUncheckedCreateWithoutSignalLogsInput>
+  connectOrCreate?: Prisma.LiveStrategyCreateOrConnectWithoutSignalLogsInput
+  upsert?: Prisma.LiveStrategyUpsertWithoutSignalLogsInput
+  disconnect?: Prisma.LiveStrategyWhereInput | boolean
+  delete?: Prisma.LiveStrategyWhereInput | boolean
+  connect?: Prisma.LiveStrategyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.LiveStrategyUpdateToOneWithWhereWithoutSignalLogsInput, Prisma.LiveStrategyUpdateWithoutSignalLogsInput>, Prisma.LiveStrategyUncheckedUpdateWithoutSignalLogsInput>
+}
+
 export type LiveStrategyCreateWithoutUserInput = {
   id?: string
   symbol: string
@@ -921,6 +944,7 @@ export type LiveStrategyCreateWithoutUserInput = {
   pair?: Prisma.PairCreateNestedOneWithoutLiveStrategiesInput
   orders?: Prisma.OrderCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyUncheckedCreateWithoutUserInput = {
@@ -944,6 +968,7 @@ export type LiveStrategyUncheckedCreateWithoutUserInput = {
   updatedAt?: Date | string
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogUncheckedCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyCreateOrConnectWithoutUserInput = {
@@ -1017,6 +1042,7 @@ export type LiveStrategyCreateWithoutPairInput = {
   version: Prisma.StrategyVersionCreateNestedOneWithoutLiveStrategiesInput
   orders?: Prisma.OrderCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyUncheckedCreateWithoutPairInput = {
@@ -1040,6 +1066,7 @@ export type LiveStrategyUncheckedCreateWithoutPairInput = {
   updatedAt?: Date | string
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogUncheckedCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyCreateOrConnectWithoutPairInput = {
@@ -1088,6 +1115,7 @@ export type LiveStrategyCreateWithoutStrategyInput = {
   pair?: Prisma.PairCreateNestedOneWithoutLiveStrategiesInput
   orders?: Prisma.OrderCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyUncheckedCreateWithoutStrategyInput = {
@@ -1111,6 +1139,7 @@ export type LiveStrategyUncheckedCreateWithoutStrategyInput = {
   updatedAt?: Date | string
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogUncheckedCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyCreateOrConnectWithoutStrategyInput = {
@@ -1159,6 +1188,7 @@ export type LiveStrategyCreateWithoutVersionInput = {
   pair?: Prisma.PairCreateNestedOneWithoutLiveStrategiesInput
   orders?: Prisma.OrderCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyUncheckedCreateWithoutVersionInput = {
@@ -1182,6 +1212,7 @@ export type LiveStrategyUncheckedCreateWithoutVersionInput = {
   updatedAt?: Date | string
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutLiveStrategyInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogUncheckedCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyCreateOrConnectWithoutVersionInput = {
@@ -1230,6 +1261,7 @@ export type LiveStrategyCreateWithoutOrdersInput = {
   version: Prisma.StrategyVersionCreateNestedOneWithoutLiveStrategiesInput
   pair?: Prisma.PairCreateNestedOneWithoutLiveStrategiesInput
   trades?: Prisma.TradeCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyUncheckedCreateWithoutOrdersInput = {
@@ -1253,6 +1285,7 @@ export type LiveStrategyUncheckedCreateWithoutOrdersInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogUncheckedCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyCreateOrConnectWithoutOrdersInput = {
@@ -1292,6 +1325,7 @@ export type LiveStrategyUpdateWithoutOrdersInput = {
   version?: Prisma.StrategyVersionUpdateOneRequiredWithoutLiveStrategiesNestedInput
   pair?: Prisma.PairUpdateOneWithoutLiveStrategiesNestedInput
   trades?: Prisma.TradeUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateWithoutOrdersInput = {
@@ -1315,6 +1349,7 @@ export type LiveStrategyUncheckedUpdateWithoutOrdersInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   trades?: Prisma.TradeUncheckedUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUncheckedUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyCreateWithoutTradesInput = {
@@ -1338,6 +1373,7 @@ export type LiveStrategyCreateWithoutTradesInput = {
   version: Prisma.StrategyVersionCreateNestedOneWithoutLiveStrategiesInput
   pair?: Prisma.PairCreateNestedOneWithoutLiveStrategiesInput
   orders?: Prisma.OrderCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyUncheckedCreateWithoutTradesInput = {
@@ -1361,6 +1397,7 @@ export type LiveStrategyUncheckedCreateWithoutTradesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutLiveStrategyInput
+  signalLogs?: Prisma.SignalLogUncheckedCreateNestedManyWithoutLiveStrategyInput
 }
 
 export type LiveStrategyCreateOrConnectWithoutTradesInput = {
@@ -1400,6 +1437,7 @@ export type LiveStrategyUpdateWithoutTradesInput = {
   version?: Prisma.StrategyVersionUpdateOneRequiredWithoutLiveStrategiesNestedInput
   pair?: Prisma.PairUpdateOneWithoutLiveStrategiesNestedInput
   orders?: Prisma.OrderUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateWithoutTradesInput = {
@@ -1423,6 +1461,119 @@ export type LiveStrategyUncheckedUpdateWithoutTradesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUncheckedUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUncheckedUpdateManyWithoutLiveStrategyNestedInput
+}
+
+export type LiveStrategyCreateWithoutSignalLogsInput = {
+  id?: string
+  symbol: string
+  exchange?: string
+  allocatedCapital: number
+  mode?: string
+  status?: string
+  stopPolicy?: string | null
+  circuitBreakerFailures?: number
+  lastSignalAt?: Date | string | null
+  lastError?: string | null
+  stats?: string
+  startedAt?: Date | string
+  stoppedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutLiveStrategiesInput
+  strategy: Prisma.StrategyCreateNestedOneWithoutLiveStrategiesInput
+  version: Prisma.StrategyVersionCreateNestedOneWithoutLiveStrategiesInput
+  pair?: Prisma.PairCreateNestedOneWithoutLiveStrategiesInput
+  orders?: Prisma.OrderCreateNestedManyWithoutLiveStrategyInput
+  trades?: Prisma.TradeCreateNestedManyWithoutLiveStrategyInput
+}
+
+export type LiveStrategyUncheckedCreateWithoutSignalLogsInput = {
+  id?: string
+  userId: string
+  strategyId: string
+  versionId: string
+  pairId?: string | null
+  symbol: string
+  exchange?: string
+  allocatedCapital: number
+  mode?: string
+  status?: string
+  stopPolicy?: string | null
+  circuitBreakerFailures?: number
+  lastSignalAt?: Date | string | null
+  lastError?: string | null
+  stats?: string
+  startedAt?: Date | string
+  stoppedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutLiveStrategyInput
+  trades?: Prisma.TradeUncheckedCreateNestedManyWithoutLiveStrategyInput
+}
+
+export type LiveStrategyCreateOrConnectWithoutSignalLogsInput = {
+  where: Prisma.LiveStrategyWhereUniqueInput
+  create: Prisma.XOR<Prisma.LiveStrategyCreateWithoutSignalLogsInput, Prisma.LiveStrategyUncheckedCreateWithoutSignalLogsInput>
+}
+
+export type LiveStrategyUpsertWithoutSignalLogsInput = {
+  update: Prisma.XOR<Prisma.LiveStrategyUpdateWithoutSignalLogsInput, Prisma.LiveStrategyUncheckedUpdateWithoutSignalLogsInput>
+  create: Prisma.XOR<Prisma.LiveStrategyCreateWithoutSignalLogsInput, Prisma.LiveStrategyUncheckedCreateWithoutSignalLogsInput>
+  where?: Prisma.LiveStrategyWhereInput
+}
+
+export type LiveStrategyUpdateToOneWithWhereWithoutSignalLogsInput = {
+  where?: Prisma.LiveStrategyWhereInput
+  data: Prisma.XOR<Prisma.LiveStrategyUpdateWithoutSignalLogsInput, Prisma.LiveStrategyUncheckedUpdateWithoutSignalLogsInput>
+}
+
+export type LiveStrategyUpdateWithoutSignalLogsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
+  allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
+  mode?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stats?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stoppedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutLiveStrategiesNestedInput
+  strategy?: Prisma.StrategyUpdateOneRequiredWithoutLiveStrategiesNestedInput
+  version?: Prisma.StrategyVersionUpdateOneRequiredWithoutLiveStrategiesNestedInput
+  pair?: Prisma.PairUpdateOneWithoutLiveStrategiesNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutLiveStrategyNestedInput
+  trades?: Prisma.TradeUpdateManyWithoutLiveStrategyNestedInput
+}
+
+export type LiveStrategyUncheckedUpdateWithoutSignalLogsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  strategyId?: Prisma.StringFieldUpdateOperationsInput | string
+  versionId?: Prisma.StringFieldUpdateOperationsInput | string
+  pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  exchange?: Prisma.StringFieldUpdateOperationsInput | string
+  allocatedCapital?: Prisma.FloatFieldUpdateOperationsInput | number
+  mode?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stats?: Prisma.StringFieldUpdateOperationsInput | string
+  startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  stoppedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutLiveStrategyNestedInput
+  trades?: Prisma.TradeUncheckedUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyCreateManyUserInput = {
@@ -1467,6 +1618,7 @@ export type LiveStrategyUpdateWithoutUserInput = {
   pair?: Prisma.PairUpdateOneWithoutLiveStrategiesNestedInput
   orders?: Prisma.OrderUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateWithoutUserInput = {
@@ -1490,6 +1642,7 @@ export type LiveStrategyUncheckedUpdateWithoutUserInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUncheckedUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUncheckedUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateManyWithoutUserInput = {
@@ -1555,6 +1708,7 @@ export type LiveStrategyUpdateWithoutPairInput = {
   version?: Prisma.StrategyVersionUpdateOneRequiredWithoutLiveStrategiesNestedInput
   orders?: Prisma.OrderUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateWithoutPairInput = {
@@ -1578,6 +1732,7 @@ export type LiveStrategyUncheckedUpdateWithoutPairInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUncheckedUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUncheckedUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateManyWithoutPairInput = {
@@ -1643,6 +1798,7 @@ export type LiveStrategyUpdateWithoutStrategyInput = {
   pair?: Prisma.PairUpdateOneWithoutLiveStrategiesNestedInput
   orders?: Prisma.OrderUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateWithoutStrategyInput = {
@@ -1666,6 +1822,7 @@ export type LiveStrategyUncheckedUpdateWithoutStrategyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUncheckedUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUncheckedUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateManyWithoutStrategyInput = {
@@ -1731,6 +1888,7 @@ export type LiveStrategyUpdateWithoutVersionInput = {
   pair?: Prisma.PairUpdateOneWithoutLiveStrategiesNestedInput
   orders?: Prisma.OrderUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateWithoutVersionInput = {
@@ -1754,6 +1912,7 @@ export type LiveStrategyUncheckedUpdateWithoutVersionInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   orders?: Prisma.OrderUncheckedUpdateManyWithoutLiveStrategyNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutLiveStrategyNestedInput
+  signalLogs?: Prisma.SignalLogUncheckedUpdateManyWithoutLiveStrategyNestedInput
 }
 
 export type LiveStrategyUncheckedUpdateManyWithoutVersionInput = {
@@ -1785,11 +1944,13 @@ export type LiveStrategyUncheckedUpdateManyWithoutVersionInput = {
 export type LiveStrategyCountOutputType = {
   orders: number
   trades: number
+  signalLogs: number
 }
 
 export type LiveStrategyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   orders?: boolean | LiveStrategyCountOutputTypeCountOrdersArgs
   trades?: boolean | LiveStrategyCountOutputTypeCountTradesArgs
+  signalLogs?: boolean | LiveStrategyCountOutputTypeCountSignalLogsArgs
 }
 
 /**
@@ -1814,6 +1975,13 @@ export type LiveStrategyCountOutputTypeCountOrdersArgs<ExtArgs extends runtime.T
  */
 export type LiveStrategyCountOutputTypeCountTradesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.TradeWhereInput
+}
+
+/**
+ * LiveStrategyCountOutputType without action
+ */
+export type LiveStrategyCountOutputTypeCountSignalLogsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SignalLogWhereInput
 }
 
 
@@ -1843,6 +2011,7 @@ export type LiveStrategySelect<ExtArgs extends runtime.Types.Extensions.Internal
   pair?: boolean | Prisma.LiveStrategy$pairArgs<ExtArgs>
   orders?: boolean | Prisma.LiveStrategy$ordersArgs<ExtArgs>
   trades?: boolean | Prisma.LiveStrategy$tradesArgs<ExtArgs>
+  signalLogs?: boolean | Prisma.LiveStrategy$signalLogsArgs<ExtArgs>
   _count?: boolean | Prisma.LiveStrategyCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["liveStrategy"]>
 
@@ -1928,6 +2097,7 @@ export type LiveStrategyInclude<ExtArgs extends runtime.Types.Extensions.Interna
   pair?: boolean | Prisma.LiveStrategy$pairArgs<ExtArgs>
   orders?: boolean | Prisma.LiveStrategy$ordersArgs<ExtArgs>
   trades?: boolean | Prisma.LiveStrategy$tradesArgs<ExtArgs>
+  signalLogs?: boolean | Prisma.LiveStrategy$signalLogsArgs<ExtArgs>
   _count?: boolean | Prisma.LiveStrategyCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type LiveStrategyIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1952,6 +2122,7 @@ export type $LiveStrategyPayload<ExtArgs extends runtime.Types.Extensions.Intern
     pair: Prisma.$PairPayload<ExtArgs> | null
     orders: Prisma.$OrderPayload<ExtArgs>[]
     trades: Prisma.$TradePayload<ExtArgs>[]
+    signalLogs: Prisma.$SignalLogPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2373,6 +2544,7 @@ export interface Prisma__LiveStrategyClient<T, Null = never, ExtArgs extends run
   pair<T extends Prisma.LiveStrategy$pairArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LiveStrategy$pairArgs<ExtArgs>>): Prisma.Prisma__PairClient<runtime.Types.Result.GetResult<Prisma.$PairPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   orders<T extends Prisma.LiveStrategy$ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LiveStrategy$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   trades<T extends Prisma.LiveStrategy$tradesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LiveStrategy$tradesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TradePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  signalLogs<T extends Prisma.LiveStrategy$signalLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.LiveStrategy$signalLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SignalLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2884,6 +3056,30 @@ export type LiveStrategy$tradesArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.TradeScalarFieldEnum | Prisma.TradeScalarFieldEnum[]
+}
+
+/**
+ * LiveStrategy.signalLogs
+ */
+export type LiveStrategy$signalLogsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SignalLog
+   */
+  select?: Prisma.SignalLogSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SignalLog
+   */
+  omit?: Prisma.SignalLogOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SignalLogInclude<ExtArgs> | null
+  where?: Prisma.SignalLogWhereInput
+  orderBy?: Prisma.SignalLogOrderByWithRelationInput | Prisma.SignalLogOrderByWithRelationInput[]
+  cursor?: Prisma.SignalLogWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SignalLogScalarFieldEnum | Prisma.SignalLogScalarFieldEnum[]
 }
 
 /**

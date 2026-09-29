@@ -72,6 +72,17 @@ describe("KucoinAdapter — public market data", () => {
     expect(book.ts).toBe(1700000000000);
   });
 
+  it("routes contract symbols (no dash) to the futures kline host", async () => {
+    const calls = stubFetch({
+      "/api/v1/kline/query": { code: "200000", data: [[1700000000000, 10, 12, 9, 11, 500, 5000]] },
+      "/api/v1/market/candles": { code: "400100", msg: "Param Error" },
+    });
+    const candles = await adapter.getCandles("ZECUSDTM", "5m", 1700000000000 - 5 * 60_000);
+    expect(calls[0].url).toContain("api-futures.kucoin.com");
+    expect(calls[0].url).toContain("/api/v1/kline/query");
+    expect(candles[0]).toMatchObject({ open: 10, close: 11 });
+  });
+
   it("reorders candles oldest→newest and maps [t,o,c,h,l,vol]", async () => {
     stubFetch({
       "/api/v1/market/candles": {
@@ -170,7 +181,7 @@ describe("KucoinAdapter — futures (perpetual)", () => {
     });
     const book = await adapter.getFuturesOrderBook("XBTUSDTM");
     expect(book.bids).toEqual([[100, 2]]);
-    const candles = await adapter.getFuturesCandles("XBTUSDTM", "1h", Date.now() - 3600_000);
+    const candles = await adapter.getFuturesCandles("XBTUSDTM", "1h", 1700000000000 - 3600_000);
     expect(candles[0]).toMatchObject({ open: 10, high: 12, low: 9, close: 11, volume: 500 });
   });
 });
