@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Field, Input, Select, SearchableSelect } from "@/components/client";
+import { Field, Input, Select, SearchableSelect, Modal } from "@/components/client";
 import { toast } from "@/components/toast";
 import { TIMEFRAMES } from "@/shared/constants";
 
@@ -24,6 +24,32 @@ interface SmartResult {
   winner: { label: string; signals: number; profitPct: number; trades: number } | null;
   candidatesTested: number;
   leaderboard: LeaderboardRow[];
+}
+
+/** Button + dialog wrapper — keeps the create page decluttered. */
+export function SmartSelectDialog({ pairs }: { pairs: { symbol: string }[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="rounded-xl border border-primary/40 bg-primary/5 px-4 py-2 text-sm font-bold text-primary transition hover:bg-primary/10"
+      >
+        انتخاب هوشمند ترکیب‌ها
+      </button>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={<>انتخاب هوشمند <span className="text-xs font-normal text-muted">(ویژه ادمین)</span></>}
+      >
+        <p className="mb-4 text-xs leading-5 text-muted">
+          سیستم همه‌ی ترکیب‌های اندیکاتورها را روی داده تاریخی تست می‌کند و استراتژی با بیشترین سیگنال خرید/فروش سودده را می‌سازد.
+        </p>
+        <SmartSelectForm pairs={pairs} />
+      </Modal>
+    </>
+  );
 }
 
 export function SmartSelectForm({ pairs }: { pairs: { symbol: string }[] }) {

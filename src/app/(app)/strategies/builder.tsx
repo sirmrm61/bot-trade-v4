@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Field, HelpTip, Input, Select, SearchableSelect } from "@/components/client";
 import { toast } from "@/components/toast";
+import { cn } from "@/shared/utils";
 import { TIMEFRAMES, STRATEGY_KINDS, STRATEGY_KIND_LABELS, EXCHANGE_IDS, EXCHANGE_LABELS, type StrategyKind } from "@/shared/constants";
 import { INDICATORS, INDICATOR_MAP } from "@/modules/indicators/registry";
 
@@ -59,6 +60,14 @@ const RISK_OPTIONS = [
   { value: "HIGH", label: "تهاجمی — سیگنال بیشتر، ریسک بالاتر" },
 ];
 
+/** Form sections split into tabs — hidden panels stay mounted so FormData still captures them. */
+const BUILDER_TABS = [
+  { id: "basic", label: "اطلاعات پایه" },
+  { id: "logic", label: "منطق استراتژی" },
+  { id: "risk", label: "ریسک و اجرا" },
+] as const;
+type BuilderTab = (typeof BUILDER_TABS)[number]["id"];
+
 export function StrategyBuilder({
   endpoint, method = "POST", submitLabel = "ذخیره استراتژی", initial, pairs,
 }: {
@@ -87,6 +96,7 @@ export function StrategyBuilder({
   const exPairs = pairs.filter((p) => !p.exchange || p.exchange === exchange);
   const firstSymbol = exPairs[0]?.symbol ?? pairs[0]?.symbol ?? "";
   const [risk, setRisk] = useState<"LOW" | "MEDIUM" | "HIGH">("MEDIUM");
+  const [tab, setTab] = useState<BuilderTab>("basic");
   const [suggesting, setSuggesting] = useState(false);
   const [suggestNotes, setSuggestNotes] = useState<string[]>([]);
 
@@ -177,6 +187,14 @@ export function StrategyBuilder({
     const fd = new FormData(e.currentTarget);
     const num = (k: string, d = 0) => Number(fd.get(k) ?? d);
 
+    // required fields live on the "basic" tab — jump there so the user sees them
+    if (!String(fd.get("name") ?? "").trim() || !String(fd.get("symbol") ?? "").trim()) {
+      setLoading(false);
+      setTab("basic");
+      toast.error("نام و نماد استراتژی را در تب «اطلاعات پایه» وارد کنید.");
+      return;
+    }
+
     const indicators = kind === "SIGNAL"
       ? Object.entries(inds).map(([name, s]) => ({
         name,
@@ -198,6 +216,7 @@ export function StrategyBuilder({
         .reduce((a, i) => a + i.weight, 0);
       if (Math.abs(wSum - 1) > 0.01) {
         setLoading(false);
+        setTab("logic");
         toast.error(`مجموع وزن اندیکاتورهای سیگنال‌دهنده باید ۱۰۰٪ باشد (فعلی: ${Math.round(wSum * 100)}٪)`);
         return;
       }
@@ -315,7 +334,26 @@ export function StrategyBuilder({
     .reduce((a, [, i]) => a + i.weight, 0);
 
   return (
-    <form ref={formRef} onSubmit={submit} className="space-y-6">
+    <form ref={formRef} onSubmit={submit} className="space-y-6" noValidate>
+      <div className="flex gap-1 border-b border-border">
+        {BUILDER_TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setTab(t.id)}
+            className={cn(
+              "-mb-px border-b-2 px-4 py-2 text-sm font-bold transition",
+              tab === t.id
+                ? "border-primary text-primary"
+                : "border-transparent text-muted hover:text-foreground",
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className={tab === "basic" ? undefined : "hidden"}>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Field label="نام استراتژی">
           <Input name="name" required defaultValue={initial?.name} />
@@ -343,7 +381,9 @@ export function StrategyBuilder({
             options={TIMEFRAMES.map((t) => ({ value: t, label: t }))} />
         </Field>
       </div>
+      </div>
 
+      <div className={tab === "logic" ? "space-y-6" : "hidden"}>
       {SUGGESTABLE.has(kind) && (
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
           <div className="flex flex-wrap items-end gap-3">
@@ -704,7 +744,9 @@ export function StrategyBuilder({
           </label>
         </div>
       )}
+      </div>
 
+      <div className={tab === "risk" ? undefined : "hidden"}>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {showThresholds(kind) && (
         <div className="rounded-2xl border border-border p-4">
@@ -752,6 +794,7 @@ export function StrategyBuilder({
           </div>
         </div>
         )}
+      </div>
       </div>
 
       <button type="submit" disabled={loading}
