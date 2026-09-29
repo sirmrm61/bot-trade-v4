@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Card, CardTitle, Badge, EmptyState, Table } from "@/components/ui";
 import { Modal } from "@/components/client";
 import { StrategyBuilder } from "@/app/(app)/strategies/builder";
@@ -84,11 +84,7 @@ export function ScalpPanel({ pairs }: { pairs: { symbol: string; exchange?: stri
     }
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => load(filters, weights), 0);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // no auto-scan — the user starts a scan explicitly via the button
 
   const shown = useMemo(() => data?.pairs ?? [], [data]);
 
@@ -175,7 +171,7 @@ export function ScalpPanel({ pairs }: { pairs: { symbol: string; exchange?: stri
             disabled={loading}
             className="rounded-xl bg-primary px-5 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
           >
-            {loading ? "در حال اسکن…" : "اسکن مجدد"}
+            {loading ? "در حال اسکن…" : data ? "اسکن مجدد" : "اسکن"}
           </button>
           <button
             onClick={() => setShowSettings(!showSettings)}
@@ -227,6 +223,12 @@ export function ScalpPanel({ pairs }: { pairs: { symbol: string; exchange?: stri
       {/* states */}
       {error && (
         <EmptyState title="خطا در دریافت داده" hint={error} />
+      )}
+      {!error && !loading && !data && (
+        <EmptyState
+          title="برای شروع روی «اسکن» کلیک کنید"
+          hint="فیلترها و تنظیمات امتیازدهی را تنظیم کنید و سپس بازار را اسکن کنید"
+        />
       )}
       {!error && !loading && data && shown.length === 0 && (
         <EmptyState
