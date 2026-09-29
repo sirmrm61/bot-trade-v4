@@ -47,7 +47,22 @@ function candles(n: number, vol = 0.01): Candle[] {
 }
 
 async function cleanup() {
-  await prisma.strategy.deleteMany({ where: { name: { startsWith: "اسکالپ " } } });
+  const ss = await prisma.strategy.findMany({
+    where: { OR: [
+      { name: { startsWith: "اسکالپ " } },
+      { name: { startsWith: "مومنتوم " } },
+      { name: { startsWith: "شکست کانال " } },
+    ] },
+    select: { id: true },
+  });
+  const ids = ss.map((s) => s.id);
+  if (ids.length === 0) return;
+  // non-cascade relations must go first (Backtest.strategy, LiveStrategy.strategy…)
+  const bts = await prisma.backtest.findMany({ where: { strategyId: { in: ids } }, select: { id: true } });
+  await prisma.backtestTrade.deleteMany({ where: { backtestId: { in: bts.map((b) => b.id) } } });
+  await prisma.backtest.deleteMany({ where: { strategyId: { in: ids } } });
+  await prisma.liveStrategy.deleteMany({ where: { strategyId: { in: ids } } });
+  await prisma.strategy.deleteMany({ where: { id: { in: ids } } });
 }
 
 describe("autoGenerateStrategies", () => {
@@ -156,6 +171,56 @@ describe("autoGenerateStrategies", () => {
     const res = await autoGenerateStrategies(user.id, { count: 5 });
     expect(res.created.map((c) => c.symbol)).toEqual(["GOODUSDT"]);
     expect(res.skipped.find((s) => s.symbol === "FLATUSDT")?.reason).toContain("هزینه");
+  });
+
+  it("COMBINED mode assigns ATM_SME to the most volatile and RMM_BSE to the least volatile pick", async () => {
+    const user = await prisma.user.findFirstOrThrow();
+    const vol = { HOT: 8, MID1: 3, MID2: 2.5, MID3: 2, CALM: 0.5 };
+    const pairs = Object.entries(vol).map(([base, v], i) =>
+      mkPair({
+        symbol: `${base}USDT`, baseCurrency: base, score: 95 - i,
+        metrics: { roundTripCostPct: 0.3, feePctPerSide: 0.15, volatilityPct: v },
+      }),
+    );
+    vi.mocked(rankPairs).mockResolvedValue({ pairs, meta: { ...META, totalPairs: 100, ranked: 5 } });
+
+    const res = await autoGenerateStrategies(user.id, { count: 5, mode: "COMBINED" });
+
+    expect(res.created).toHaveLength(5);
+    const bySymbol = Object.fromEntries(res.created.map((c) => [c.symbol, c.kind]));
+    expect(bySymbol.HOTUSDT).toBe("ATM_SME");
+    expect(bySymbol.CALMUSDT).toBe("RMM_BSE");
+    expect(bySymbol.MID1USDT).toBe("SIGNAL");
+    expect(bySymbol.MID2USDT).toBe("SIGNAL");
+    expect(bySymbol.MID3USDT).toBe("SIGNAL");
+
+    const versions = await prisma.strategyVersion.findMany({
+      where: { strategyId: { in: res.created.map((c) => c.id) } },
+    });
+    const cfgBySymbol = Object.fromEntries(
+      versions.map((v) => [v.symbol, JSON.parse(v.config)]),
+    );
+    expect(cfgBySymbol.HOTUSDT.kind).toBe("ATM_SME");
+    expect(cfgBySymbol.HOTUSDT.smart).toBe(true);
+    expect(cfgBySymbol.HOTUSDT.atmSme).toBeDefined();
+    expect(cfgBySymbol.CALMUSDT.kind).toBe("RMM_BSE");
+    expect(cfgBySymbol.CALMUSDT.smart).toBe(true);
+    expect(cfgBySymbol.CALMUSDT.rmmBse).toBeDefined();
+    expect(cfgBySymbol.MID1USDT.kind).toBe("SIGNAL");
+  });
+
+  it("COMBINED with fewer than 3 picks stays all-SIGNAL", async () => {
+    const user = await prisma.user.findFirstOrThrow();
+    vi.mocked(rankPairs).mockResolvedValue({
+      pairs: [
+        mkPair({ symbol: "ONEUSDT", baseCurrency: "ONE", metrics: { volatilityPct: 9 } }),
+        mkPair({ symbol: "TWOUSDT", baseCurrency: "TWO", metrics: { volatilityPct: 1 } }),
+      ],
+      meta: { ...META, totalPairs: 30, ranked: 2 },
+    });
+    const res = await autoGenerateStrategies(user.id, { count: 5, mode: "COMBINED" });
+    expect(res.created).toHaveLength(2);
+    expect(res.created.every((c) => c.kind === "SIGNAL")).toBe(true);
   });
 
   it("creates fewer than requested when not enough candidates survive", async () => {

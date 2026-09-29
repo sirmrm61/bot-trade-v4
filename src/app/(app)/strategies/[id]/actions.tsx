@@ -29,12 +29,12 @@ export function DeleteStrategyButton({
   );
 }
 
-export function RunBacktestForm({ strategyId, versionId, defaultFrom, defaultTo }: { strategyId: string; versionId?: string; defaultFrom: string; defaultTo: string }) {
+export function RunBacktestForm({ strategyId, versionId, defaultFrom, defaultTo, onDone }: { strategyId: string; versionId?: string; defaultFrom: string; defaultTo: string; onDone?: () => void }) {
   return (
     <ApiForm
       endpoint="/api/backtests"
       submitLabel="اجرای بک‌تست"
-      onSuccess={() => toast.success("بک‌تست در صف قرار گرفت — نتیجه به‌زودی آماده می‌شود.")}
+      onSuccess={() => { toast.success("بک‌تست در صف قرار گرفت — نتیجه به‌زودی آماده می‌شود."); onDone?.(); }}
     >
       <input type="hidden" name="strategyId" value={strategyId} />
       {versionId && <input type="hidden" name="versionId" value={versionId} />}
@@ -47,7 +47,7 @@ export function RunBacktestForm({ strategyId, versionId, defaultFrom, defaultTo 
   );
 }
 
-export function GoLiveForm({ strategyId, versionId, hasBacktest }: { strategyId: string; versionId?: string; hasBacktest: boolean }) {
+export function GoLiveForm({ strategyId, versionId, hasBacktest, onDone }: { strategyId: string; versionId?: string; hasBacktest: boolean; onDone?: () => void }) {
   // every kind needs a completed backtest before going live with real funds
   // (order-book kinds get a candle-simulated backtest); paper test is exempt
   if (!hasBacktest) {
@@ -57,7 +57,7 @@ export function GoLiveForm({ strategyId, versionId, hasBacktest }: { strategyId:
     <ApiForm
       endpoint="/api/live"
       submitLabel="تأیید و شروع"
-      onSuccess={() => toast.success("استراتژی زنده فعال شد.")}
+      onSuccess={() => { toast.success("استراتژی زنده فعال شد."); onDone?.(); }}
     >
       <input type="hidden" name="strategyId" value={strategyId} />
       {versionId && <input type="hidden" name="versionId" value={versionId} />}
@@ -72,12 +72,12 @@ export function GoLiveForm({ strategyId, versionId, hasBacktest }: { strategyId:
 }
 
 /** تست زنده — real-time run against live market data with virtual capital (no real orders). */
-export function PaperTestForm({ strategyId, versionId }: { strategyId: string; versionId?: string }) {
+export function PaperTestForm({ strategyId, versionId, onDone }: { strategyId: string; versionId?: string; onDone?: () => void }) {
   return (
     <ApiForm
       endpoint="/api/live"
       submitLabel="شروع تست زنده"
-      onSuccess={() => toast.success("تست زنده فعال شد — در صفحه «معاملات زنده» قابل مشاهده است.")}
+      onSuccess={() => { toast.success("تست زنده فعال شد — در صفحه «معاملات زنده» قابل مشاهده است."); onDone?.(); }}
     >
       <input type="hidden" name="strategyId" value={strategyId} />
       {versionId && <input type="hidden" name="versionId" value={versionId} />}

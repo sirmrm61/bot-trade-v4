@@ -7,12 +7,15 @@ import { faPercent } from "@/shared/utils";
 import { cn } from "@/shared/utils";
 import { DeleteStrategyButton } from "./[id]/actions";
 import { AutoGenerateButton } from "./auto-generate";
+import { StrategyRowActions } from "./row-actions";
 
 const TABS = [
   { key: "all", label: "همه" },
   { key: "live", label: "لایو" },
   { key: "draft", label: "پیش‌نویس" },
 ] as const;
+
+const ACTIVE_LIVE = ["RUNNING", "PAUSED", "STARTING"] as const;
 
 export default async function StrategiesPage({
   searchParams,
@@ -28,18 +31,22 @@ export default async function StrategiesPage({
     include: {
       versions: { orderBy: { versionNumber: "desc" }, take: 1 },
       backtests: { where: { status: "COMPLETED" }, orderBy: { completedAt: "desc" }, take: 1 },
-      liveStrategies: { where: { status: { in: ["RUNNING", "PAUSED", "STARTING"] } } },
+      liveStrategies: { select: { mode: true, status: true } },
+      _count: { select: { backtests: true } },
     },
   });
 
+  const hasActiveLive = (s: (typeof strategies)[number]) =>
+    s.liveStrategies.some((l) => (ACTIVE_LIVE as readonly string[]).includes(l.status));
+
   const filtered = strategies.filter((s) =>
-    view === "live" ? s.liveStrategies.length > 0
+    view === "live" ? hasActiveLive(s)
       : view === "draft" ? s.status === "DRAFT"
       : true,
   );
   const counts = {
     all: strategies.length,
-    live: strategies.filter((s) => s.liveStrategies.length > 0).length,
+    live: strategies.filter(hasActiveLive).length,
     draft: strategies.filter((s) => s.status === "DRAFT").length,
   };
 
@@ -84,10 +91,12 @@ export default async function StrategiesPage({
             <EmptyState title="موردی در این دسته نیست" hint="فیلتر دیگری را انتخاب کنید" />
           ) : (
           <Card>
-            <Table headers={["نام", "نسخه", "نماد/تایم‌فریم", "آخرین بک‌تست", "وضعیت", "عملیات"]}>
+            <Table headers={["نام", "نسخه", "نماد/تایم‌فریم", "آخرین بک‌تست", "فعالیت", "وضعیت", "عملیات"]}>
               {filtered.map((s) => {
                 const v = s.versions[0];
                 const bt = s.backtests[0];
+                const paperCount = s.liveStrategies.filter((l) => l.mode === "PAPER").length;
+                const realCount = s.liveStrategies.filter((l) => l.mode !== "PAPER").length;
                 return (
                   <tr key={s.id}>
                     <td className="px-4 py-3">
@@ -104,9 +113,31 @@ export default async function StrategiesPage({
                         </span>
                       ) : "—"}
                     </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-1 text-xs text-muted">
+                        <span title="تعداد بک‌تست‌ها" className="rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800">
+                          بک‌تست {s._count.backtests}
+                        </span>
+                        <span title="تعداد تست‌های معاملات زنده (مجازی)" className="rounded-full bg-slate-100 px-2 py-0.5 dark:bg-slate-800">
+                          تست {paperCount}
+                        </span>
+                        <span title="تعداد معاملات زنده‌ی واقعی" className={cn(
+                          "rounded-full px-2 py-0.5",
+                          realCount > 0 ? "bg-success/10 font-bold text-success" : "bg-slate-100 dark:bg-slate-800",
+                        )}>
+                          لایو {realCount}
+                        </span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
+                        <StrategyRowActions
+                          strategyId={s.id}
+                          versionId={v?.id}
+                          strategyName={s.name}
+                          hasBacktest={!!bt}
+                        />
                         <Link href={`/strategies/${s.id}`} className="text-sm font-bold text-primary">مدیریت</Link>
                         <DeleteStrategyButton strategyId={s.id} compact />
                       </div>

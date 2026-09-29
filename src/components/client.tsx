@@ -6,6 +6,20 @@ import { cn } from "@/shared/utils";
 import { toast } from "./toast";
 import { ConfirmDialog } from "./confirm-dialog";
 
+/** Small inline spinner — shown inside buttons while a request is in flight. */
+export function Spinner({ className }: { className?: string }) {
+  return (
+    <span
+      role="status"
+      aria-label="در حال پردازش"
+      className={cn(
+        "inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent",
+        className,
+      )}
+    />
+  );
+}
+
 /** Generic API mutation button with loading + Persian error handling. */
 export function ActionButton({
   endpoint, method = "POST", payload, label, confirm, className, variant = "primary", onDone,
@@ -62,7 +76,9 @@ export function ActionButton({
           className,
         )}
       >
-        {loading ? "در حال پردازش…" : label}
+        {loading ? (
+          <span className="inline-flex items-center gap-2"><Spinner />در حال پردازش…</span>
+        ) : label}
       </button>
       <ConfirmDialog
         open={asking}
@@ -129,7 +145,9 @@ export function ApiForm({
         disabled={loading}
         className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
       >
-        {loading ? "در حال پردازش…" : submitLabel}
+        {loading ? (
+          <span className="inline-flex items-center gap-2"><Spinner />در حال پردازش…</span>
+        ) : submitLabel}
       </button>
     </form>
   );

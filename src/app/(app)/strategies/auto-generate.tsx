@@ -14,6 +14,7 @@ interface CreatedRow {
   exchange: string;
   market: string;
   timeframe: string;
+  kind: string;
   score: number | null;
 }
 interface SkippedRow { symbol: string; exchange: string; reason: string }
@@ -25,21 +26,56 @@ interface AutoResult {
   ranked: number;
 }
 
+type Mode = "SCALP" | "COMBINED";
+
+const MODES: { key: Mode; title: string; desc: string }[] = [
+  {
+    key: "SCALP",
+    title: "اسکالپ",
+    desc: "۵ استراتژی سیگنال (RSI، EMA، MACD، بولینگر) روی بهترین جفت‌های اسکنر با تایم‌فریم ارزیابی‌شده",
+  },
+  {
+    key: "COMBINED",
+    title: "ترکیبی",
+    desc: "۳ سیگنال + مومنتوم نمادین برای پرنوسان‌ترین جفت + شکست کانال برای کم‌نوسان‌ترین — هر دو با یادگیری خودکار",
+  },
+];
+
+const KIND_BADGE: Record<string, string> = {
+  SIGNAL: "سیگنال",
+  ATM_SME: "مومنتوم",
+  RMM_BSE: "شکست کانال",
+};
+
+/** animated progress block shown while a long-running request is in flight */
+function WorkingAnimation({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-5" role="status" aria-live="polite">
+      <div className="relative h-10 w-10">
+        <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
+        <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-primary" />
+      </div>
+      <p className="text-sm font-bold">{label}</p>
+      <p className="text-xs text-muted">این فرایند ممکن است تا یک دقیقه طول بکشد — لطفاً صفحه را نبندید.</p>
+    </div>
+  );
+}
+
 /** "ایجاد خودکار" — scanner picks the best pairs and builds strategies for them. */
 export function AutoGenerateButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [running, setRunning] = useState(false);
+  const [running, setRunning] = useState<Mode | null>(null);
   const [result, setResult] = useState<AutoResult | null>(null);
 
-  async function run() {
-    setRunning(true);
+  async function run(mode: Mode) {
+    setRunning(mode);
     setResult(null);
     try {
       const res = await fetch("/api/strategies/auto", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count: 5 }),
+        body: JSON.stringify({ count: 5, mode }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -53,7 +89,7 @@ export function AutoGenerateButton() {
       toast.error("خطای غیرمنتظره‌ای رخ داد. لطفاً دوباره تلاش کنید.");
       setOpen(false);
     } finally {
-      setRunning(false);
+      setRunning(null);
     }
   }
 
@@ -75,22 +111,26 @@ export function AutoGenerateButton() {
           <div className="space-y-4">
             <p className="text-sm leading-6 text-muted">
               سیستم بازار را اسکن می‌کند، ۵ جفت‌ارز برتر را بر اساس نقدشوندگی، اسپرد، عمق دفتر سفارش،
-              لغزش، نوسان و هزینه‌ی رفت‌وبرگشت انتخاب می‌کند، برای هرکدام بهترین تایم‌فریم را با داده‌ی
-              واقعی کندل‌ها ارزیابی می‌کند و یک استراتژی سیگنال با مدیریت ریسک متناسب می‌سازد.
-              جفت‌هایی که قبلاً استراتژی دارند یا داده‌ی کافی ندارند رد می‌شوند.
+              لغزش، نوسان و هزینه‌ی رفت‌وبرگشت انتخاب می‌کند و برای هرکدام بهترین تایم‌فریم را با داده‌ی
+              واقعی کندل‌ها ارزیابی می‌کند. جفت‌هایی که قبلاً استراتژی دارند یا داده‌ی کافی ندارند رد می‌شوند.
             </p>
-            <button
-              type="button"
-              onClick={run}
-              disabled={running}
-              className="w-full rounded-xl bg-primary px-4 py-3 font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-            >
-              {running ? "در حال اسکن بازار و ارزیابی جفت‌ها…" : "شروع اسکن و ایجاد ۵ استراتژی"}
-            </button>
-            {running && (
-              <p className="text-xs text-muted">
-                این فرایند ممکن است تا یک دقیقه طول بکشد — لطفاً صفحه را نبندید.
-              </p>
+
+            {running ? (
+              <WorkingAnimation label="در حال اسکن بازار، ارزیابی تایم‌فریم‌ها و ساخت استراتژی‌ها…" />
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {MODES.map((m) => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => run(m.key)}
+                    className="rounded-xl border border-border p-4 text-start transition hover:border-primary/50 hover:bg-primary/5"
+                  >
+                    <p className="mb-1 font-bold text-primary">{m.title}</p>
+                    <p className="text-xs leading-5 text-muted">{m.desc}</p>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         )}
@@ -115,6 +155,11 @@ export function AutoGenerateButton() {
                         {EXCHANGE_LABELS[c.exchange as keyof typeof EXCHANGE_LABELS] ?? c.exchange}
                         {" · "}{c.timeframe}{c.market === "FUTURES" ? " · پرپچوال ۲×" : " · اسپات"}
                       </span>
+                      {c.kind && KIND_BADGE[c.kind] && (
+                        <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs text-violet-700 dark:bg-violet-900/40 dark:text-violet-300">
+                          {KIND_BADGE[c.kind]}
+                        </span>
+                      )}
                       {c.score !== null && (
                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
                           امتیاز {c.score.toFixed(0)}
