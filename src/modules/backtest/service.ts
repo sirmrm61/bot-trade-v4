@@ -7,6 +7,8 @@ import { latestVersion } from "@/modules/strategies/service";
 import { getCandles } from "@/modules/pairs/service";
 import { runBacktest, type BacktestResult } from "./engine";
 import { runMmBacktest } from "./mm-engine";
+import { runGridBacktest } from "./grid-engine";
+import { readGridConfig } from "@/modules/trading/grid";
 import { readMmConfig } from "@/modules/trading/market-making";
 import { readMarketConfig, readExchange } from "@/modules/trading/futures";
 import { obiBacktestSignal } from "@/modules/trading/orderbook-imbalance";
@@ -229,6 +231,21 @@ export async function runAndPersist(
     result = runMmBacktest({
       candles: data,
       cfg: readMmConfig(v.config),
+      initialBalance: bt.initialBalance,
+      feePct: bt.feePct,
+      pricePrecision: pair?.pricePrecision ?? (quoteCur === "IRT" ? 0 : 2),
+      amountPrecision: pair?.amountPrecision ?? 8,
+      minAmount: pair?.minAmount,
+    });
+  } else if (kind === "GRID") {
+    // simulated grid — rungs rest between candles, fills on range touches
+    const pair = await prisma.pair.findUnique({
+      where: { exchange_symbol: { exchange: marketCfg.exchange, symbol: bt.symbol } },
+    });
+    const quoteCur = /IRT$/.test(bt.symbol) ? "IRT" : "USDT";
+    result = runGridBacktest({
+      candles: data,
+      cfg: readGridConfig(v.config),
       initialBalance: bt.initialBalance,
       feePct: bt.feePct,
       pricePrecision: pair?.pricePrecision ?? (quoteCur === "IRT" ? 0 : 2),

@@ -25,6 +25,18 @@ export interface MarketMakingConfigInput {
   maxInventoryPct?: number; // stop buying above this inventory share (default 60)
 }
 
+/** GRID kind params — anchored ladder, ATR-smart spacing. */
+export interface GridConfigInput {
+  rangePct?: number;       // half-band around anchor (default 4)
+  levels?: number;         // rungs per side (default 5)
+  stepPct?: number;        // minimum rung spacing (default 0.8)
+  atrStepMult?: number;    // smart spacing: step ≥ ATR% × this (default 1.2)
+  orderSizePct?: number;   // % of capital per rung (default 15)
+  recenterPct?: number;    // anchor drift → rebuild (default = rangePct)
+  requotePct?: number;     // existing-order match tolerance (default 0.1)
+  maxInventoryPct?: number;// stop buying above this base share (default 80)
+}
+
 /** ATM_SME kind params — symbolic tanh-momentum engine. */
 export interface AtmSmeConfigInput {
   volWindow?: number;          // σt window of past returns (default 20)
@@ -95,6 +107,7 @@ export interface StrategyInput {
   indicators: StrategyIndicatorConfig[];
   orderBookImbalance?: ObiConfigInput;
   marketMaking?: MarketMakingConfigInput;
+  grid?: GridConfigInput;
   atmSme?: AtmSmeConfigInput;
   rmmBse?: RmmBseConfigInput;
   dzsHmm?: DzsHmmConfigInput;
@@ -126,7 +139,7 @@ export function validateStrategyInput(input: StrategyInput) {
     throw new AppError("VALIDATION", 400, { field: "market" });
   }
   if (input.market === "FUTURES") {
-    if (kind === "MARKET_MAKING") throw new AppError("VALIDATION", 400, { field: "market", reason: "futures not supported for market making" });
+    if (kind === "MARKET_MAKING" || kind === "GRID") throw new AppError("VALIDATION", 400, { field: "market", reason: "futures not supported for this kind" });
     if (!inRange(input.leverage, 1, 10)) throw new AppError("VALIDATION", 400, { field: "leverage" });
   }
 
@@ -160,6 +173,23 @@ export function validateStrategyInput(input: StrategyInput) {
       throw new AppError("VALIDATION", 400, { field: "marketMaking" });
     }
     return; // signal thresholds are unused for market making
+  }
+
+  if (kind === "GRID") {
+    const g = input.grid ?? {};
+    if (
+      !inRange(g.rangePct, 0.2, 50) ||
+      !inRange(g.levels, 1, 25) ||
+      !inRange(g.stepPct, 0.05, 20) ||
+      !inRange(g.atrStepMult, 0, 10) ||
+      !inRange(g.orderSizePct, 0.1, 100) ||
+      !inRange(g.recenterPct, 0.2, 50) ||
+      !inRange(g.requotePct, 0, 10) ||
+      !inRange(g.maxInventoryPct, 1, 100)
+    ) {
+      throw new AppError("VALIDATION", 400, { field: "grid" });
+    }
+    return; // signal thresholds are unused for grid
   }
 
   if (kind === "ATM_SME") {

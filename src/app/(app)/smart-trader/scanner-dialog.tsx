@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Spinner, Field, Select, Input } from "@/components/client";
 import { Badge, EmptyState } from "@/components/ui";
 import { toast } from "@/components/toast";
@@ -54,7 +54,7 @@ const OUTCOME_LABEL: Record<string, { label: string; tone: "success" | "danger" 
 
 const fmt = (v: number) => (Math.abs(v) >= 1 ? v.toLocaleString("en-US", { maximumFractionDigits: 4 }) : v.toFixed(6));
 
-export function ScannerDialog() {
+export function ScannerDialog({ pairs }: { pairs: { symbol: string; exchange: string }[] }) {
   const [market, setMarket] = useState("");
   const [timeframe, setTimeframe] = useState("5m");
   const [count, setCount] = useState("10");
@@ -70,6 +70,14 @@ export function ScannerDialog() {
   const [btSymbol, setBtSymbol] = useState("");
   const [btExchange, setBtExchange] = useState("KUCOIN");
   const [btDays, setBtDays] = useState("14");
+
+  // unique symbols for the datalist; picking one auto-sets its exchange
+  const symbols = useMemo(() => [...new Set(pairs.map((p) => p.symbol))].sort(), [pairs]);
+  function pickSymbol(v: string) {
+    setBtSymbol(v);
+    const hit = pairs.find((p) => p.symbol === v.toUpperCase().trim());
+    if (hit) setBtExchange(hit.exchange);
+  }
 
   const loadHistory = useCallback(async () => {
     try {
@@ -213,7 +221,12 @@ export function ScannerDialog() {
       <div className="rounded-xl border border-border p-4">
         <h4 className="mb-3 text-sm font-bold">بک‌تست اسکنر — همان منطق روی داده‌ی تاریخی</h4>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Field label="نماد"><Input dir="ltr" placeholder="BTC-USDT" value={btSymbol} onChange={(e) => setBtSymbol(e.target.value)} /></Field>
+          <Field label="نماد">
+            <Input dir="ltr" list="bt-symbols" placeholder="BTC-USDT" value={btSymbol} onChange={(e) => pickSymbol(e.target.value)} />
+            <datalist id="bt-symbols">
+              {symbols.map((s) => <option key={s} value={s} />)}
+            </datalist>
+          </Field>
           <Field label="صرافی">
             <Select value={btExchange} onChange={(e) => setBtExchange(e.target.value)}>
               <option value="KUCOIN">کوکوین</option>

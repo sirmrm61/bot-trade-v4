@@ -157,9 +157,13 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     const exchange = live.exchange || "NOBITEX";
     const adapter = paper ? publicAdapter(exchange) : await adapterForUser(live.userId, exchange, "live-engine");
 
-    // ---- market making — own quoting loop, handles PAUSED internally
-    if (live.version.kind === "MARKET_MAKING") {
-      if (paper) await paperMarketMakingTick(live, adapter);
+    // ---- market making / grid — own quoting loops, handle PAUSED internally
+    if (live.version.kind === "MARKET_MAKING" || live.version.kind === "GRID") {
+      const { gridTick, paperGridTick } = await import("./grid");
+      if (live.version.kind === "GRID") {
+        if (paper) await paperGridTick(live, adapter);
+        else await gridTick(live, adapter);
+      } else if (paper) await paperMarketMakingTick(live, adapter);
       else await marketMakingTick(live, adapter);
       if (live.circuitBreakerFailures > 0 || live.status === "STARTING") {
         await prisma.liveStrategy.update({

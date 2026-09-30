@@ -9,13 +9,14 @@ export type IndicatorName = (typeof INDICATORS)[number];
 
 /** Strategy engine kinds — SIGNAL uses candle indicators; OBI/MM are order-book driven;
  *  the SYMBOLIC_* kinds are candle-native symbolic engines (see modules/trading/symbolic-engines). */
-export const STRATEGY_KINDS = ["SIGNAL", "ORDER_BOOK_IMBALANCE", "MARKET_MAKING", "ATM_SME", "RMM_BSE", "DZS_HMM"] as const;
+export const STRATEGY_KINDS = ["SIGNAL", "ORDER_BOOK_IMBALANCE", "MARKET_MAKING", "GRID", "ATM_SME", "RMM_BSE", "DZS_HMM"] as const;
 export type StrategyKind = (typeof STRATEGY_KINDS)[number];
 
 export const STRATEGY_KIND_LABELS: Record<StrategyKind, string> = {
   SIGNAL: "سیگنالی (اندیکاتورها)",
   ORDER_BOOK_IMBALANCE: "عدم تعادل دفتر سفارش",
   MARKET_MAKING: "مارکت میکر",
+  GRID: "گرید هوشمند",
   ATM_SME: "سمبلیک مومنتوم (ATM-SME)",
   RMM_BSE: "سمبلیک شکست کانال (RMM-BSE)",
   DZS_HMM: "سمبلیک رژیم بازار (DZS-HMM)",

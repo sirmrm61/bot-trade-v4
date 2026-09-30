@@ -5,6 +5,8 @@ import { Modal } from "@/components/client";
 import { Badge } from "@/components/ui";
 import { cn } from "@/shared/utils";
 import { ScannerDialog } from "./scanner-dialog";
+import { WhaleDialog } from "./whale-dialog";
+import { GridDialog } from "./grid-dialog";
 
 /**
  * Smart Trader mosaic — data-driven idea tiles. To add an idea, append an
@@ -37,20 +39,20 @@ const IDEAS: Idea[] = [
   {
     id: "smart-grid",
     title: "گرید هوشمند",
-    description: "سفارش‌های پلکانی تطبیق‌پذیر با نوسان — به‌زودی.",
+    description:
+      "نردبان سفارش‌های لیمیت دور قیمت — خرید پایین، فروش بالا. فاصله‌ی پله‌ها با ATR تطبیق می‌یابد و با خروج قیمت از باند، نردبان بازچینی می‌شود.",
     icon: "pulse",
     accent: "from-violet-500/15 to-fuchsia-400/15 text-violet-500",
-    badge: "به‌زودی",
-    disabled: true,
+    badge: "فعال",
   },
   {
     id: "whale-watch",
     title: "ردیاب نهنگ",
-    description: "تشخیص جریان سفارش‌های بزرگ در اوردر‌بوک — به‌زودی.",
+    description:
+      "اسکن اوردر‌بوک جفت‌های برتر — دیوارهای خرید/فروش بزرگ و عدم تعادل عمق را پیدا می‌کند تا حمایت و مقاومت نهنگ‌ها را ببینید.",
     icon: "sparkle",
     accent: "from-amber-500/15 to-orange-400/15 text-amber-500",
-    badge: "به‌زودی",
-    disabled: true,
+    badge: "فعال",
   },
 ];
 
@@ -116,7 +118,7 @@ function PulseGlyph() {
   );
 }
 
-export function SmartTraderMosaic() {
+export function SmartTraderMosaic({ pairs }: { pairs: { symbol: string; exchange: string }[] }) {
   const [active, setActive] = useState<string | null>(null);
   const idea = IDEAS.find((i) => i.id === active);
 
@@ -162,7 +164,33 @@ export function SmartTraderMosaic() {
           </span>
         }
       >
-        <ScannerDialog />
+        <ScannerDialog pairs={pairs} />
+      </Modal>
+
+      <Modal
+        open={active === "whale-watch"}
+        onClose={() => setActive(null)}
+        title={
+          <span className="flex items-center gap-2">
+            {idea?.title}
+            <Badge tone="warning">ردیابی اوردر‌بوک</Badge>
+          </span>
+        }
+      >
+        <WhaleDialog />
+      </Modal>
+
+      <Modal
+        open={active === "smart-grid"}
+        onClose={() => setActive(null)}
+        title={
+          <span className="flex items-center gap-2">
+            {idea?.title}
+            <Badge tone="success">استراتژی اجرایی</Badge>
+          </span>
+        }
+      >
+        <GridDialog pairs={pairs} />
       </Modal>
     </>
   );

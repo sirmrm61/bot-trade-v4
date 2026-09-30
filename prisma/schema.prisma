@@ -624,6 +624,34 @@ model Opportunity {
 }
 
 // ------------------------------------------------------------
+// Whale Events — large order-book walls / imbalance detections
+// ------------------------------------------------------------
+
+model WhaleEvent {
+  id          String   @id @default(cuid())
+  userId      String
+  exchange    String
+  symbol      String
+  marketType  String   // SPOT | PERPETUAL
+  kind        String   // BID_WALL | ASK_WALL | IMBALANCE_BIDS | IMBALANCE_ASKS
+  mid         Float
+  price       Float?   // wall level price (null for imbalance-only events)
+  sizeUsd     Float?   // wall size in USD
+  distancePct Float?   // |level - mid| / mid %
+  sharePct    Float?   // level share of its side's depth
+  bidDepthUsd Float
+  askDepthUsd Float
+  imbalance   Float    // bidDepth / askDepth
+  score       Float    // 0..100 strength
+  reasons     String   // JSON array — Persian, user-facing
+  features    String   // JSON — book snapshot for analysis
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([symbol, exchange])
+}
+
+// ------------------------------------------------------------
 // Referrals
 // ------------------------------------------------------------
 
