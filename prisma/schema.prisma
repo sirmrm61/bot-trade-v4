@@ -403,11 +403,17 @@ model Backtest {
   equityCurve        String?  // JSON array [{t, equity}]
   results            String?  // JSON full result blob
   idempotencyKey     String? @unique
+  // trace & debugging — OFF (default) | SUMMARY | FULL
+  traceLevel         String   @default("OFF")
+  traceSymbol        String?  // scope FULL traces to one symbol
+  strictCausality    Boolean  @default(false) // forbid same-bar entry after signal
+  ambiguityPolicy    String   @default("SL_FIRST") // TP_FIRST | SL_FIRST | CONSERVATIVE | TICK_DATA_REQUIRED
   createdAt          DateTime @default(now())
   startedAt          DateTime?
   completedAt        DateTime?
 
   trades BacktestTrade[]
+  traceEvents TraceEvent[]
 
   @@index([userId, createdAt])
   @@index([status])
@@ -427,7 +433,34 @@ model BacktestTrade {
   entryTime  DateTime
   exitTime   DateTime?
   exitReason String?  // SIGNAL | STOP_LOSS | TAKE_PROFIT | TRAILING_STOP | END
+  traceId    String?  // deterministic "tr-<runId>-<seq>"
+  trace      String?  // JSON — this trade's full event chain
 
+  @@index([backtestId])
+  @@index([traceId])
+}
+
+// ------------------------------------------------------------
+// Trace & Debugging — structured events keyed by runId
+// ------------------------------------------------------------
+
+model TraceEvent {
+  id        String   @id @default(cuid())
+  runId     String   // "bt-<backtestId>" | "scan-<ts>"
+  backtestId String? // set when runId belongs to a backtest
+  backtest  Backtest? @relation(fields: [backtestId], references: [id], onDelete: Cascade)
+  refId     String?  // tradeTraceId / opportunityTraceId / candidateId
+  seq       Int
+  ts        BigInt   // event time (candle time for engine events)
+  stage     String   // SCANNER | STRATEGY | COST | RISK | ENTRY | POSITION | EXIT | PNL_AUDIT | SUMMARY | SYSTEM
+  event     String
+  symbol    String?
+  barIndex  Int?
+  candleTs  BigInt?
+  data      String?  // JSON payload
+
+  @@index([runId, seq])
+  @@index([refId])
   @@index([backtestId])
 }
 

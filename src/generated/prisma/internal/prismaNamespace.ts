@@ -413,12 +413,14 @@ export const ModelName = {
   StrategyPurchase: 'StrategyPurchase',
   Backtest: 'Backtest',
   BacktestTrade: 'BacktestTrade',
+  TraceEvent: 'TraceEvent',
   LiveStrategy: 'LiveStrategy',
   Order: 'Order',
   Trade: 'Trade',
   HistoricalCandle: 'HistoricalCandle',
   SignalLog: 'SignalLog',
   Opportunity: 'Opportunity',
+  WhaleEvent: 'WhaleEvent',
   Referral: 'Referral',
   Notification: 'Notification',
   ActivityLog: 'ActivityLog',
@@ -440,7 +442,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "opportunity" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "jobRecord"
+    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "traceEvent" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "opportunity" | "whaleEvent" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "jobRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1628,6 +1630,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TraceEvent: {
+      payload: Prisma.$TraceEventPayload<ExtArgs>
+      fields: Prisma.TraceEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TraceEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TraceEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload>
+        }
+        findFirst: {
+          args: Prisma.TraceEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TraceEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload>
+        }
+        findMany: {
+          args: Prisma.TraceEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload>[]
+        }
+        create: {
+          args: Prisma.TraceEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload>
+        }
+        createMany: {
+          args: Prisma.TraceEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TraceEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload>[]
+        }
+        delete: {
+          args: Prisma.TraceEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload>
+        }
+        update: {
+          args: Prisma.TraceEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.TraceEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TraceEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TraceEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.TraceEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TraceEventPayload>
+        }
+        aggregate: {
+          args: Prisma.TraceEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTraceEvent>
+        }
+        groupBy: {
+          args: Prisma.TraceEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TraceEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TraceEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TraceEventCountAggregateOutputType> | number
+        }
+      }
+    }
     LiveStrategy: {
       payload: Prisma.$LiveStrategyPayload<ExtArgs>
       fields: Prisma.LiveStrategyFieldRefs
@@ -2069,6 +2145,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.OpportunityCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.OpportunityCountAggregateOutputType> | number
+        }
+      }
+    }
+    WhaleEvent: {
+      payload: Prisma.$WhaleEventPayload<ExtArgs>
+      fields: Prisma.WhaleEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WhaleEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WhaleEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload>
+        }
+        findFirst: {
+          args: Prisma.WhaleEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WhaleEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload>
+        }
+        findMany: {
+          args: Prisma.WhaleEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload>[]
+        }
+        create: {
+          args: Prisma.WhaleEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload>
+        }
+        createMany: {
+          args: Prisma.WhaleEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WhaleEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload>[]
+        }
+        delete: {
+          args: Prisma.WhaleEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload>
+        }
+        update: {
+          args: Prisma.WhaleEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.WhaleEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WhaleEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WhaleEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.WhaleEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WhaleEventPayload>
+        }
+        aggregate: {
+          args: Prisma.WhaleEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWhaleEvent>
+        }
+        groupBy: {
+          args: Prisma.WhaleEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WhaleEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WhaleEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WhaleEventCountAggregateOutputType> | number
         }
       }
     }
@@ -2847,6 +2997,10 @@ export const BacktestScalarFieldEnum = {
   equityCurve: 'equityCurve',
   results: 'results',
   idempotencyKey: 'idempotencyKey',
+  traceLevel: 'traceLevel',
+  traceSymbol: 'traceSymbol',
+  strictCausality: 'strictCausality',
+  ambiguityPolicy: 'ambiguityPolicy',
   createdAt: 'createdAt',
   startedAt: 'startedAt',
   completedAt: 'completedAt'
@@ -2867,10 +3021,30 @@ export const BacktestTradeScalarFieldEnum = {
   pnlPct: 'pnlPct',
   entryTime: 'entryTime',
   exitTime: 'exitTime',
-  exitReason: 'exitReason'
+  exitReason: 'exitReason',
+  traceId: 'traceId',
+  trace: 'trace'
 } as const
 
 export type BacktestTradeScalarFieldEnum = (typeof BacktestTradeScalarFieldEnum)[keyof typeof BacktestTradeScalarFieldEnum]
+
+
+export const TraceEventScalarFieldEnum = {
+  id: 'id',
+  runId: 'runId',
+  backtestId: 'backtestId',
+  refId: 'refId',
+  seq: 'seq',
+  ts: 'ts',
+  stage: 'stage',
+  event: 'event',
+  symbol: 'symbol',
+  barIndex: 'barIndex',
+  candleTs: 'candleTs',
+  data: 'data'
+} as const
+
+export type TraceEventScalarFieldEnum = (typeof TraceEventScalarFieldEnum)[keyof typeof TraceEventScalarFieldEnum]
 
 
 export const LiveStrategyScalarFieldEnum = {
@@ -3025,6 +3199,30 @@ export const OpportunityScalarFieldEnum = {
 export type OpportunityScalarFieldEnum = (typeof OpportunityScalarFieldEnum)[keyof typeof OpportunityScalarFieldEnum]
 
 
+export const WhaleEventScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  exchange: 'exchange',
+  symbol: 'symbol',
+  marketType: 'marketType',
+  kind: 'kind',
+  mid: 'mid',
+  price: 'price',
+  sizeUsd: 'sizeUsd',
+  distancePct: 'distancePct',
+  sharePct: 'sharePct',
+  bidDepthUsd: 'bidDepthUsd',
+  askDepthUsd: 'askDepthUsd',
+  imbalance: 'imbalance',
+  score: 'score',
+  reasons: 'reasons',
+  features: 'features',
+  createdAt: 'createdAt'
+} as const
+
+export type WhaleEventScalarFieldEnum = (typeof WhaleEventScalarFieldEnum)[keyof typeof WhaleEventScalarFieldEnum]
+
+
 export const ReferralScalarFieldEnum = {
   id: 'id',
   referrerId: 'referrerId',
@@ -3171,6 +3369,13 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Float'
  */
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'BigInt'
+ */
+export type BigIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BigInt'>
     
 
 /**
@@ -3340,12 +3545,14 @@ export type GlobalOmitConfig = {
   strategyPurchase?: Prisma.StrategyPurchaseOmit
   backtest?: Prisma.BacktestOmit
   backtestTrade?: Prisma.BacktestTradeOmit
+  traceEvent?: Prisma.TraceEventOmit
   liveStrategy?: Prisma.LiveStrategyOmit
   order?: Prisma.OrderOmit
   trade?: Prisma.TradeOmit
   historicalCandle?: Prisma.HistoricalCandleOmit
   signalLog?: Prisma.SignalLogOmit
   opportunity?: Prisma.OpportunityOmit
+  whaleEvent?: Prisma.WhaleEventOmit
   referral?: Prisma.ReferralOmit
   notification?: Prisma.NotificationOmit
   activityLog?: Prisma.ActivityLogOmit

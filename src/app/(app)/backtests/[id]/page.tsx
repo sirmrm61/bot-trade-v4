@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/infrastructure/database/prisma";
 import { currentSession } from "@/modules/auth/session";
@@ -63,7 +64,14 @@ export default async function BacktestDetailPage({ params }: { params: Promise<{
       <PageHeader
         title={`بک‌تست ${bt.strategy.name}`}
         description={`${bt.symbol} · ${bt.timeframe} · ${jalaliDateTime(bt.startDate)} تا ${jalaliDateTime(bt.endDate)}`}
-        action={<StatusBadge status={bt.status} />}
+        action={
+          <div className="flex items-center gap-2">
+            <StatusBadge status={bt.status} />
+            <Link href={`/backtests/${bt.id}/trace`} className="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-surface2">
+              ردیابی (Trace)
+            </Link>
+          </div>
+        }
       />
       {bt.status !== "COMPLETED" ? (
         <Card>

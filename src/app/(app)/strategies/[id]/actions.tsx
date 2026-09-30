@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ActionButton, ApiForm, Field, Input } from "@/components/client";
+import { ActionButton, ApiForm, Field, Input, Select } from "@/components/client";
 import { toast } from "@/components/toast";
 
 export function DeleteStrategyButton({
@@ -43,6 +43,17 @@ export function RunBacktestForm({ strategyId, versionId, defaultFrom, defaultTo,
       <Field label="سرمایه اولیه (تومان)"><Input name="initialBalance" type="number" required defaultValue={10000000} /></Field>
       <Field label="کارمزد ٪"><Input name="feePct" type="number" step="0.01" defaultValue={0.25} /></Field>
       <Field label="لغزش قیمت ٪"><Input name="slippagePct" type="number" step="0.01" defaultValue={0.05} /></Field>
+      <Field label="ردیابی (Trace)" hint="خلاصه = معاملات و دلایل رد · کامل = هر مرحله هر کندل">
+        <Select name="traceLevel" defaultValue="OFF" options={[
+          { value: "OFF", label: "خاموش" },
+          { value: "SUMMARY", label: "خلاصه" },
+          { value: "FULL", label: "کامل" },
+        ]} />
+      </Field>
+      <label className="flex items-center gap-2 text-xs text-muted">
+        <input type="checkbox" name="strictCausality" value="true" />
+        علیت سخت‌گیرانه — ورود فقط روی کندل بعد از سیگنال (جلوگیری از look-ahead)
+      </label>
     </ApiForm>
   );
 }

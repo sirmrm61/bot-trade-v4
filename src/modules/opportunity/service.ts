@@ -9,9 +9,10 @@ import { INDICATORS } from "@/modules/indicators/registry";
 import type { Condition } from "@/modules/indicators/engine";
 import type { StrategyIndicatorConfig } from "@/modules/signals/engine";
 import {
-  computeOpportunity, backtestScanner,
+  evaluateOpportunity, backtestScanner,
   OPPORTUNITY_DEFAULTS, type OpportunityCalc,
 } from "./engine";
+import { Tracer, makeScanRunId, opportunityTraceId } from "@/modules/trace/tracer";
 import type { PairRank } from "@/modules/scalping/types";
 
 /**
@@ -35,38 +36,75 @@ export interface ScanOpts {
 export async function scanOpportunities(
   userId: string,
   opts: ScanOpts = {},
-): Promise<{ created: number; opportunities: unknown[]; scanned: number; ranked: number }> {
+): Promise<{ created: number; opportunities: unknown[]; scanned: number; ranked: number; scanRunId: string }> {
   const count = clamp(Math.trunc(opts.count ?? 10), 1, 25);
   const tf = opts.candleTimeframe ?? "5m";
+  const tracer = new Tracer(makeScanRunId(), { level: "SUMMARY" });
 
   const result = await rankPairs({ market: opts.market });
   const ranked = result.pairs.filter((p) => p.status === "RANKED" && p.score !== null);
   if (ranked.length === 0) {
     throw new AppError("INSUFFICIENT_DATA", 422, { reason: "no ranked pairs from scanner" });
   }
+  tracer.counters.totalEvaluations = ranked.length;
 
   const end = new Date();
   const start = new Date(end.getTime() - CANDLE_TARGET * tfMs(tf));
   const rows: {
-    calc: OpportunityCalc; p: PairRank;
+    calc: OpportunityCalc; p: PairRank; oid: string;
   }[] = [];
 
   for (const p of ranked.slice(0, MAX_SCANNED)) {
     if (rows.length >= count) break;
+    const oid = opportunityTraceId(tracer.runId, p.symbol, Date.now());
     try {
       const candles = await getCandles({ symbol: p.symbol, timeframe: tf, start, end, exchange: p.exchange });
-      if (candles.length < MIN_CANDLES) continue;
+      if (candles.length < MIN_CANDLES) {
+        tracer.reject("MARKET_FILTER", "Insufficient candle history");
+        continue;
+      }
       const mid = p.metrics.mid ?? p.metrics.markPrice ?? candles[candles.length - 1].close;
       const costPct = p.metrics.roundTripCostPct ?? DEFAULT_COST_PCT;
-      const calc = computeOpportunity({ candles, costPct, scanScore: p.score, mid });
-      if (calc) rows.push({ calc, p });
+      const verdict = evaluateOpportunity({ candles, costPct, scanScore: p.score, mid });
+      if (!verdict.opportunity) {
+        // every failed filter + the primary reason, so an empty scan is diagnosable
+        tracer.emit({
+          stage: "SCANNER", event: "CANDIDATE_REJECTED", important: true,
+          refId: oid, symbol: p.symbol, candleTs: candles.at(-1)?.time,
+          data: {
+            scanScore: p.score, costPct,
+            rejectionStage: verdict.rejection!.stage,
+            primaryRejectReason: verdict.rejection!.primaryRejectReason,
+            filters: verdict.rejection!.filters,
+            marketSnapshot: {
+              spreadPct: p.metrics.spreadPct, depthUsd: p.metrics.depthUsd,
+              volumeUsd24h: p.metrics.volumeUsd24h, slippagePct: p.metrics.slippagePct,
+            },
+          },
+        });
+        tracer.reject(verdict.rejection!.stage, verdict.rejection!.primaryRejectReason);
+        continue;
+      }
+      tracer.counters.signals++;
+      tracer.emit({
+        stage: "SCANNER", event: "CANDIDATE_ACCEPTED", important: true,
+        refId: oid, symbol: p.symbol, candleTs: candles.at(-1)?.time,
+        data: {
+          scanScore: p.score, costPct, filters: verdict.rejection ? [] : undefined,
+          direction: verdict.opportunity.direction,
+          netReturnPct: verdict.opportunity.netReturnPct,
+          riskReward: verdict.opportunity.riskReward,
+          score: verdict.opportunity.score,
+        },
+      });
+      rows.push({ calc: verdict.opportunity, p, oid });
     } catch {
       logger.warn("opportunity candle eval failed", { module: "opportunity", symbol: p.symbol });
     }
   }
 
   const created: unknown[] = [];
-  for (const { calc, p } of rows) {
+  for (const { calc, p, oid } of rows) {
     const opp = await prisma.opportunity.create({
       data: {
         userId, exchange: p.exchange, symbol: p.symbol,
@@ -81,6 +119,7 @@ export async function scanOpportunities(
         features: JSON.stringify({
           scanScore: p.score, metrics: p.metrics,
           completeness: p.dataQuality.completeness,
+          opportunityTraceId: oid, scanRunId: tracer.runId,
         }),
         horizonCandles: OPPORTUNITY_DEFAULTS.horizonCandles,
         expiresAt: new Date(Date.now() + OPPORTUNITY_DEFAULTS.horizonCandles * tfMs(tf)),
@@ -89,12 +128,29 @@ export async function scanOpportunities(
     created.push(opp);
   }
 
+  // persist the scan trace — every rejection reason survives for diagnosis
+  const summary = tracer.summary();
+  try {
+    await prisma.traceEvent.createMany({
+      data: tracer.events.map((e) => ({
+        runId: e.runId, backtestId: null, refId: e.refId ?? null, seq: e.seq,
+        ts: BigInt(e.ts), stage: e.stage, event: e.event,
+        symbol: e.symbol ?? null, barIndex: e.barIndex ?? null,
+        candleTs: e.candleTs != null ? BigInt(e.candleTs) : null,
+        data: e.data ? JSON.stringify(e.data) : null,
+      })),
+    });
+  } catch (err) {
+    logger.warn("scan trace persist failed", { module: "opportunity", err: String(err) });
+  }
+
   await logActivity({ userId, action: "OPPORTUNITY_SCAN", entityType: "opportunity" });
   logger.info("opportunity scan", {
     module: "opportunity", userId, market: opts.market ?? "ALL",
-    ranked: ranked.length, created: created.length,
+    ranked: ranked.length, created: created.length, scanRunId: tracer.runId,
+    rejections: summary.rejectionsByReason,
   });
-  return { created: created.length, opportunities: created, scanned: result.meta.totalPairs, ranked: ranked.length };
+  return { created: created.length, opportunities: created, scanned: result.meta.totalPairs, ranked: ranked.length, scanRunId: tracer.runId };
 }
 
 /**
@@ -284,7 +340,7 @@ export async function executeOpportunity(
 /** Scanner-level backtest — replays the opportunity logic on history. */
 export async function runScannerBacktest(
   userId: string,
-  opts: { symbol: string; exchange: string; timeframe: string; days?: number; costPct?: number },
+  opts: { symbol: string; exchange: string; timeframe: string; days?: number; costPct?: number; traceLevel?: "OFF" | "SUMMARY" | "FULL" },
 ) {
   const days = clamp(opts.days ?? 14, 3, 90);
   const end = new Date();
@@ -293,7 +349,23 @@ export async function runScannerBacktest(
     symbol: opts.symbol, timeframe: opts.timeframe, start, end, exchange: opts.exchange,
   });
   if (candles.length < 200) throw new AppError("INSUFFICIENT_DATA", 422, { candles: candles.length });
-  const result = backtestScanner({ candles, costPct: opts.costPct ?? DEFAULT_COST_PCT });
+  const tracer = new Tracer(makeScanRunId(), { level: opts.traceLevel ?? "SUMMARY" });
+  const result = backtestScanner({ candles, costPct: opts.costPct ?? DEFAULT_COST_PCT, tracer, symbol: opts.symbol });
+  if (tracer.events.length > 0) {
+    try {
+      await prisma.traceEvent.createMany({
+        data: tracer.events.map((e) => ({
+          runId: e.runId, backtestId: null, refId: e.refId ?? null, seq: e.seq,
+          ts: BigInt(e.ts), stage: e.stage, event: e.event,
+          symbol: e.symbol ?? opts.symbol, barIndex: e.barIndex ?? null,
+          candleTs: e.candleTs != null ? BigInt(e.candleTs) : null,
+          data: e.data ? JSON.stringify(e.data) : null,
+        })),
+      });
+    } catch (err) {
+      logger.warn("scanner backtest trace persist failed", { module: "opportunity", err: String(err) });
+    }
+  }
   await logActivity({ userId, action: "OPPORTUNITY_BACKTEST", entityType: "opportunity" });
-  return { ...result, candles: candles.length, symbol: opts.symbol, timeframe: opts.timeframe, days };
+  return { ...result, candles: candles.length, symbol: opts.symbol, timeframe: opts.timeframe, days, scanRunId: tracer.runId, traceSummary: tracer.counters };
 }

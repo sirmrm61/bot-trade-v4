@@ -109,6 +109,10 @@ export type BacktestMinAggregateOutputType = {
   equityCurve: string | null
   results: string | null
   idempotencyKey: string | null
+  traceLevel: string | null
+  traceSymbol: string | null
+  strictCausality: boolean | null
+  ambiguityPolicy: string | null
   createdAt: Date | null
   startedAt: Date | null
   completedAt: Date | null
@@ -151,6 +155,10 @@ export type BacktestMaxAggregateOutputType = {
   equityCurve: string | null
   results: string | null
   idempotencyKey: string | null
+  traceLevel: string | null
+  traceSymbol: string | null
+  strictCausality: boolean | null
+  ambiguityPolicy: string | null
   createdAt: Date | null
   startedAt: Date | null
   completedAt: Date | null
@@ -193,6 +201,10 @@ export type BacktestCountAggregateOutputType = {
   equityCurve: number
   results: number
   idempotencyKey: number
+  traceLevel: number
+  traceSymbol: number
+  strictCausality: number
+  ambiguityPolicy: number
   createdAt: number
   startedAt: number
   completedAt: number
@@ -283,6 +295,10 @@ export type BacktestMinAggregateInputType = {
   equityCurve?: true
   results?: true
   idempotencyKey?: true
+  traceLevel?: true
+  traceSymbol?: true
+  strictCausality?: true
+  ambiguityPolicy?: true
   createdAt?: true
   startedAt?: true
   completedAt?: true
@@ -325,6 +341,10 @@ export type BacktestMaxAggregateInputType = {
   equityCurve?: true
   results?: true
   idempotencyKey?: true
+  traceLevel?: true
+  traceSymbol?: true
+  strictCausality?: true
+  ambiguityPolicy?: true
   createdAt?: true
   startedAt?: true
   completedAt?: true
@@ -367,6 +387,10 @@ export type BacktestCountAggregateInputType = {
   equityCurve?: true
   results?: true
   idempotencyKey?: true
+  traceLevel?: true
+  traceSymbol?: true
+  strictCausality?: true
+  ambiguityPolicy?: true
   createdAt?: true
   startedAt?: true
   completedAt?: true
@@ -496,6 +520,10 @@ export type BacktestGroupByOutputType = {
   equityCurve: string | null
   results: string | null
   idempotencyKey: string | null
+  traceLevel: string
+  traceSymbol: string | null
+  strictCausality: boolean
+  ambiguityPolicy: string
   createdAt: Date
   startedAt: Date | null
   completedAt: Date | null
@@ -561,6 +589,10 @@ export type BacktestWhereInput = {
   equityCurve?: Prisma.StringNullableFilter<"Backtest"> | string | null
   results?: Prisma.StringNullableFilter<"Backtest"> | string | null
   idempotencyKey?: Prisma.StringNullableFilter<"Backtest"> | string | null
+  traceLevel?: Prisma.StringFilter<"Backtest"> | string
+  traceSymbol?: Prisma.StringNullableFilter<"Backtest"> | string | null
+  strictCausality?: Prisma.BoolFilter<"Backtest"> | boolean
+  ambiguityPolicy?: Prisma.StringFilter<"Backtest"> | string
   createdAt?: Prisma.DateTimeFilter<"Backtest"> | Date | string
   startedAt?: Prisma.DateTimeNullableFilter<"Backtest"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"Backtest"> | Date | string | null
@@ -569,6 +601,7 @@ export type BacktestWhereInput = {
   version?: Prisma.XOR<Prisma.StrategyVersionNullableScalarRelationFilter, Prisma.StrategyVersionWhereInput> | null
   pair?: Prisma.XOR<Prisma.PairNullableScalarRelationFilter, Prisma.PairWhereInput> | null
   trades?: Prisma.BacktestTradeListRelationFilter
+  traceEvents?: Prisma.TraceEventListRelationFilter
 }
 
 export type BacktestOrderByWithRelationInput = {
@@ -608,6 +641,10 @@ export type BacktestOrderByWithRelationInput = {
   equityCurve?: Prisma.SortOrderInput | Prisma.SortOrder
   results?: Prisma.SortOrderInput | Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  traceLevel?: Prisma.SortOrder
+  traceSymbol?: Prisma.SortOrderInput | Prisma.SortOrder
+  strictCausality?: Prisma.SortOrder
+  ambiguityPolicy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -616,6 +653,7 @@ export type BacktestOrderByWithRelationInput = {
   version?: Prisma.StrategyVersionOrderByWithRelationInput
   pair?: Prisma.PairOrderByWithRelationInput
   trades?: Prisma.BacktestTradeOrderByRelationAggregateInput
+  traceEvents?: Prisma.TraceEventOrderByRelationAggregateInput
 }
 
 export type BacktestWhereUniqueInput = Prisma.AtLeast<{
@@ -658,6 +696,10 @@ export type BacktestWhereUniqueInput = Prisma.AtLeast<{
   avgTradeDurationMin?: Prisma.FloatNullableFilter<"Backtest"> | number | null
   equityCurve?: Prisma.StringNullableFilter<"Backtest"> | string | null
   results?: Prisma.StringNullableFilter<"Backtest"> | string | null
+  traceLevel?: Prisma.StringFilter<"Backtest"> | string
+  traceSymbol?: Prisma.StringNullableFilter<"Backtest"> | string | null
+  strictCausality?: Prisma.BoolFilter<"Backtest"> | boolean
+  ambiguityPolicy?: Prisma.StringFilter<"Backtest"> | string
   createdAt?: Prisma.DateTimeFilter<"Backtest"> | Date | string
   startedAt?: Prisma.DateTimeNullableFilter<"Backtest"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"Backtest"> | Date | string | null
@@ -666,6 +708,7 @@ export type BacktestWhereUniqueInput = Prisma.AtLeast<{
   version?: Prisma.XOR<Prisma.StrategyVersionNullableScalarRelationFilter, Prisma.StrategyVersionWhereInput> | null
   pair?: Prisma.XOR<Prisma.PairNullableScalarRelationFilter, Prisma.PairWhereInput> | null
   trades?: Prisma.BacktestTradeListRelationFilter
+  traceEvents?: Prisma.TraceEventListRelationFilter
 }, "id" | "idempotencyKey">
 
 export type BacktestOrderByWithAggregationInput = {
@@ -705,6 +748,10 @@ export type BacktestOrderByWithAggregationInput = {
   equityCurve?: Prisma.SortOrderInput | Prisma.SortOrder
   results?: Prisma.SortOrderInput | Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrderInput | Prisma.SortOrder
+  traceLevel?: Prisma.SortOrder
+  traceSymbol?: Prisma.SortOrderInput | Prisma.SortOrder
+  strictCausality?: Prisma.SortOrder
+  ambiguityPolicy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -755,6 +802,10 @@ export type BacktestScalarWhereWithAggregatesInput = {
   equityCurve?: Prisma.StringNullableWithAggregatesFilter<"Backtest"> | string | null
   results?: Prisma.StringNullableWithAggregatesFilter<"Backtest"> | string | null
   idempotencyKey?: Prisma.StringNullableWithAggregatesFilter<"Backtest"> | string | null
+  traceLevel?: Prisma.StringWithAggregatesFilter<"Backtest"> | string
+  traceSymbol?: Prisma.StringNullableWithAggregatesFilter<"Backtest"> | string | null
+  strictCausality?: Prisma.BoolWithAggregatesFilter<"Backtest"> | boolean
+  ambiguityPolicy?: Prisma.StringWithAggregatesFilter<"Backtest"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Backtest"> | Date | string
   startedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Backtest"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Backtest"> | Date | string | null
@@ -793,6 +844,10 @@ export type BacktestCreateInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -801,6 +856,7 @@ export type BacktestCreateInput = {
   version?: Prisma.StrategyVersionCreateNestedOneWithoutBacktestsInput
   pair?: Prisma.PairCreateNestedOneWithoutBacktestsInput
   trades?: Prisma.BacktestTradeCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestUncheckedCreateInput = {
@@ -840,10 +896,15 @@ export type BacktestUncheckedCreateInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   trades?: Prisma.BacktestTradeUncheckedCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventUncheckedCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestUpdateInput = {
@@ -879,6 +940,10 @@ export type BacktestUpdateInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -887,6 +952,7 @@ export type BacktestUpdateInput = {
   version?: Prisma.StrategyVersionUpdateOneWithoutBacktestsNestedInput
   pair?: Prisma.PairUpdateOneWithoutBacktestsNestedInput
   trades?: Prisma.BacktestTradeUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateInput = {
@@ -926,10 +992,15 @@ export type BacktestUncheckedUpdateInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   trades?: Prisma.BacktestTradeUncheckedUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUncheckedUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestCreateManyInput = {
@@ -969,6 +1040,10 @@ export type BacktestCreateManyInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -1007,6 +1082,10 @@ export type BacktestUpdateManyMutationInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1049,6 +1128,10 @@ export type BacktestUncheckedUpdateManyInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1101,6 +1184,10 @@ export type BacktestCountOrderByAggregateInput = {
   equityCurve?: Prisma.SortOrder
   results?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
+  traceLevel?: Prisma.SortOrder
+  traceSymbol?: Prisma.SortOrder
+  strictCausality?: Prisma.SortOrder
+  ambiguityPolicy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
@@ -1166,6 +1253,10 @@ export type BacktestMaxOrderByAggregateInput = {
   equityCurve?: Prisma.SortOrder
   results?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
+  traceLevel?: Prisma.SortOrder
+  traceSymbol?: Prisma.SortOrder
+  strictCausality?: Prisma.SortOrder
+  ambiguityPolicy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
@@ -1208,6 +1299,10 @@ export type BacktestMinOrderByAggregateInput = {
   equityCurve?: Prisma.SortOrder
   results?: Prisma.SortOrder
   idempotencyKey?: Prisma.SortOrder
+  traceLevel?: Prisma.SortOrder
+  traceSymbol?: Prisma.SortOrder
+  strictCausality?: Prisma.SortOrder
+  ambiguityPolicy?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
@@ -1239,6 +1334,11 @@ export type BacktestSumOrderByAggregateInput = {
 export type BacktestScalarRelationFilter = {
   is?: Prisma.BacktestWhereInput
   isNot?: Prisma.BacktestWhereInput
+}
+
+export type BacktestNullableScalarRelationFilter = {
+  is?: Prisma.BacktestWhereInput | null
+  isNot?: Prisma.BacktestWhereInput | null
 }
 
 export type BacktestCreateNestedManyWithoutUserInput = {
@@ -1423,6 +1523,22 @@ export type BacktestUpdateOneRequiredWithoutTradesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BacktestUpdateToOneWithWhereWithoutTradesInput, Prisma.BacktestUpdateWithoutTradesInput>, Prisma.BacktestUncheckedUpdateWithoutTradesInput>
 }
 
+export type BacktestCreateNestedOneWithoutTraceEventsInput = {
+  create?: Prisma.XOR<Prisma.BacktestCreateWithoutTraceEventsInput, Prisma.BacktestUncheckedCreateWithoutTraceEventsInput>
+  connectOrCreate?: Prisma.BacktestCreateOrConnectWithoutTraceEventsInput
+  connect?: Prisma.BacktestWhereUniqueInput
+}
+
+export type BacktestUpdateOneWithoutTraceEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.BacktestCreateWithoutTraceEventsInput, Prisma.BacktestUncheckedCreateWithoutTraceEventsInput>
+  connectOrCreate?: Prisma.BacktestCreateOrConnectWithoutTraceEventsInput
+  upsert?: Prisma.BacktestUpsertWithoutTraceEventsInput
+  disconnect?: Prisma.BacktestWhereInput | boolean
+  delete?: Prisma.BacktestWhereInput | boolean
+  connect?: Prisma.BacktestWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BacktestUpdateToOneWithWhereWithoutTraceEventsInput, Prisma.BacktestUpdateWithoutTraceEventsInput>, Prisma.BacktestUncheckedUpdateWithoutTraceEventsInput>
+}
+
 export type BacktestCreateWithoutUserInput = {
   id?: string
   symbol: string
@@ -1456,6 +1572,10 @@ export type BacktestCreateWithoutUserInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -1463,6 +1583,7 @@ export type BacktestCreateWithoutUserInput = {
   version?: Prisma.StrategyVersionCreateNestedOneWithoutBacktestsInput
   pair?: Prisma.PairCreateNestedOneWithoutBacktestsInput
   trades?: Prisma.BacktestTradeCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestUncheckedCreateWithoutUserInput = {
@@ -1501,10 +1622,15 @@ export type BacktestUncheckedCreateWithoutUserInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   trades?: Prisma.BacktestTradeUncheckedCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventUncheckedCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestCreateOrConnectWithoutUserInput = {
@@ -1572,6 +1698,10 @@ export type BacktestScalarWhereInput = {
   equityCurve?: Prisma.StringNullableFilter<"Backtest"> | string | null
   results?: Prisma.StringNullableFilter<"Backtest"> | string | null
   idempotencyKey?: Prisma.StringNullableFilter<"Backtest"> | string | null
+  traceLevel?: Prisma.StringFilter<"Backtest"> | string
+  traceSymbol?: Prisma.StringNullableFilter<"Backtest"> | string | null
+  strictCausality?: Prisma.BoolFilter<"Backtest"> | boolean
+  ambiguityPolicy?: Prisma.StringFilter<"Backtest"> | string
   createdAt?: Prisma.DateTimeFilter<"Backtest"> | Date | string
   startedAt?: Prisma.DateTimeNullableFilter<"Backtest"> | Date | string | null
   completedAt?: Prisma.DateTimeNullableFilter<"Backtest"> | Date | string | null
@@ -1610,6 +1740,10 @@ export type BacktestCreateWithoutPairInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -1617,6 +1751,7 @@ export type BacktestCreateWithoutPairInput = {
   strategy: Prisma.StrategyCreateNestedOneWithoutBacktestsInput
   version?: Prisma.StrategyVersionCreateNestedOneWithoutBacktestsInput
   trades?: Prisma.BacktestTradeCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestUncheckedCreateWithoutPairInput = {
@@ -1655,10 +1790,15 @@ export type BacktestUncheckedCreateWithoutPairInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   trades?: Prisma.BacktestTradeUncheckedCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventUncheckedCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestCreateOrConnectWithoutPairInput = {
@@ -1719,6 +1859,10 @@ export type BacktestCreateWithoutStrategyInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -1726,6 +1870,7 @@ export type BacktestCreateWithoutStrategyInput = {
   version?: Prisma.StrategyVersionCreateNestedOneWithoutBacktestsInput
   pair?: Prisma.PairCreateNestedOneWithoutBacktestsInput
   trades?: Prisma.BacktestTradeCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestUncheckedCreateWithoutStrategyInput = {
@@ -1764,10 +1909,15 @@ export type BacktestUncheckedCreateWithoutStrategyInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   trades?: Prisma.BacktestTradeUncheckedCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventUncheckedCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestCreateOrConnectWithoutStrategyInput = {
@@ -1828,6 +1978,10 @@ export type BacktestCreateWithoutVersionInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -1835,6 +1989,7 @@ export type BacktestCreateWithoutVersionInput = {
   strategy: Prisma.StrategyCreateNestedOneWithoutBacktestsInput
   pair?: Prisma.PairCreateNestedOneWithoutBacktestsInput
   trades?: Prisma.BacktestTradeCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestUncheckedCreateWithoutVersionInput = {
@@ -1873,10 +2028,15 @@ export type BacktestUncheckedCreateWithoutVersionInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
   trades?: Prisma.BacktestTradeUncheckedCreateNestedManyWithoutBacktestInput
+  traceEvents?: Prisma.TraceEventUncheckedCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestCreateOrConnectWithoutVersionInput = {
@@ -1937,6 +2097,10 @@ export type BacktestCreateWithoutTradesInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -1944,6 +2108,7 @@ export type BacktestCreateWithoutTradesInput = {
   strategy: Prisma.StrategyCreateNestedOneWithoutBacktestsInput
   version?: Prisma.StrategyVersionCreateNestedOneWithoutBacktestsInput
   pair?: Prisma.PairCreateNestedOneWithoutBacktestsInput
+  traceEvents?: Prisma.TraceEventCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestUncheckedCreateWithoutTradesInput = {
@@ -1983,9 +2148,14 @@ export type BacktestUncheckedCreateWithoutTradesInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
+  traceEvents?: Prisma.TraceEventUncheckedCreateNestedManyWithoutBacktestInput
 }
 
 export type BacktestCreateOrConnectWithoutTradesInput = {
@@ -2037,6 +2207,10 @@ export type BacktestUpdateWithoutTradesInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2044,6 +2218,7 @@ export type BacktestUpdateWithoutTradesInput = {
   strategy?: Prisma.StrategyUpdateOneRequiredWithoutBacktestsNestedInput
   version?: Prisma.StrategyVersionUpdateOneWithoutBacktestsNestedInput
   pair?: Prisma.PairUpdateOneWithoutBacktestsNestedInput
+  traceEvents?: Prisma.TraceEventUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateWithoutTradesInput = {
@@ -2083,9 +2258,218 @@ export type BacktestUncheckedUpdateWithoutTradesInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  traceEvents?: Prisma.TraceEventUncheckedUpdateManyWithoutBacktestNestedInput
+}
+
+export type BacktestCreateWithoutTraceEventsInput = {
+  id?: string
+  symbol: string
+  timeframe: string
+  startDate: Date | string
+  endDate: Date | string
+  initialBalance: number
+  feePct?: number
+  slippagePct?: number
+  executionDelayMs?: number
+  partialFill?: boolean
+  status?: string
+  progress?: number
+  error?: string | null
+  quotaConsumed?: boolean
+  finalBalance?: number | null
+  netProfit?: number | null
+  profitPct?: number | null
+  winRate?: number | null
+  lossRate?: number | null
+  totalTrades?: number | null
+  winningTrades?: number | null
+  losingTrades?: number | null
+  avgProfit?: number | null
+  avgLoss?: number | null
+  maxDrawdown?: number | null
+  profitFactor?: number | null
+  largestWin?: number | null
+  largestLoss?: number | null
+  avgTradeDurationMin?: number | null
+  equityCurve?: string | null
+  results?: string | null
+  idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
+  createdAt?: Date | string
+  startedAt?: Date | string | null
+  completedAt?: Date | string | null
+  user: Prisma.UserCreateNestedOneWithoutBacktestsInput
+  strategy: Prisma.StrategyCreateNestedOneWithoutBacktestsInput
+  version?: Prisma.StrategyVersionCreateNestedOneWithoutBacktestsInput
+  pair?: Prisma.PairCreateNestedOneWithoutBacktestsInput
+  trades?: Prisma.BacktestTradeCreateNestedManyWithoutBacktestInput
+}
+
+export type BacktestUncheckedCreateWithoutTraceEventsInput = {
+  id?: string
+  userId: string
+  strategyId: string
+  versionId?: string | null
+  pairId?: string | null
+  symbol: string
+  timeframe: string
+  startDate: Date | string
+  endDate: Date | string
+  initialBalance: number
+  feePct?: number
+  slippagePct?: number
+  executionDelayMs?: number
+  partialFill?: boolean
+  status?: string
+  progress?: number
+  error?: string | null
+  quotaConsumed?: boolean
+  finalBalance?: number | null
+  netProfit?: number | null
+  profitPct?: number | null
+  winRate?: number | null
+  lossRate?: number | null
+  totalTrades?: number | null
+  winningTrades?: number | null
+  losingTrades?: number | null
+  avgProfit?: number | null
+  avgLoss?: number | null
+  maxDrawdown?: number | null
+  profitFactor?: number | null
+  largestWin?: number | null
+  largestLoss?: number | null
+  avgTradeDurationMin?: number | null
+  equityCurve?: string | null
+  results?: string | null
+  idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
+  createdAt?: Date | string
+  startedAt?: Date | string | null
+  completedAt?: Date | string | null
+  trades?: Prisma.BacktestTradeUncheckedCreateNestedManyWithoutBacktestInput
+}
+
+export type BacktestCreateOrConnectWithoutTraceEventsInput = {
+  where: Prisma.BacktestWhereUniqueInput
+  create: Prisma.XOR<Prisma.BacktestCreateWithoutTraceEventsInput, Prisma.BacktestUncheckedCreateWithoutTraceEventsInput>
+}
+
+export type BacktestUpsertWithoutTraceEventsInput = {
+  update: Prisma.XOR<Prisma.BacktestUpdateWithoutTraceEventsInput, Prisma.BacktestUncheckedUpdateWithoutTraceEventsInput>
+  create: Prisma.XOR<Prisma.BacktestCreateWithoutTraceEventsInput, Prisma.BacktestUncheckedCreateWithoutTraceEventsInput>
+  where?: Prisma.BacktestWhereInput
+}
+
+export type BacktestUpdateToOneWithWhereWithoutTraceEventsInput = {
+  where?: Prisma.BacktestWhereInput
+  data: Prisma.XOR<Prisma.BacktestUpdateWithoutTraceEventsInput, Prisma.BacktestUncheckedUpdateWithoutTraceEventsInput>
+}
+
+export type BacktestUpdateWithoutTraceEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  timeframe?: Prisma.StringFieldUpdateOperationsInput | string
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  initialBalance?: Prisma.FloatFieldUpdateOperationsInput | number
+  feePct?: Prisma.FloatFieldUpdateOperationsInput | number
+  slippagePct?: Prisma.FloatFieldUpdateOperationsInput | number
+  executionDelayMs?: Prisma.IntFieldUpdateOperationsInput | number
+  partialFill?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  progress?: Prisma.IntFieldUpdateOperationsInput | number
+  error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quotaConsumed?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  finalBalance?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  netProfit?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  profitPct?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  winRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lossRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  totalTrades?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  winningTrades?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  losingTrades?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  avgProfit?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  avgLoss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  maxDrawdown?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  profitFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  largestWin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  largestLoss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  avgTradeDurationMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  user?: Prisma.UserUpdateOneRequiredWithoutBacktestsNestedInput
+  strategy?: Prisma.StrategyUpdateOneRequiredWithoutBacktestsNestedInput
+  version?: Prisma.StrategyVersionUpdateOneWithoutBacktestsNestedInput
+  pair?: Prisma.PairUpdateOneWithoutBacktestsNestedInput
+  trades?: Prisma.BacktestTradeUpdateManyWithoutBacktestNestedInput
+}
+
+export type BacktestUncheckedUpdateWithoutTraceEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  strategyId?: Prisma.StringFieldUpdateOperationsInput | string
+  versionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  pairId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  symbol?: Prisma.StringFieldUpdateOperationsInput | string
+  timeframe?: Prisma.StringFieldUpdateOperationsInput | string
+  startDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  endDate?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  initialBalance?: Prisma.FloatFieldUpdateOperationsInput | number
+  feePct?: Prisma.FloatFieldUpdateOperationsInput | number
+  slippagePct?: Prisma.FloatFieldUpdateOperationsInput | number
+  executionDelayMs?: Prisma.IntFieldUpdateOperationsInput | number
+  partialFill?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  progress?: Prisma.IntFieldUpdateOperationsInput | number
+  error?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  quotaConsumed?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  finalBalance?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  netProfit?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  profitPct?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  winRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  lossRate?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  totalTrades?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  winningTrades?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  losingTrades?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  avgProfit?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  avgLoss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  maxDrawdown?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  profitFactor?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  largestWin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  largestLoss?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  avgTradeDurationMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  trades?: Prisma.BacktestTradeUncheckedUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestCreateManyUserInput = {
@@ -2124,6 +2508,10 @@ export type BacktestCreateManyUserInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -2162,6 +2550,10 @@ export type BacktestUpdateWithoutUserInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2169,6 +2561,7 @@ export type BacktestUpdateWithoutUserInput = {
   version?: Prisma.StrategyVersionUpdateOneWithoutBacktestsNestedInput
   pair?: Prisma.PairUpdateOneWithoutBacktestsNestedInput
   trades?: Prisma.BacktestTradeUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateWithoutUserInput = {
@@ -2207,10 +2600,15 @@ export type BacktestUncheckedUpdateWithoutUserInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   trades?: Prisma.BacktestTradeUncheckedUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUncheckedUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateManyWithoutUserInput = {
@@ -2249,6 +2647,10 @@ export type BacktestUncheckedUpdateManyWithoutUserInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2290,6 +2692,10 @@ export type BacktestCreateManyPairInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -2328,6 +2734,10 @@ export type BacktestUpdateWithoutPairInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2335,6 +2745,7 @@ export type BacktestUpdateWithoutPairInput = {
   strategy?: Prisma.StrategyUpdateOneRequiredWithoutBacktestsNestedInput
   version?: Prisma.StrategyVersionUpdateOneWithoutBacktestsNestedInput
   trades?: Prisma.BacktestTradeUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateWithoutPairInput = {
@@ -2373,10 +2784,15 @@ export type BacktestUncheckedUpdateWithoutPairInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   trades?: Prisma.BacktestTradeUncheckedUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUncheckedUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateManyWithoutPairInput = {
@@ -2415,6 +2831,10 @@ export type BacktestUncheckedUpdateManyWithoutPairInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2456,6 +2876,10 @@ export type BacktestCreateManyStrategyInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -2494,6 +2918,10 @@ export type BacktestUpdateWithoutStrategyInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2501,6 +2929,7 @@ export type BacktestUpdateWithoutStrategyInput = {
   version?: Prisma.StrategyVersionUpdateOneWithoutBacktestsNestedInput
   pair?: Prisma.PairUpdateOneWithoutBacktestsNestedInput
   trades?: Prisma.BacktestTradeUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateWithoutStrategyInput = {
@@ -2539,10 +2968,15 @@ export type BacktestUncheckedUpdateWithoutStrategyInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   trades?: Prisma.BacktestTradeUncheckedUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUncheckedUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateManyWithoutStrategyInput = {
@@ -2581,6 +3015,10 @@ export type BacktestUncheckedUpdateManyWithoutStrategyInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2622,6 +3060,10 @@ export type BacktestCreateManyVersionInput = {
   equityCurve?: string | null
   results?: string | null
   idempotencyKey?: string | null
+  traceLevel?: string
+  traceSymbol?: string | null
+  strictCausality?: boolean
+  ambiguityPolicy?: string
   createdAt?: Date | string
   startedAt?: Date | string | null
   completedAt?: Date | string | null
@@ -2660,6 +3102,10 @@ export type BacktestUpdateWithoutVersionInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2667,6 +3113,7 @@ export type BacktestUpdateWithoutVersionInput = {
   strategy?: Prisma.StrategyUpdateOneRequiredWithoutBacktestsNestedInput
   pair?: Prisma.PairUpdateOneWithoutBacktestsNestedInput
   trades?: Prisma.BacktestTradeUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateWithoutVersionInput = {
@@ -2705,10 +3152,15 @@ export type BacktestUncheckedUpdateWithoutVersionInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   trades?: Prisma.BacktestTradeUncheckedUpdateManyWithoutBacktestNestedInput
+  traceEvents?: Prisma.TraceEventUncheckedUpdateManyWithoutBacktestNestedInput
 }
 
 export type BacktestUncheckedUpdateManyWithoutVersionInput = {
@@ -2747,6 +3199,10 @@ export type BacktestUncheckedUpdateManyWithoutVersionInput = {
   equityCurve?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   results?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   idempotencyKey?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceLevel?: Prisma.StringFieldUpdateOperationsInput | string
+  traceSymbol?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  strictCausality?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  ambiguityPolicy?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   startedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -2759,10 +3215,12 @@ export type BacktestUncheckedUpdateManyWithoutVersionInput = {
 
 export type BacktestCountOutputType = {
   trades: number
+  traceEvents: number
 }
 
 export type BacktestCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   trades?: boolean | BacktestCountOutputTypeCountTradesArgs
+  traceEvents?: boolean | BacktestCountOutputTypeCountTraceEventsArgs
 }
 
 /**
@@ -2780,6 +3238,13 @@ export type BacktestCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Ext
  */
 export type BacktestCountOutputTypeCountTradesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.BacktestTradeWhereInput
+}
+
+/**
+ * BacktestCountOutputType without action
+ */
+export type BacktestCountOutputTypeCountTraceEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TraceEventWhereInput
 }
 
 
@@ -2820,6 +3285,10 @@ export type BacktestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   equityCurve?: boolean
   results?: boolean
   idempotencyKey?: boolean
+  traceLevel?: boolean
+  traceSymbol?: boolean
+  strictCausality?: boolean
+  ambiguityPolicy?: boolean
   createdAt?: boolean
   startedAt?: boolean
   completedAt?: boolean
@@ -2828,6 +3297,7 @@ export type BacktestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   version?: boolean | Prisma.Backtest$versionArgs<ExtArgs>
   pair?: boolean | Prisma.Backtest$pairArgs<ExtArgs>
   trades?: boolean | Prisma.Backtest$tradesArgs<ExtArgs>
+  traceEvents?: boolean | Prisma.Backtest$traceEventsArgs<ExtArgs>
   _count?: boolean | Prisma.BacktestCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["backtest"]>
 
@@ -2868,6 +3338,10 @@ export type BacktestSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   equityCurve?: boolean
   results?: boolean
   idempotencyKey?: boolean
+  traceLevel?: boolean
+  traceSymbol?: boolean
+  strictCausality?: boolean
+  ambiguityPolicy?: boolean
   createdAt?: boolean
   startedAt?: boolean
   completedAt?: boolean
@@ -2914,6 +3388,10 @@ export type BacktestSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   equityCurve?: boolean
   results?: boolean
   idempotencyKey?: boolean
+  traceLevel?: boolean
+  traceSymbol?: boolean
+  strictCausality?: boolean
+  ambiguityPolicy?: boolean
   createdAt?: boolean
   startedAt?: boolean
   completedAt?: boolean
@@ -2960,18 +3438,23 @@ export type BacktestSelectScalar = {
   equityCurve?: boolean
   results?: boolean
   idempotencyKey?: boolean
+  traceLevel?: boolean
+  traceSymbol?: boolean
+  strictCausality?: boolean
+  ambiguityPolicy?: boolean
   createdAt?: boolean
   startedAt?: boolean
   completedAt?: boolean
 }
 
-export type BacktestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "strategyId" | "versionId" | "pairId" | "symbol" | "timeframe" | "startDate" | "endDate" | "initialBalance" | "feePct" | "slippagePct" | "executionDelayMs" | "partialFill" | "status" | "progress" | "error" | "quotaConsumed" | "finalBalance" | "netProfit" | "profitPct" | "winRate" | "lossRate" | "totalTrades" | "winningTrades" | "losingTrades" | "avgProfit" | "avgLoss" | "maxDrawdown" | "profitFactor" | "largestWin" | "largestLoss" | "avgTradeDurationMin" | "equityCurve" | "results" | "idempotencyKey" | "createdAt" | "startedAt" | "completedAt", ExtArgs["result"]["backtest"]>
+export type BacktestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "strategyId" | "versionId" | "pairId" | "symbol" | "timeframe" | "startDate" | "endDate" | "initialBalance" | "feePct" | "slippagePct" | "executionDelayMs" | "partialFill" | "status" | "progress" | "error" | "quotaConsumed" | "finalBalance" | "netProfit" | "profitPct" | "winRate" | "lossRate" | "totalTrades" | "winningTrades" | "losingTrades" | "avgProfit" | "avgLoss" | "maxDrawdown" | "profitFactor" | "largestWin" | "largestLoss" | "avgTradeDurationMin" | "equityCurve" | "results" | "idempotencyKey" | "traceLevel" | "traceSymbol" | "strictCausality" | "ambiguityPolicy" | "createdAt" | "startedAt" | "completedAt", ExtArgs["result"]["backtest"]>
 export type BacktestInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   strategy?: boolean | Prisma.StrategyDefaultArgs<ExtArgs>
   version?: boolean | Prisma.Backtest$versionArgs<ExtArgs>
   pair?: boolean | Prisma.Backtest$pairArgs<ExtArgs>
   trades?: boolean | Prisma.Backtest$tradesArgs<ExtArgs>
+  traceEvents?: boolean | Prisma.Backtest$traceEventsArgs<ExtArgs>
   _count?: boolean | Prisma.BacktestCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type BacktestIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2995,6 +3478,7 @@ export type $BacktestPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     version: Prisma.$StrategyVersionPayload<ExtArgs> | null
     pair: Prisma.$PairPayload<ExtArgs> | null
     trades: Prisma.$BacktestTradePayload<ExtArgs>[]
+    traceEvents: Prisma.$TraceEventPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -3033,6 +3517,10 @@ export type $BacktestPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     equityCurve: string | null
     results: string | null
     idempotencyKey: string | null
+    traceLevel: string
+    traceSymbol: string | null
+    strictCausality: boolean
+    ambiguityPolicy: string
     createdAt: Date
     startedAt: Date | null
     completedAt: Date | null
@@ -3435,6 +3923,7 @@ export interface Prisma__BacktestClient<T, Null = never, ExtArgs extends runtime
   version<T extends Prisma.Backtest$versionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Backtest$versionArgs<ExtArgs>>): Prisma.Prisma__StrategyVersionClient<runtime.Types.Result.GetResult<Prisma.$StrategyVersionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   pair<T extends Prisma.Backtest$pairArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Backtest$pairArgs<ExtArgs>>): Prisma.Prisma__PairClient<runtime.Types.Result.GetResult<Prisma.$PairPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   trades<T extends Prisma.Backtest$tradesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Backtest$tradesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BacktestTradePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  traceEvents<T extends Prisma.Backtest$traceEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Backtest$traceEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TraceEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3500,6 +3989,10 @@ export interface BacktestFieldRefs {
   readonly equityCurve: Prisma.FieldRef<"Backtest", 'String'>
   readonly results: Prisma.FieldRef<"Backtest", 'String'>
   readonly idempotencyKey: Prisma.FieldRef<"Backtest", 'String'>
+  readonly traceLevel: Prisma.FieldRef<"Backtest", 'String'>
+  readonly traceSymbol: Prisma.FieldRef<"Backtest", 'String'>
+  readonly strictCausality: Prisma.FieldRef<"Backtest", 'Boolean'>
+  readonly ambiguityPolicy: Prisma.FieldRef<"Backtest", 'String'>
   readonly createdAt: Prisma.FieldRef<"Backtest", 'DateTime'>
   readonly startedAt: Prisma.FieldRef<"Backtest", 'DateTime'>
   readonly completedAt: Prisma.FieldRef<"Backtest", 'DateTime'>
@@ -3961,6 +4454,30 @@ export type Backtest$tradesArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.BacktestTradeScalarFieldEnum | Prisma.BacktestTradeScalarFieldEnum[]
+}
+
+/**
+ * Backtest.traceEvents
+ */
+export type Backtest$traceEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TraceEvent
+   */
+  select?: Prisma.TraceEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TraceEvent
+   */
+  omit?: Prisma.TraceEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TraceEventInclude<ExtArgs> | null
+  where?: Prisma.TraceEventWhereInput
+  orderBy?: Prisma.TraceEventOrderByWithRelationInput | Prisma.TraceEventOrderByWithRelationInput[]
+  cursor?: Prisma.TraceEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TraceEventScalarFieldEnum | Prisma.TraceEventScalarFieldEnum[]
 }
 
 /**

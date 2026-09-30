@@ -13,6 +13,12 @@ const schema = z.object({
   slippagePct: z.number().min(0).max(5).optional(),
   partialFill: z.boolean().optional(),
   idempotencyKey: z.string().optional(),
+  // trace & debugging
+  traceLevel: z.enum(["OFF", "SUMMARY", "FULL"]).optional(),
+  traceSymbol: z.string().optional(),
+  // html checkbox posts "true" as a string
+  strictCausality: z.preprocess((v) => v === true || v === "true", z.boolean()).optional(),
+  ambiguityPolicy: z.enum(["TP_FIRST", "SL_FIRST", "CONSERVATIVE", "TICK_DATA_REQUIRED"]).optional(),
 });
 
 export const GET = api(async (_req, ctx) => {
@@ -42,6 +48,10 @@ export const POST = api(async (req, ctx) => {
     slippagePct: input.slippagePct,
     partialFill: input.partialFill,
     idempotencyKey: input.idempotencyKey,
+    traceLevel: input.traceLevel,
+    traceSymbol: input.traceSymbol,
+    strictCausality: input.strictCausality,
+    ambiguityPolicy: input.ambiguityPolicy,
   });
   return { ok: true, backtest: bt };
 });

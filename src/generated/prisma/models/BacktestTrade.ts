@@ -57,6 +57,8 @@ export type BacktestTradeMinAggregateOutputType = {
   entryTime: Date | null
   exitTime: Date | null
   exitReason: string | null
+  traceId: string | null
+  trace: string | null
 }
 
 export type BacktestTradeMaxAggregateOutputType = {
@@ -72,6 +74,8 @@ export type BacktestTradeMaxAggregateOutputType = {
   entryTime: Date | null
   exitTime: Date | null
   exitReason: string | null
+  traceId: string | null
+  trace: string | null
 }
 
 export type BacktestTradeCountAggregateOutputType = {
@@ -87,6 +91,8 @@ export type BacktestTradeCountAggregateOutputType = {
   entryTime: number
   exitTime: number
   exitReason: number
+  traceId: number
+  trace: number
   _all: number
 }
 
@@ -122,6 +128,8 @@ export type BacktestTradeMinAggregateInputType = {
   entryTime?: true
   exitTime?: true
   exitReason?: true
+  traceId?: true
+  trace?: true
 }
 
 export type BacktestTradeMaxAggregateInputType = {
@@ -137,6 +145,8 @@ export type BacktestTradeMaxAggregateInputType = {
   entryTime?: true
   exitTime?: true
   exitReason?: true
+  traceId?: true
+  trace?: true
 }
 
 export type BacktestTradeCountAggregateInputType = {
@@ -152,6 +162,8 @@ export type BacktestTradeCountAggregateInputType = {
   entryTime?: true
   exitTime?: true
   exitReason?: true
+  traceId?: true
+  trace?: true
   _all?: true
 }
 
@@ -254,6 +266,8 @@ export type BacktestTradeGroupByOutputType = {
   entryTime: Date
   exitTime: Date | null
   exitReason: string | null
+  traceId: string | null
+  trace: string | null
   _count: BacktestTradeCountAggregateOutputType | null
   _avg: BacktestTradeAvgAggregateOutputType | null
   _sum: BacktestTradeSumAggregateOutputType | null
@@ -292,6 +306,8 @@ export type BacktestTradeWhereInput = {
   entryTime?: Prisma.DateTimeFilter<"BacktestTrade"> | Date | string
   exitTime?: Prisma.DateTimeNullableFilter<"BacktestTrade"> | Date | string | null
   exitReason?: Prisma.StringNullableFilter<"BacktestTrade"> | string | null
+  traceId?: Prisma.StringNullableFilter<"BacktestTrade"> | string | null
+  trace?: Prisma.StringNullableFilter<"BacktestTrade"> | string | null
   backtest?: Prisma.XOR<Prisma.BacktestScalarRelationFilter, Prisma.BacktestWhereInput>
 }
 
@@ -308,6 +324,8 @@ export type BacktestTradeOrderByWithRelationInput = {
   entryTime?: Prisma.SortOrder
   exitTime?: Prisma.SortOrderInput | Prisma.SortOrder
   exitReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  traceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  trace?: Prisma.SortOrderInput | Prisma.SortOrder
   backtest?: Prisma.BacktestOrderByWithRelationInput
 }
 
@@ -327,6 +345,8 @@ export type BacktestTradeWhereUniqueInput = Prisma.AtLeast<{
   entryTime?: Prisma.DateTimeFilter<"BacktestTrade"> | Date | string
   exitTime?: Prisma.DateTimeNullableFilter<"BacktestTrade"> | Date | string | null
   exitReason?: Prisma.StringNullableFilter<"BacktestTrade"> | string | null
+  traceId?: Prisma.StringNullableFilter<"BacktestTrade"> | string | null
+  trace?: Prisma.StringNullableFilter<"BacktestTrade"> | string | null
   backtest?: Prisma.XOR<Prisma.BacktestScalarRelationFilter, Prisma.BacktestWhereInput>
 }, "id">
 
@@ -343,6 +363,8 @@ export type BacktestTradeOrderByWithAggregationInput = {
   entryTime?: Prisma.SortOrder
   exitTime?: Prisma.SortOrderInput | Prisma.SortOrder
   exitReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  traceId?: Prisma.SortOrderInput | Prisma.SortOrder
+  trace?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.BacktestTradeCountOrderByAggregateInput
   _avg?: Prisma.BacktestTradeAvgOrderByAggregateInput
   _max?: Prisma.BacktestTradeMaxOrderByAggregateInput
@@ -366,6 +388,8 @@ export type BacktestTradeScalarWhereWithAggregatesInput = {
   entryTime?: Prisma.DateTimeWithAggregatesFilter<"BacktestTrade"> | Date | string
   exitTime?: Prisma.DateTimeNullableWithAggregatesFilter<"BacktestTrade"> | Date | string | null
   exitReason?: Prisma.StringNullableWithAggregatesFilter<"BacktestTrade"> | string | null
+  traceId?: Prisma.StringNullableWithAggregatesFilter<"BacktestTrade"> | string | null
+  trace?: Prisma.StringNullableWithAggregatesFilter<"BacktestTrade"> | string | null
 }
 
 export type BacktestTradeCreateInput = {
@@ -380,6 +404,8 @@ export type BacktestTradeCreateInput = {
   entryTime: Date | string
   exitTime?: Date | string | null
   exitReason?: string | null
+  traceId?: string | null
+  trace?: string | null
   backtest: Prisma.BacktestCreateNestedOneWithoutTradesInput
 }
 
@@ -396,6 +422,8 @@ export type BacktestTradeUncheckedCreateInput = {
   entryTime: Date | string
   exitTime?: Date | string | null
   exitReason?: string | null
+  traceId?: string | null
+  trace?: string | null
 }
 
 export type BacktestTradeUpdateInput = {
@@ -410,6 +438,8 @@ export type BacktestTradeUpdateInput = {
   entryTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   exitTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   exitReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trace?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   backtest?: Prisma.BacktestUpdateOneRequiredWithoutTradesNestedInput
 }
 
@@ -426,6 +456,8 @@ export type BacktestTradeUncheckedUpdateInput = {
   entryTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   exitTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   exitReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trace?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BacktestTradeCreateManyInput = {
@@ -441,6 +473,8 @@ export type BacktestTradeCreateManyInput = {
   entryTime: Date | string
   exitTime?: Date | string | null
   exitReason?: string | null
+  traceId?: string | null
+  trace?: string | null
 }
 
 export type BacktestTradeUpdateManyMutationInput = {
@@ -455,6 +489,8 @@ export type BacktestTradeUpdateManyMutationInput = {
   entryTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   exitTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   exitReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trace?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BacktestTradeUncheckedUpdateManyInput = {
@@ -470,6 +506,8 @@ export type BacktestTradeUncheckedUpdateManyInput = {
   entryTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   exitTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   exitReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trace?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BacktestTradeListRelationFilter = {
@@ -495,6 +533,8 @@ export type BacktestTradeCountOrderByAggregateInput = {
   entryTime?: Prisma.SortOrder
   exitTime?: Prisma.SortOrder
   exitReason?: Prisma.SortOrder
+  traceId?: Prisma.SortOrder
+  trace?: Prisma.SortOrder
 }
 
 export type BacktestTradeAvgOrderByAggregateInput = {
@@ -519,6 +559,8 @@ export type BacktestTradeMaxOrderByAggregateInput = {
   entryTime?: Prisma.SortOrder
   exitTime?: Prisma.SortOrder
   exitReason?: Prisma.SortOrder
+  traceId?: Prisma.SortOrder
+  trace?: Prisma.SortOrder
 }
 
 export type BacktestTradeMinOrderByAggregateInput = {
@@ -534,6 +576,8 @@ export type BacktestTradeMinOrderByAggregateInput = {
   entryTime?: Prisma.SortOrder
   exitTime?: Prisma.SortOrder
   exitReason?: Prisma.SortOrder
+  traceId?: Prisma.SortOrder
+  trace?: Prisma.SortOrder
 }
 
 export type BacktestTradeSumOrderByAggregateInput = {
@@ -599,6 +643,8 @@ export type BacktestTradeCreateWithoutBacktestInput = {
   entryTime: Date | string
   exitTime?: Date | string | null
   exitReason?: string | null
+  traceId?: string | null
+  trace?: string | null
 }
 
 export type BacktestTradeUncheckedCreateWithoutBacktestInput = {
@@ -613,6 +659,8 @@ export type BacktestTradeUncheckedCreateWithoutBacktestInput = {
   entryTime: Date | string
   exitTime?: Date | string | null
   exitReason?: string | null
+  traceId?: string | null
+  trace?: string | null
 }
 
 export type BacktestTradeCreateOrConnectWithoutBacktestInput = {
@@ -656,6 +704,8 @@ export type BacktestTradeScalarWhereInput = {
   entryTime?: Prisma.DateTimeFilter<"BacktestTrade"> | Date | string
   exitTime?: Prisma.DateTimeNullableFilter<"BacktestTrade"> | Date | string | null
   exitReason?: Prisma.StringNullableFilter<"BacktestTrade"> | string | null
+  traceId?: Prisma.StringNullableFilter<"BacktestTrade"> | string | null
+  trace?: Prisma.StringNullableFilter<"BacktestTrade"> | string | null
 }
 
 export type BacktestTradeCreateManyBacktestInput = {
@@ -670,6 +720,8 @@ export type BacktestTradeCreateManyBacktestInput = {
   entryTime: Date | string
   exitTime?: Date | string | null
   exitReason?: string | null
+  traceId?: string | null
+  trace?: string | null
 }
 
 export type BacktestTradeUpdateWithoutBacktestInput = {
@@ -684,6 +736,8 @@ export type BacktestTradeUpdateWithoutBacktestInput = {
   entryTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   exitTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   exitReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trace?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BacktestTradeUncheckedUpdateWithoutBacktestInput = {
@@ -698,6 +752,8 @@ export type BacktestTradeUncheckedUpdateWithoutBacktestInput = {
   entryTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   exitTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   exitReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trace?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type BacktestTradeUncheckedUpdateManyWithoutBacktestInput = {
@@ -712,6 +768,8 @@ export type BacktestTradeUncheckedUpdateManyWithoutBacktestInput = {
   entryTime?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   exitTime?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   exitReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  traceId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  trace?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 
@@ -729,6 +787,8 @@ export type BacktestTradeSelect<ExtArgs extends runtime.Types.Extensions.Interna
   entryTime?: boolean
   exitTime?: boolean
   exitReason?: boolean
+  traceId?: boolean
+  trace?: boolean
   backtest?: boolean | Prisma.BacktestDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["backtestTrade"]>
 
@@ -745,6 +805,8 @@ export type BacktestTradeSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   entryTime?: boolean
   exitTime?: boolean
   exitReason?: boolean
+  traceId?: boolean
+  trace?: boolean
   backtest?: boolean | Prisma.BacktestDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["backtestTrade"]>
 
@@ -761,6 +823,8 @@ export type BacktestTradeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   entryTime?: boolean
   exitTime?: boolean
   exitReason?: boolean
+  traceId?: boolean
+  trace?: boolean
   backtest?: boolean | Prisma.BacktestDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["backtestTrade"]>
 
@@ -777,9 +841,11 @@ export type BacktestTradeSelectScalar = {
   entryTime?: boolean
   exitTime?: boolean
   exitReason?: boolean
+  traceId?: boolean
+  trace?: boolean
 }
 
-export type BacktestTradeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "backtestId" | "side" | "entryPrice" | "exitPrice" | "amount" | "fee" | "pnl" | "pnlPct" | "entryTime" | "exitTime" | "exitReason", ExtArgs["result"]["backtestTrade"]>
+export type BacktestTradeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "backtestId" | "side" | "entryPrice" | "exitPrice" | "amount" | "fee" | "pnl" | "pnlPct" | "entryTime" | "exitTime" | "exitReason" | "traceId" | "trace", ExtArgs["result"]["backtestTrade"]>
 export type BacktestTradeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   backtest?: boolean | Prisma.BacktestDefaultArgs<ExtArgs>
 }
@@ -808,6 +874,8 @@ export type $BacktestTradePayload<ExtArgs extends runtime.Types.Extensions.Inter
     entryTime: Date
     exitTime: Date | null
     exitReason: string | null
+    traceId: string | null
+    trace: string | null
   }, ExtArgs["result"]["backtestTrade"]>
   composites: {}
 }
@@ -1244,6 +1312,8 @@ export interface BacktestTradeFieldRefs {
   readonly entryTime: Prisma.FieldRef<"BacktestTrade", 'DateTime'>
   readonly exitTime: Prisma.FieldRef<"BacktestTrade", 'DateTime'>
   readonly exitReason: Prisma.FieldRef<"BacktestTrade", 'String'>
+  readonly traceId: Prisma.FieldRef<"BacktestTrade", 'String'>
+  readonly trace: Prisma.FieldRef<"BacktestTrade", 'String'>
 }
     
 

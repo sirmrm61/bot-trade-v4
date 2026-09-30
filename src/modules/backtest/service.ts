@@ -21,6 +21,8 @@ import { logActivity } from "@/modules/activity/service";
 import { logger } from "@/infrastructure/logging/logger";
 import { idempotencyKey as newIdemKey, parseJson } from "@/shared/utils";
 import type { StrategyIndicatorConfig } from "@/modules/signals/engine";
+import { Tracer, backtestRunId } from "@/modules/trace/tracer";
+import type { AmbiguityPolicy, TraceLevel } from "@/modules/trace/types";
 
 /** Extract dynamic SL/TP config from an enabled ATR indicator. */
 export function atrStopsFromIndicators(
@@ -53,6 +55,11 @@ export async function requestBacktest(opts: {
   slippagePct?: number;
   partialFill?: boolean;
   idempotencyKey?: string;
+  /** observability — OFF (default) | SUMMARY | FULL */
+  traceLevel?: TraceLevel;
+  traceSymbol?: string;
+  strictCausality?: boolean;
+  ambiguityPolicy?: AmbiguityPolicy;
 }) {
   const { subscription, backtestLimit, unlimited } = await effectiveLimits(opts.userId);
   if (!unlimited) {
@@ -94,6 +101,10 @@ export async function requestBacktest(opts: {
       feePct,
       slippagePct,
       partialFill: opts.partialFill ?? false,
+      traceLevel: opts.traceLevel ?? "OFF",
+      traceSymbol: opts.traceSymbol ?? null,
+      strictCausality: opts.strictCausality ?? false,
+      ambiguityPolicy: opts.ambiguityPolicy ?? "SL_FIRST",
       status: "QUEUED",
       idempotencyKey: key,
     },
@@ -203,7 +214,12 @@ export async function runAndPersist(
       trailingStopPct: number | null;
       indicators: { name: string; parameters: string; enabled: boolean }[];
     } | null;
-  },
+  } & Partial<{
+    traceLevel: string;
+    traceSymbol: string | null;
+    strictCausality: boolean;
+    ambiguityPolicy: string;
+  }>,
   indicators: StrategyIndicatorConfig[],
   candles?: Candle[],
 ): Promise<BacktestResult> {
@@ -222,6 +238,7 @@ export async function runAndPersist(
   const kind = v.kind ?? "SIGNAL";
   const marketCfg = readMarketConfig(v.config);
   let result: BacktestResult;
+  let tracer: Tracer | undefined;
   if (kind === "MARKET_MAKING") {
     // simulated MM — quotes rest between candles, fills on range touches
     const pair = await prisma.pair.findUnique({
@@ -253,6 +270,11 @@ export async function runAndPersist(
       minAmount: pair?.minAmount,
     });
   } else {
+    tracer = new Tracer(backtestRunId(bt.id), {
+      level: (bt.traceLevel as TraceLevel) ?? "OFF",
+      symbols: bt.traceSymbol ? [bt.traceSymbol] : undefined,
+      strictCausality: bt.strictCausality ?? false,
+    });
     result = runBacktest({
       candles: data,
       indicators,
@@ -269,6 +291,11 @@ export async function runAndPersist(
       slippagePct: bt.slippagePct,
       executionDelayMs: bt.executionDelayMs,
       partialFill: bt.partialFill,
+      tracer,
+      symbol: bt.symbol,
+      timeframe: bt.timeframe,
+      strictCausality: bt.strictCausality ?? false,
+      ambiguityPolicy: (bt.ambiguityPolicy as AmbiguityPolicy) ?? "SL_FIRST",
       // futures — shorts + leverage + liquidation live inside the engine
       market: marketCfg.market,
       leverage: marketCfg.leverage,
@@ -297,8 +324,34 @@ export async function runAndPersist(
         entryTime: new Date(t.entryTime),
         exitTime: new Date(t.exitTime),
         exitReason: t.exitReason,
+        traceId: t.traceId ?? null,
+        trace: t.traceId && tracer
+          ? JSON.stringify(tracer.events.filter((e) => e.refId === t.traceId))
+          : null,
       })),
     });
+    // non-trade events (scanner evals, rejections, summary) keyed by runId
+    if (tracer && tracer.events.length > 0) {
+      const tradeRefs = new Set(result.trades.map((t) => t.traceId).filter(Boolean));
+      await tx.traceEvent.createMany({
+        data: tracer.events.map((e) => ({
+          runId: e.runId,
+          backtestId: bt.id,
+          refId: e.refId ?? null,
+          seq: e.seq,
+          ts: BigInt(e.ts),
+          stage: e.stage,
+          event: e.event,
+          symbol: e.symbol ?? null,
+          barIndex: e.barIndex ?? null,
+          candleTs: e.candleTs != null ? BigInt(e.candleTs) : null,
+          // events that live on a trade row anyway get a slim marker to save space
+          data: e.refId && tradeRefs.has(e.refId) && e.stage !== "SUMMARY"
+            ? null
+            : e.data ? JSON.stringify(e.data) : null,
+        })),
+      });
+    }
     await tx.backtest.update({
       where: { id: bt.id },
       data: {
@@ -321,7 +374,13 @@ export async function runAndPersist(
         largestLoss: result.largestLoss,
         avgTradeDurationMin: result.avgTradeDurationMin,
         equityCurve: JSON.stringify(result.equityCurve.filter((_, i) => i % 10 === 0)),
-        results: JSON.stringify({ breakdown: true, kind }),
+        results: JSON.stringify({
+          breakdown: true, kind,
+          trace: tracer
+            ? { runId: tracer.runId, level: tracer.opts.level,
+                truncated: tracer.truncated, summary: tracer.counters }
+            : undefined,
+        }),
         completedAt: new Date(),
       },
     });

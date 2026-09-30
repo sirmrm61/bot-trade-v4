@@ -86,6 +86,71 @@ export function dynamicStops(
   return { slPct, tpPct, atrPct };
 }
 
+export interface OpportunityRejection {
+  stage: "MARKET_FILTER" | "LIQUIDITY" | "COST" | "STRATEGY" | "RISK" | "EXECUTION";
+  primaryRejectReason: string;
+  filters: { filterName: string; result: "PASS" | "FAIL"; actualValue: number | null; threshold: number | null; operator: string; reason: string }[];
+}
+
+export interface OpportunityVerdict {
+  opportunity: OpportunityCalc | null;
+  rejection: OpportunityRejection | null;
+}
+
+/**
+ * Traced evaluation — same math as computeOpportunity, but instead of a bare
+ * null it reports every failed filter plus a `primaryRejectReason` (first
+ * gate that killed the candidate) and `rejectionStage`.
+ */
+export function evaluateOpportunity(input: {
+  candles: Candle[];
+  costPct: number;
+  scanScore: number | null;
+  mid: number;
+  cfg?: OpportunityConfig;
+}): OpportunityVerdict {
+  const cfg = input.cfg ?? OPPORTUNITY_DEFAULTS;
+  const filters: OpportunityRejection["filters"] = [];
+  const fail = (stage: OpportunityRejection["stage"], reason: string): OpportunityVerdict => ({
+    opportunity: null,
+    rejection: { stage, primaryRejectReason: reason, filters },
+  });
+
+  const dir = detectDirection(input.candles, cfg.minMomentumPct);
+  filters.push({
+    filterName: "momentum_direction", result: dir ? "PASS" : "FAIL",
+    actualValue: null, threshold: cfg.minMomentumPct, operator: ">|minMomentumPct|",
+    reason: "EMA9/EMA21 cross must agree with the 6-candle return",
+  });
+  if (!dir) return fail("STRATEGY", "No directional edge — EMA cross and momentum disagree or momentum too weak");
+
+  const stops = dynamicStops(input.candles, input.costPct, cfg);
+  if (!stops) return fail("MARKET_FILTER", "ATR unavailable — insufficient or degenerate candles");
+
+  const gross = stops.tpPct;
+  const net = gross - input.costPct;
+  const rr = stops.tpPct / stops.slPct;
+  const costShare = gross > 0 ? input.costPct / gross : 1;
+
+  filters.push(
+    { filterName: "net_return", result: net >= cfg.minNetReturnPct ? "PASS" : "FAIL",
+      actualValue: round2(net), threshold: cfg.minNetReturnPct, operator: ">=",
+      reason: "expected net return after costs" },
+    { filterName: "risk_reward", result: rr >= cfg.minRiskReward ? "PASS" : "FAIL",
+      actualValue: Math.round(rr * 100) / 100, threshold: cfg.minRiskReward, operator: ">=",
+      reason: "tp/sl distance ratio" },
+    { filterName: "cost_share", result: input.costPct <= gross * 0.5 ? "PASS" : "FAIL",
+      actualValue: Math.round(costShare * 1000) / 10, threshold: 50, operator: "<=",
+      reason: "cost as % of gross move — must stay under half" },
+  );
+  if (net < cfg.minNetReturnPct) return fail("COST", `Expected net return ${net.toFixed(2)}% below minimum ${cfg.minNetReturnPct}%`);
+  if (input.costPct > gross * 0.5) return fail("COST", `Trading cost eats ${(costShare * 100).toFixed(0)}% of the gross edge`);
+  if (rr < cfg.minRiskReward) return fail("RISK", `Risk/reward ${rr.toFixed(2)} below minimum ${cfg.minRiskReward}`);
+
+  const opportunity = computeOpportunity(input)!;
+  return { opportunity, rejection: null };
+}
+
 /**
  * Score one candidate pair. `metrics` is the scalping scanner's PairMetrics
  * (spread/depth/slippage/cost/volume) — reused so live and analysis agree.
@@ -149,6 +214,10 @@ export function backtestScanner(params: {
   costPct: number;
   cfg?: OpportunityConfig;
   warmup?: number;
+  /** optional tracer — emits per-candidate filter results, rejections and
+   *  opportunity lifecycles so a losing scan can be diagnosed */
+  tracer?: import("@/modules/trace/tracer").Tracer;
+  symbol?: string;
 }): {
   totalSignals: number;
   wins: number;
@@ -161,42 +230,119 @@ export function backtestScanner(params: {
   const cfg = params.cfg ?? OPPORTUNITY_DEFAULTS;
   const warmup = params.warmup ?? 40;
   const cost = params.costPct;
+  const tracer = params.tracer;
   let wins = 0, losses = 0, timeouts = 0, totalPnl = 0;
   const pnls: number[] = [];
 
   for (let i = warmup; i < params.candles.length - cfg.horizonCandles - 1; i++) {
     const window = params.candles.slice(0, i + 1);
+    const c0 = params.candles[i];
+    const oid = `opp-${tracer?.runId ?? "local"}-${i}`;
+    if (tracer) tracer.counters.totalEvaluations++;
+
     const dir = detectDirection(window, cfg.minMomentumPct);
-    if (!dir) continue;
+    if (!dir) {
+      tracer?.emit({
+        stage: "SCANNER", event: "CANDIDATE_REJECTED",
+        refId: oid, symbol: params.symbol, barIndex: i, candleTs: c0.time,
+        data: {
+          rejectionStage: "STRATEGY",
+          primaryRejectReason: "No directional edge",
+          failedFilters: ["momentum_direction"],
+        },
+      });
+      tracer?.reject("STRATEGY", "No directional edge");
+      continue;
+    }
     const stops = dynamicStops(window, cost, cfg);
     if (!stops) continue;
     const rr = stops.tpPct / stops.slPct;
-    if (stops.tpPct - cost < cfg.minNetReturnPct || rr < cfg.minRiskReward) continue;
+    const net = stops.tpPct - cost;
+    const reject =
+      net < cfg.minNetReturnPct
+        ? { stage: "COST", reason: `Net ${net.toFixed(2)}% < min ${cfg.minNetReturnPct}%` }
+        : rr < cfg.minRiskReward
+          ? { stage: "RISK", reason: `RR ${rr.toFixed(2)} < min ${cfg.minRiskReward}` }
+          : null;
+    if (reject) {
+      tracer?.emit({
+        stage: "SCANNER", event: "CANDIDATE_REJECTED",
+        refId: oid, symbol: params.symbol, barIndex: i, candleTs: c0.time,
+        data: { rejectionStage: reject.stage, primaryRejectReason: reject.reason,
+          netPct: net, riskReward: rr, costPct: cost },
+      });
+      tracer?.reject(reject.stage, reject.reason);
+      continue;
+    }
+    if (tracer) { tracer.counters.signals++; tracer.counters.executedTrades++; }
 
     const entry = params.candles[i + 1].open;
     const long = dir.direction === "LONG";
     const tp = long ? entry * (1 + stops.tpPct / 100) : entry * (1 - stops.tpPct / 100);
     const sl = long ? entry * (1 - stops.slPct / 100) : entry * (1 + stops.slPct / 100);
 
+    tracer?.emit({
+      stage: "ENTRY", event: "OPPORTUNITY_OPENED", important: true,
+      refId: oid, symbol: params.symbol, barIndex: i + 1, candleTs: params.candles[i + 1].time,
+      data: {
+        opportunityTraceId: oid, direction: dir.direction,
+        signalTimestamp: c0.time, signalPrice: c0.close,
+        entryPrice: entry, tpPrice: tp, slPrice: sl,
+        atrPct: stops.atrPct, costPct: cost,
+        grossExpectedReturnPct: stops.tpPct, netExpectedReturnPct: net,
+        executionModel: "NEXT_BAR_OPEN", // causal — fills on the bar after the signal
+      },
+    });
+
     let pnl: number | null = null;
+    let exitReason = "TIMEOUT";
+    let exitTs = 0;
+    let ambiguous = false;
     for (let j = i + 1; j < Math.min(i + 1 + cfg.horizonCandles, params.candles.length); j++) {
       const c = params.candles[j];
       const hitTp = long ? c.high >= tp : c.low <= tp;
       const hitSl = long ? c.low <= sl : c.high >= sl;
-      if (hitTp && hitSl) { pnl = -stops.slPct; losses++; break; } // ambiguous candle → worst case
-      if (hitTp) { pnl = stops.tpPct - cost; wins++; break; }
-      if (hitSl) { pnl = -stops.slPct; losses++; break; }
+      if (hitTp && hitSl) {
+        pnl = -stops.slPct; losses++; exitReason = "AMBIGUOUS_EXIT"; exitTs = c.time; ambiguous = true;
+        tracer?.emit({
+          stage: "POSITION", event: "AMBIGUOUS_EXIT", important: true,
+          refId: oid, symbol: params.symbol, barIndex: j, candleTs: c.time,
+          data: { warning: "AMBIGUOUS_EXIT", resolvedTo: "STOP_LOSS", policy: "CONSERVATIVE",
+            candleHigh: c.high, candleLow: c.low },
+        });
+        if (tracer) tracer.counters.ambiguousExits++;
+        break;
+      }
+      if (hitTp) { pnl = stops.tpPct - cost; wins++; exitReason = "TAKE_PROFIT"; exitTs = c.time; break; }
+      if (hitSl) { pnl = -stops.slPct; losses++; exitReason = "STOP_LOSS"; exitTs = c.time; break; }
     }
     if (pnl === null) {
       const lastC = params.candles[Math.min(i + cfg.horizonCandles, params.candles.length - 1)];
       const drift = long ? (lastC.close - entry) / entry : (entry - lastC.close) / entry;
       pnl = drift * 100 - cost;
+      exitTs = lastC.time;
       timeouts++;
     }
     pnls.push(pnl);
     totalPnl += pnl;
+    tracer?.emit({
+      stage: "EXIT", event: "OPPORTUNITY_CLOSED", important: true,
+      refId: oid, symbol: params.symbol, candleTs: exitTs,
+      data: { exitReason, netPnlPct: pnl, costPct: cost, ambiguousExit: ambiguous || undefined,
+        holdingCandles: Math.round((exitTs - params.candles[i + 1].time) / (c0.time ? c0.time - (params.candles[i - 1]?.time ?? c0.time) : 1)) || undefined },
+    });
+    if (tracer) {
+      tracer.counters.closedTrades++;
+      if (pnl > 0) { tracer.counters.winningTrades++; tracer.counters.grossProfit += pnl; }
+      else { tracer.counters.losingTrades++; tracer.counters.grossLoss += Math.abs(pnl); }
+      tracer.counters.netProfit += pnl;
+      if (exitReason === "TAKE_PROFIT") tracer.counters.tpCount++;
+      else if (exitReason === "STOP_LOSS" || exitReason === "AMBIGUOUS_EXIT") tracer.counters.slCount++;
+      else tracer.counters.otherExitCount++;
+    }
   }
 
+  tracer?.summary();
   const n = pnls.length;
   return {
     totalSignals: n, wins, losses, timeouts,

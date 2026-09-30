@@ -67,12 +67,14 @@ export const ModelName = {
   StrategyPurchase: 'StrategyPurchase',
   Backtest: 'Backtest',
   BacktestTrade: 'BacktestTrade',
+  TraceEvent: 'TraceEvent',
   LiveStrategy: 'LiveStrategy',
   Order: 'Order',
   Trade: 'Trade',
   HistoricalCandle: 'HistoricalCandle',
   SignalLog: 'SignalLog',
   Opportunity: 'Opportunity',
+  WhaleEvent: 'WhaleEvent',
   Referral: 'Referral',
   Notification: 'Notification',
   ActivityLog: 'ActivityLog',
@@ -389,6 +391,10 @@ export const BacktestScalarFieldEnum = {
   equityCurve: 'equityCurve',
   results: 'results',
   idempotencyKey: 'idempotencyKey',
+  traceLevel: 'traceLevel',
+  traceSymbol: 'traceSymbol',
+  strictCausality: 'strictCausality',
+  ambiguityPolicy: 'ambiguityPolicy',
   createdAt: 'createdAt',
   startedAt: 'startedAt',
   completedAt: 'completedAt'
@@ -409,10 +415,30 @@ export const BacktestTradeScalarFieldEnum = {
   pnlPct: 'pnlPct',
   entryTime: 'entryTime',
   exitTime: 'exitTime',
-  exitReason: 'exitReason'
+  exitReason: 'exitReason',
+  traceId: 'traceId',
+  trace: 'trace'
 } as const
 
 export type BacktestTradeScalarFieldEnum = (typeof BacktestTradeScalarFieldEnum)[keyof typeof BacktestTradeScalarFieldEnum]
+
+
+export const TraceEventScalarFieldEnum = {
+  id: 'id',
+  runId: 'runId',
+  backtestId: 'backtestId',
+  refId: 'refId',
+  seq: 'seq',
+  ts: 'ts',
+  stage: 'stage',
+  event: 'event',
+  symbol: 'symbol',
+  barIndex: 'barIndex',
+  candleTs: 'candleTs',
+  data: 'data'
+} as const
+
+export type TraceEventScalarFieldEnum = (typeof TraceEventScalarFieldEnum)[keyof typeof TraceEventScalarFieldEnum]
 
 
 export const LiveStrategyScalarFieldEnum = {
@@ -565,6 +591,30 @@ export const OpportunityScalarFieldEnum = {
 } as const
 
 export type OpportunityScalarFieldEnum = (typeof OpportunityScalarFieldEnum)[keyof typeof OpportunityScalarFieldEnum]
+
+
+export const WhaleEventScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  exchange: 'exchange',
+  symbol: 'symbol',
+  marketType: 'marketType',
+  kind: 'kind',
+  mid: 'mid',
+  price: 'price',
+  sizeUsd: 'sizeUsd',
+  distancePct: 'distancePct',
+  sharePct: 'sharePct',
+  bidDepthUsd: 'bidDepthUsd',
+  askDepthUsd: 'askDepthUsd',
+  imbalance: 'imbalance',
+  score: 'score',
+  reasons: 'reasons',
+  features: 'features',
+  createdAt: 'createdAt'
+} as const
+
+export type WhaleEventScalarFieldEnum = (typeof WhaleEventScalarFieldEnum)[keyof typeof WhaleEventScalarFieldEnum]
 
 
 export const ReferralScalarFieldEnum = {

@@ -122,6 +122,11 @@ export type Backtest = Prisma.BacktestModel
  */
 export type BacktestTrade = Prisma.BacktestTradeModel
 /**
+ * Model TraceEvent
+ * 
+ */
+export type TraceEvent = Prisma.TraceEventModel
+/**
  * Model LiveStrategy
  * 
  */
@@ -151,6 +156,11 @@ export type SignalLog = Prisma.SignalLogModel
  * 
  */
 export type Opportunity = Prisma.OpportunityModel
+/**
+ * Model WhaleEvent
+ * 
+ */
+export type WhaleEvent = Prisma.WhaleEventModel
 /**
  * Model Referral
  * 
