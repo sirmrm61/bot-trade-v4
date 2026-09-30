@@ -418,6 +418,7 @@ export const ModelName = {
   Trade: 'Trade',
   HistoricalCandle: 'HistoricalCandle',
   SignalLog: 'SignalLog',
+  Opportunity: 'Opportunity',
   Referral: 'Referral',
   Notification: 'Notification',
   ActivityLog: 'ActivityLog',
@@ -439,7 +440,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "jobRecord"
+    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "opportunity" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "jobRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1997,6 +1998,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Opportunity: {
+      payload: Prisma.$OpportunityPayload<ExtArgs>
+      fields: Prisma.OpportunityFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.OpportunityFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.OpportunityFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload>
+        }
+        findFirst: {
+          args: Prisma.OpportunityFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.OpportunityFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload>
+        }
+        findMany: {
+          args: Prisma.OpportunityFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload>[]
+        }
+        create: {
+          args: Prisma.OpportunityCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload>
+        }
+        createMany: {
+          args: Prisma.OpportunityCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.OpportunityCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload>[]
+        }
+        delete: {
+          args: Prisma.OpportunityDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload>
+        }
+        update: {
+          args: Prisma.OpportunityUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload>
+        }
+        deleteMany: {
+          args: Prisma.OpportunityDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.OpportunityUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.OpportunityUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload>[]
+        }
+        upsert: {
+          args: Prisma.OpportunityUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$OpportunityPayload>
+        }
+        aggregate: {
+          args: Prisma.OpportunityAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateOpportunity>
+        }
+        groupBy: {
+          args: Prisma.OpportunityGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OpportunityGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.OpportunityCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.OpportunityCountAggregateOutputType> | number
+        }
+      }
+    }
     Referral: {
       payload: Prisma.$ReferralPayload<ExtArgs>
       fields: Prisma.ReferralFieldRefs
@@ -2917,6 +2992,39 @@ export const SignalLogScalarFieldEnum = {
 export type SignalLogScalarFieldEnum = (typeof SignalLogScalarFieldEnum)[keyof typeof SignalLogScalarFieldEnum]
 
 
+export const OpportunityScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  exchange: 'exchange',
+  symbol: 'symbol',
+  marketType: 'marketType',
+  direction: 'direction',
+  timeframe: 'timeframe',
+  entryPrice: 'entryPrice',
+  stopLossPct: 'stopLossPct',
+  takeProfitPct: 'takeProfitPct',
+  stopLossPrice: 'stopLossPrice',
+  takeProfitPrice: 'takeProfitPrice',
+  grossReturnPct: 'grossReturnPct',
+  totalCostPct: 'totalCostPct',
+  netReturnPct: 'netReturnPct',
+  riskReward: 'riskReward',
+  score: 'score',
+  reasons: 'reasons',
+  features: 'features',
+  status: 'status',
+  horizonCandles: 'horizonCandles',
+  outcome: 'outcome',
+  outcomePnlPct: 'outcomePnlPct',
+  evaluatedAt: 'evaluatedAt',
+  liveStrategyId: 'liveStrategyId',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type OpportunityScalarFieldEnum = (typeof OpportunityScalarFieldEnum)[keyof typeof OpportunityScalarFieldEnum]
+
+
 export const ReferralScalarFieldEnum = {
   id: 'id',
   referrerId: 'referrerId',
@@ -3237,6 +3345,7 @@ export type GlobalOmitConfig = {
   trade?: Prisma.TradeOmit
   historicalCandle?: Prisma.HistoricalCandleOmit
   signalLog?: Prisma.SignalLogOmit
+  opportunity?: Prisma.OpportunityOmit
   referral?: Prisma.ReferralOmit
   notification?: Prisma.NotificationOmit
   activityLog?: Prisma.ActivityLogOmit

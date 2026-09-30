@@ -583,6 +583,47 @@ model SignalLog {
 }
 
 // ------------------------------------------------------------
+// Market Opportunities — scanner output with trade plan + outcome (ML dataset)
+// ------------------------------------------------------------
+
+model Opportunity {
+  id             String   @id @default(cuid())
+  userId         String
+  exchange       String
+  symbol         String
+  marketType     String   // SPOT | PERPETUAL
+  direction      String   // LONG | SHORT
+  timeframe      String
+  // trade plan — TP/SL are dynamic (ATR + cost aware), never a fixed %
+  entryPrice     Float
+  stopLossPct    Float
+  takeProfitPct  Float
+  stopLossPrice  Float
+  takeProfitPrice Float
+  grossReturnPct Float
+  totalCostPct   Float
+  netReturnPct   Float    // gross - total cost
+  riskReward     Float    // tp / sl distance ratio
+  score          Float    // confidence 0..100
+  reasons        String   // JSON array — Persian, user-facing
+  features       String   // JSON — full metric snapshot for analysis
+  status         String   @default("OPEN") // OPEN | EXPIRED | EXECUTED
+  // outcome backfill — evaluated after `horizonCandles` have elapsed
+  horizonCandles Int      @default(20)
+  outcome        String?  // TP_HIT | SL_HIT | TIMEOUT
+  outcomePnlPct  Float?
+  evaluatedAt    DateTime?
+  // execution — set when the user trades this opportunity
+  liveStrategyId String?
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([symbol, exchange])
+}
+
+// ------------------------------------------------------------
 // Referrals
 // ------------------------------------------------------------
 

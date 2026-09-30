@@ -72,6 +72,7 @@ export const ModelName = {
   Trade: 'Trade',
   HistoricalCandle: 'HistoricalCandle',
   SignalLog: 'SignalLog',
+  Opportunity: 'Opportunity',
   Referral: 'Referral',
   Notification: 'Notification',
   ActivityLog: 'ActivityLog',
@@ -531,6 +532,39 @@ export const SignalLogScalarFieldEnum = {
 } as const
 
 export type SignalLogScalarFieldEnum = (typeof SignalLogScalarFieldEnum)[keyof typeof SignalLogScalarFieldEnum]
+
+
+export const OpportunityScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  exchange: 'exchange',
+  symbol: 'symbol',
+  marketType: 'marketType',
+  direction: 'direction',
+  timeframe: 'timeframe',
+  entryPrice: 'entryPrice',
+  stopLossPct: 'stopLossPct',
+  takeProfitPct: 'takeProfitPct',
+  stopLossPrice: 'stopLossPrice',
+  takeProfitPrice: 'takeProfitPrice',
+  grossReturnPct: 'grossReturnPct',
+  totalCostPct: 'totalCostPct',
+  netReturnPct: 'netReturnPct',
+  riskReward: 'riskReward',
+  score: 'score',
+  reasons: 'reasons',
+  features: 'features',
+  status: 'status',
+  horizonCandles: 'horizonCandles',
+  outcome: 'outcome',
+  outcomePnlPct: 'outcomePnlPct',
+  evaluatedAt: 'evaluatedAt',
+  liveStrategyId: 'liveStrategyId',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt'
+} as const
+
+export type OpportunityScalarFieldEnum = (typeof OpportunityScalarFieldEnum)[keyof typeof OpportunityScalarFieldEnum]
 
 
 export const ReferralScalarFieldEnum = {

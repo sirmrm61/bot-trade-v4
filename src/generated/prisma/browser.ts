@@ -123,6 +123,11 @@ export type HistoricalCandle = Prisma.HistoricalCandleModel
  */
 export type SignalLog = Prisma.SignalLogModel
 /**
+ * Model Opportunity
+ * 
+ */
+export type Opportunity = Prisma.OpportunityModel
+/**
  * Model Referral
  * 
  */
