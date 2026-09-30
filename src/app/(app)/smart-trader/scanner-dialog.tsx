@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Spinner, Field, Select, Input } from "@/components/client";
+import { Spinner, Field, Select, Input, SearchableSelect } from "@/components/client";
 import { Badge, EmptyState } from "@/components/ui";
 import { toast } from "@/components/toast";
 import { cn } from "@/shared/utils";
@@ -222,10 +222,11 @@ export function ScannerDialog({ pairs }: { pairs: { symbol: string; exchange: st
         <h4 className="mb-3 text-sm font-bold">بک‌تست اسکنر — همان منطق روی داده‌ی تاریخی</h4>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Field label="نماد">
-            <Input dir="ltr" list="bt-symbols" placeholder="BTC-USDT" value={btSymbol} onChange={(e) => pickSymbol(e.target.value)} />
-            <datalist id="bt-symbols">
-              {symbols.map((s) => <option key={s} value={s} />)}
-            </datalist>
+            <SearchableSelect
+              dir="ltr" placeholder="جستجو… BTC-USDT"
+              options={symbols.map((s) => ({ value: s }))}
+              value={btSymbol} onValueChange={pickSymbol}
+            />
           </Field>
           <Field label="صرافی">
             <Select value={btExchange} onChange={(e) => setBtExchange(e.target.value)}>

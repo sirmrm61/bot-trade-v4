@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Spinner, Field, Select, Input } from "@/components/client";
+import { Spinner, Field, Select, Input, SearchableSelect } from "@/components/client";
 import { toast } from "@/components/toast";
 import { useRouter } from "next/navigation";
 
@@ -111,10 +111,11 @@ export function GridDialog({ pairs }: { pairs: { symbol: string; exchange: strin
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Field label="نماد" help="جفت‌ارزی که گرید روی آن اجرا شود — بازار رنج‌شکن بهترین است">
-          <Input dir="ltr" list="grid-symbols" placeholder="BTC-USDT" value={symbol} onChange={(e) => pick(e.target.value)} />
-          <datalist id="grid-symbols">
-            {symbols.map((s) => <option key={s} value={s} />)}
-          </datalist>
+          <SearchableSelect
+            dir="ltr" placeholder="جستجو… BTC-USDT"
+            options={symbols.map((s) => ({ value: s }))}
+            value={symbol} onValueChange={pick}
+          />
         </Field>
         <Field label="صرافی">
           <Select value={exchange} onChange={(e) => setExchange(e.target.value)}>

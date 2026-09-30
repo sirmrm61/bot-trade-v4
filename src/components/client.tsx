@@ -261,19 +261,28 @@ export function Select(props: React.SelectHTMLAttributes<HTMLSelectElement> & { 
 }
 
 /** Filterable dropdown — a plain <select> can't search through ~1600 pairs.
- *  The picked value lands in a hidden <input name> so FormData/applyFields keep working. */
+ *  Uncontrolled: the picked value lands in a hidden <input name> for FormData.
+ *  Controlled: pass `value` + `onValueChange` (name/input then omitted). */
 export function SearchableSelect({
   name, options, defaultValue, placeholder, required, dir = "ltr", className,
+  value: valueProp, onValueChange,
 }: {
-  name: string;
+  name?: string;
   options: { value: string; label?: string }[];
   defaultValue?: string;
   placeholder?: string;
   required?: boolean;
   dir?: string;
   className?: string;
+  value?: string;
+  onValueChange?: (v: string) => void;
 }) {
-  const [value, setValue] = useState(defaultValue ?? "");
+  const [internal, setInternal] = useState(defaultValue ?? "");
+  const value = valueProp !== undefined ? valueProp : internal;
+  const setValue = (v: string) => {
+    if (valueProp === undefined) setInternal(v);
+    onValueChange?.(v);
+  };
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
