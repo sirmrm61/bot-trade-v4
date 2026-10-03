@@ -220,15 +220,19 @@ export async function checkPortfolioRisk(
   userId: string,
   opp: { symbol: string; exchange: string },
   cfg: PortfolioRiskConfig = DEFAULT_PORTFOLIO_RISK,
-): Promise<{ approved: boolean; violations: string[] }> {
+): Promise<{ approved: boolean; violations: string[]; details: string[] }> {
   const violations: string[] = [];
-  if (cfg.emergencyStop) violations.push("EMERGENCY_STOP");
+  const details: string[] = [];
+  const push = (code: string, detail: string) => { violations.push(code); details.push(detail); };
+  if (cfg.emergencyStop) push("EMERGENCY_STOP", "توقف اضطراری فعال است — تا وقتی خاموش نشود معامله‌ی جدیدی باز نمی‌شود");
 
   const active = await prisma.liveStrategy.findMany({
     where: { userId, status: { in: ["RUNNING", "PAUSED", "STARTING", "DEGRADED"] } },
     select: { symbol: true, exchange: true },
   });
-  if (active.length >= cfg.maxOpenPositions) violations.push("MAX_OPEN_POSITIONS");
+  if (active.length >= cfg.maxOpenPositions) {
+    push("MAX_OPEN_POSITIONS", `${active.length} استراتژی فعال دارید — سقف ${cfg.maxOpenPositions} پوزیشن باز است. یکی را متوقف کنید`);
+  }
 
   // correlation — same base asset already running
   const base = opp.symbol.replace(/IRT|USDT|M$/g, "").replace(/-/g, "");
@@ -236,7 +240,9 @@ export async function checkPortfolioRisk(
     l.exchange === opp.exchange &&
     l.symbol.replace(/IRT|USDT|M$/g, "").replace(/-/g, "") === base,
   );
-  if (sameBase.length >= cfg.maxSameBasePositions) violations.push("CORRELATED_POSITION");
+  if (sameBase.length >= cfg.maxSameBasePositions) {
+    push("CORRELATED_POSITION", `هم‌پوشانی ریسکی: ${sameBase.length} استراتژی فعال روی دارایی پایه‌ی ${base} وجود دارد — سقف ${cfg.maxSameBasePositions}`);
+  }
 
   // daily loss — sum of today's closed-trade pnlPct
   const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
@@ -245,7 +251,9 @@ export async function checkPortfolioRisk(
     select: { pnlPct: true, symbol: true },
   });
   const dailyLoss = todayClosed.reduce((s, t) => s + Math.min(t.pnlPct ?? 0, 0), 0);
-  if (dailyLoss <= -cfg.maxDailyLossPct) violations.push("MAX_DAILY_LOSS");
+  if (dailyLoss <= -cfg.maxDailyLossPct) {
+    push("MAX_DAILY_LOSS", `زیان تحقق‌یافته‌ی امروز ${dailyLoss.toFixed(1)}٪ به حد مجاز ${cfg.maxDailyLossPct}٪- رسیده — فردا دوباره تلاش کنید`);
+  }
 
   // consecutive losses — newest first
   const recent = await prisma.trade.findMany({
@@ -255,7 +263,7 @@ export async function checkPortfolioRisk(
     select: { pnlPct: true },
   });
   if (recent.length === cfg.maxConsecutiveLosses && recent.every((t) => (t.pnlPct ?? 0) <= 0)) {
-    violations.push("CONSECUTIVE_LOSSES");
+    push("CONSECUTIVE_LOSSES", `${cfg.maxConsecutiveLosses} معامله‌ی اخیر پشت‌سرهم زیان‌ده بوده‌اند — ورود جدید موقتاً قفل است`);
   }
 
   // per-symbol cooldown after its last closed trade
@@ -265,10 +273,11 @@ export async function checkPortfolioRisk(
     select: { closedAt: true },
   });
   if (lastSame?.closedAt && Date.now() - lastSame.closedAt.getTime() < cfg.cooldownMinutes * 60_000) {
-    violations.push("COOLDOWN");
+    const wait = Math.ceil(cfg.cooldownMinutes - (Date.now() - lastSame.closedAt.getTime()) / 60_000);
+    push("COOLDOWN", `کول‌داون نماد: آخرین معامله‌ی ${opp.symbol} تازه بسته شده — ${wait} دقیقه‌ی دیگر صبر کنید`);
   }
 
-  return { approved: violations.length === 0, violations };
+  return { approved: violations.length === 0, violations, details };
 }
 
 /**
@@ -290,8 +299,14 @@ export async function executeOpportunity(
     throw new AppError("VALIDATION", 400, { reason: "short requires a perpetual market" });
   }
 
-  const risk = await checkPortfolioRisk(userId, opp);
-  if (!risk.approved) throw new AppError("RISK_VIOLATION", 422, { violations: risk.violations });
+  // risk gate — PAPER always allowed (no real orders). REAL requires the
+  // portfolio risk check.
+  if (opts.mode === "REAL") {
+    const risk = await checkPortfolioRisk(userId, opp);
+    if (!risk.approved) {
+      throw new AppError("RISK_VIOLATION", 422, { violations: risk.violations }, risk.details.join("؛ "));
+    }
+  }
 
   const { createStrategy } = await import("@/modules/strategies/service");
   const { startLiveStrategy } = await import("@/modules/trading/live-engine");

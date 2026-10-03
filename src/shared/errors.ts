@@ -38,6 +38,8 @@ export class AppError extends Error {
     public code: keyof typeof ERROR_MESSAGES | string,
     public status = 400,
     public context?: Record<string, unknown>,
+    /** user-facing specifics (safe to render) — why THIS request failed */
+    public detail?: string,
   ) {
     super(code);
     this.name = "AppError";

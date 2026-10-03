@@ -65,6 +65,7 @@ export function ScannerDialog({ pairs }: { pairs: { symbol: string; exchange: st
   const [capital, setCapital] = useState("100");
   const [execMode, setExecMode] = useState<"PAPER" | "REAL">("PAPER");
   const [executing, setExecuting] = useState(false);
+  const [execError, setExecError] = useState<{ error: string; details: string[] } | null>(null);
   const [bt, setBt] = useState<BacktestResult | null>(null);
   const [btRunning, setBtRunning] = useState(false);
   const [btSymbol, setBtSymbol] = useState("");
@@ -122,6 +123,7 @@ export function ScannerDialog({ pairs }: { pairs: { symbol: string; exchange: st
 
   async function execute(id: string) {
     setExecuting(true);
+    setExecError(null);
     try {
       const res = await fetch(`/api/opportunities/${id}/execute`, {
         method: "POST",
@@ -129,8 +131,12 @@ export function ScannerDialog({ pairs }: { pairs: { symbol: string; exchange: st
         body: JSON.stringify({ mode: execMode, allocatedCapital: Number(capital) }),
       });
       const json = await res.json();
-      if (!res.ok) toast.error(json.error ?? "اجرای فرصت ناموفق بود");
-      else {
+      if (!res.ok) {
+        toast.error(json.error ?? "اجرای فرصت ناموفق بود");
+        if (json.detail) {
+          setExecError({ error: json.error ?? "", details: String(json.detail).split("؛") });
+        }
+      } else {
         toast.success(execMode === "PAPER" ? "تست زنده فعال شد" : "معامله‌ی زنده فعال شد");
         setExecId(null);
         void loadHistory();
@@ -216,6 +222,20 @@ export function ScannerDialog({ pairs }: { pairs: { symbol: string; exchange: st
           ))}
         </div>
       ) : null}
+
+      {/* risk-rejection details — math reasons for why execution was blocked */}
+      {execError && (
+        <div className="rounded-xl border border-danger/40 bg-danger/5 p-4 text-xs">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-bold text-danger">چرا سفارش پذیرفته نشد — جزئیات مدیریت ریسک</span>
+            <button type="button" onClick={() => setExecError(null)} className="text-muted hover:text-foreground">بستن ✕</button>
+          </div>
+          {execError.error && <p className="mb-1.5 text-muted">{execError.error}</p>}
+          <ul className="list-disc space-y-1 pe-4 leading-relaxed text-muted">
+            {execError.details.map((d, i) => <li key={i}>{d}</li>)}
+          </ul>
+        </div>
+      )}
 
       {/* scanner backtest */}
       <div className="rounded-xl border border-border p-4">

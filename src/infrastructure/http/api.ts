@@ -49,7 +49,11 @@ export function api(handler: Handler, opts: { admin?: boolean; public?: boolean 
         duration: Date.now() - start, status: "ERROR",
         errorCode: err instanceof AppError ? err.code : "UNKNOWN",
       });
-      return NextResponse.json({ error: msg, code: err instanceof AppError ? err.code : "UNKNOWN", requestId }, { status });
+      const detail = err instanceof AppError && err.detail ? err.detail : undefined;
+      return NextResponse.json(
+        { error: msg, detail, code: err instanceof AppError ? err.code : "UNKNOWN", requestId },
+        { status },
+      );
     }
   };
 }

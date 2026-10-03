@@ -89,7 +89,7 @@ export function GridDialog({ pairs }: { pairs: { symbol: string; exchange: strin
         }),
       });
       const liveJson = await live.json();
-      if (!live.ok) toast.error(liveJson.error ?? "شروع لایو ناموفق بود");
+      if (!live.ok) toast.error(liveJson.detail ? `${liveJson.error} — ${liveJson.detail}` : (liveJson.error ?? "شروع لایو ناموفق بود"));
       else {
         toast.success(action === "PAPER" ? "گرید در حالت تست زنده فعال شد" : "گرید واقعی فعال شد");
         router.push("/live");

@@ -53,7 +53,7 @@ export function ActionButton({
         body: payload ? JSON.stringify(typeof payload === "function" ? payload() : payload) : undefined,
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) toast.error(json.error ?? "خطایی رخ داد");
+      if (!res.ok) toast.error(json.detail ? `${json.error} — ${json.detail}` : (json.error ?? "خطایی رخ داد"));
       else {
         onDone?.(json);
         router.refresh();
@@ -125,7 +125,7 @@ export function ApiForm({
         body: JSON.stringify(payload),
       });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) toast.error(json.error ?? "خطایی رخ داد");
+      if (!res.ok) toast.error(json.detail ? `${json.error} — ${json.detail}` : (json.error ?? "خطایی رخ داد"));
       else {
         onSuccess?.(json);
         router.refresh();
