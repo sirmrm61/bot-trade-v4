@@ -181,6 +181,11 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       where: { liveStrategyId: live.id, status: "OPEN" },
     });
     const ticker = await adapter.getTicker(live.symbol);
+    // a venue returning a null/zero quote (e.g. symbol routed to the wrong
+    // endpoint) must not reach sizing — exposure/0 = Infinity → NaN writes
+    if (!Number.isFinite(ticker.last) || ticker.last <= 0) {
+      throw new AppError("EXCHANGE_CONNECTION_FAILED", 502, { symbol: live.symbol, reason: "no usable price" });
+    }
 
     // real futures: lazily resolve the exchange position id so exits can
     // use /positions/{id}/close instead of a counter-order
@@ -414,7 +419,7 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     const exposure = Math.min(riskCapital * (100 / stopDistPct), maxPosition * leverage);
     const margin = exposure / leverage;   // wallet outlay (spot: exposure == margin)
     const amount = exposure / ticker.last;
-    if (amount <= 0) return;
+    if (!Number.isFinite(amount) || amount <= 0) return;
 
     // paper mode: sizing vs virtual capital only — real balance/risk checks don't apply
     if (!paper) {
@@ -496,13 +501,19 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     }
   } catch (err) {
     const code = err instanceof AppError ? err.code : "UNKNOWN";
-    logger.error("live tick failed", { module: "trading", liveStrategyId, errorCode: code });
+    // UNKNOWN without a message is undiagnosable — always capture it
+    const detail = err instanceof Error ? err.message : String(err);
+    logger.error("live tick failed", {
+      module: "trading", liveStrategyId, errorCode: code,
+      errorMessage: detail.slice(0, 300),
+      errorName: err instanceof Error ? err.name : undefined,
+    });
     const failures = live.circuitBreakerFailures + 1;
     const threshold = await getSetting<number>("CIRCUIT_BREAKER_THRESHOLD");
     const status = failures >= threshold ? "DEGRADED" : live.status;
     await prisma.liveStrategy.update({
       where: { id: live.id },
-      data: { circuitBreakerFailures: failures, status, lastError: code },
+      data: { circuitBreakerFailures: failures, status, lastError: `${code}: ${detail.slice(0, 160)}` },
     });
     // notify only on the transition into DEGRADED — not on every failed tick
     if (status === "DEGRADED" && live.status !== "DEGRADED") {

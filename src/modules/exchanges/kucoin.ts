@@ -152,7 +152,24 @@ export class KucoinAdapter implements ExchangeAdapter {
     })).filter((m) => m.symbol);
   }
 
+  /** Spot markets are dashed (BTC-USDT); futures contracts never are (ZECUSDTM). */
+  private isFuturesSymbol(symbol: string): boolean {
+    return !symbol.toUpperCase().includes("-");
+  }
+
   async getMarketInfo(symbol: string): Promise<MarketInfo> {
+    if (this.isFuturesSymbol(symbol)) {
+      const c = await this.contract(symbol);
+      return {
+        symbol: symbol.toUpperCase(),
+        baseCurrency: String(c.baseCurrency ?? c.rootSymbol ?? ""),
+        quoteCurrency: String(c.quoteCurrency ?? "USDT"),
+        amountPrecision: decimals(c.lotSize ?? c.multiplier),
+        pricePrecision: decimals(c.tickSize ?? c.indexPriceTickSize),
+        active: c.status === "Open" || c.status === undefined,
+        stats: c,
+      };
+    }
     const markets = await this.getMarkets();
     const m = markets.find((x) => x.symbol === symbol.toUpperCase());
     const stats = await this.request<{ data?: Record<string, unknown> }>(
@@ -170,6 +187,20 @@ export class KucoinAdapter implements ExchangeAdapter {
   }
 
   async getTicker(symbol: string): Promise<Ticker> {
+    // futures contract — spot stats returns 200 with all-null data, silently
+    // poisoning price reads (last=0 → division-by-zero sizing)
+    if (this.isFuturesSymbol(symbol)) {
+      const d = (await this.request<{ data?: Record<string, unknown> }>(
+        "GET", "/api/v1/ticker", { futures: true, params: { symbol: symbol.toUpperCase() } },
+      )).data ?? {};
+      return {
+        symbol: symbol.toUpperCase(),
+        last: num(d.price),
+        bid: num(d.bestBidPrice),
+        ask: num(d.bestAskPrice),
+        ts: num(d.ts) || Date.now(),
+      };
+    }
     const [stats, l1] = await Promise.all([
       this.request<{ data?: Record<string, unknown> }>(
         "GET", "/api/v1/market/stats", { params: { symbol: symbol.toUpperCase() } }),
@@ -193,6 +224,7 @@ export class KucoinAdapter implements ExchangeAdapter {
   }
 
   async getOrderBook(symbol: string): Promise<OrderBook> {
+    if (this.isFuturesSymbol(symbol)) return this.getFuturesOrderBook(symbol);
     const data = await this.request<{
       data?: { time?: number; bids?: [string, string][]; asks?: [string, string][] };
     }>("GET", "/api/v1/market/orderbook/level2_20", { params: { symbol: symbol.toUpperCase() } });

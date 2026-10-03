@@ -40,6 +40,11 @@ services:
       context: .
       target: runner
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "127.0.0.1:3000:3000" # localhost only — public traffic enters via caddy
     env_file: .env
@@ -59,6 +64,11 @@ services:
       context: .
       target: worker
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     env_file: .env
     environment:
       REDIS_URL: redis://redis:6379

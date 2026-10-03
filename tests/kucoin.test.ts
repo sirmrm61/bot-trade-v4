@@ -184,6 +184,42 @@ describe("KucoinAdapter — futures (perpetual)", () => {
     const candles = await adapter.getFuturesCandles("XBTUSDTM", "1h", 1700000000000 - 3600_000);
     expect(candles[0]).toMatchObject({ open: 10, high: 12, low: 9, close: 11, volume: 500 });
   });
+
+  it("routes contract symbols to the futures ticker — spot stats returns nulls silently", async () => {
+    const calls = stubFetch({
+      "/api/v1/ticker": {
+        code: "200000",
+        data: { symbol: "ZECUSDTM", price: "41.2", bestBidPrice: "41.1", bestAskPrice: "41.3", ts: 1700000000000 },
+      },
+      // spot stats must NOT be hit for futures symbols — it returns 200 with all-null data
+      "/api/v1/market/stats": { code: "200000", data: { last: null } },
+    });
+    const t = await adapter.getTicker("ZECUSDTM");
+    expect(calls.some((c) => c.url.includes("api-futures.kucoin.com"))).toBe(true);
+    expect(calls.some((c) => c.url.includes("api.kucoin.com/api/v1/market/stats"))).toBe(false);
+    expect(t).toMatchObject({ last: 41.2, bid: 41.1, ask: 41.3 });
+  });
+
+  it("routes contract symbols to the futures order book", async () => {
+    const calls = stubFetch({
+      "/api/v1/level2/snapshot": { code: "200000", data: { ts: 1700000000123, bids: [[100, 2]], asks: [[101, 1]] } },
+      "/api/v1/market/orderbook/level2_20": { code: "400100", msg: "symbol not exists" },
+    });
+    const book = await adapter.getOrderBook("ZECUSDTM");
+    expect(calls[0].url).toContain("api-futures.kucoin.com");
+    expect(book.bids).toEqual([[100, 2]]);
+  });
+
+  it("getMarketInfo reads the contract spec for futures symbols", async () => {
+    stubFetch({
+      "/api/v1/contracts/ZECUSDTM": {
+        code: "200000",
+        data: { symbol: "ZECUSDTM", baseCurrency: "ZEC", quoteCurrency: "USDT", multiplier: 0.01, tickSize: 0.01, status: "Open" },
+      },
+    });
+    const info = await adapter.getMarketInfo("ZECUSDTM");
+    expect(info).toMatchObject({ symbol: "ZECUSDTM", baseCurrency: "ZEC", quoteCurrency: "USDT", active: true });
+  });
 });
 
 describe("exchange registry", () => {

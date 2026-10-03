@@ -205,9 +205,15 @@ async function main() {
       }
       const running = await prisma.liveStrategy.findMany({
         where: { status: { in: ["RUNNING", "STARTING", "PAUSED", "DEGRADED", "STOPPING"] } },
-        select: { id: true },
+        select: { id: true, status: true },
       });
       for (const s of running) {
+        // DEGRADED strategies retry every 5 min, not every tick — a permanently
+        // broken venue otherwise gets hammered and floods the logs
+        if (s.status === "DEGRADED") {
+          const probe = await redis.set(`degraded:tick:${s.id}`, "1", "EX", 300, "NX");
+          if (!probe) continue;
+        }
         // jobId dedupes in-flight ticks; removeOnFail:true is critical — a failed
         // job keeps its id, and BullMQ would silently drop every future add()
         // for it (observed: SQLITE_FULL during deploy poisoned stop policies).
