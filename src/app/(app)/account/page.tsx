@@ -3,7 +3,7 @@ import { currentSession } from "@/modules/auth/session";
 import { Card, CardTitle, PageHeader, StatusBadge } from "@/components/ui";
 import { jalaliDateTime } from "@/shared/jalali";
 import { EXCHANGES } from "@/modules/exchanges/registry";
-import { ConnectForm, TestButton, DisconnectButton } from "./actions";
+import { ConnectForm, TestButton, DisconnectButton, ResetTestDataButton } from "./actions";
 
 export default async function AccountPage() {
   const session = await currentSession();
@@ -60,6 +60,16 @@ export default async function AccountPage() {
         <div className="text-sm text-amber-800 dark:text-amber-200">
           <b>نکته امنیتی:</b> کلیدها با رمزنگاری AES-256-GCM ذخیره می‌شوند و حتی مدیر سیستم هم نمی‌تواند مقدار خام آن‌ها را ببیند.
         </div>
+      </Card>
+
+      <Card className="border-danger/40">
+        <CardTitle>ناحیه‌ی خطر</CardTitle>
+        <p className="my-3 text-sm leading-6 text-muted">
+          با ریست، تمام داده‌های آزمایشی — تست‌های زنده، بک‌تست‌ها، تاریخچه‌ی معاملات تست و
+          استراتژی‌های بلااستفاده — پاک می‌شود و یک شروع تازه خواهید داشت.
+          معاملات واقعی و اتصال‌های صرافی دست‌نخورده می‌مانند.
+        </p>
+        <ResetTestDataButton />
       </Card>
     </div>
   );
