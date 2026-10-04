@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { orderBookImbalance, smoothObi, readObiConfig, candleImbalanceProxy, obiBacktestSignal } from "@/modules/trading/orderbook-imbalance";
+import { orderBookImbalance, smoothObi, readObiConfig, obiHysteresis } from "@/modules/trading/orderbook-imbalance";
 import type { OrderBook } from "@/modules/exchanges/types";
 
 const book = (bids: [number, number][], asks: [number, number][]): OrderBook => ({
@@ -54,13 +54,49 @@ describe("smoothObi", () => {
 });
 
 describe("readObiConfig", () => {
-  it("applies defaults", () => {
-    expect(readObiConfig("{}")).toEqual({ depthLevels: 10, emaPeriod: 1 });
+  it("applies defaults — smoothed + hysteresis on", () => {
+    expect(readObiConfig("{}")).toEqual({ depthLevels: 10, emaPeriod: 10, hysteresis: 3 });
   });
 
   it("reads nested config and clamps ranges", () => {
-    const cfg = readObiConfig(JSON.stringify({ orderBookImbalance: { depthLevels: 500, emaPeriod: 5 } }));
+    const cfg = readObiConfig(JSON.stringify({ orderBookImbalance: { depthLevels: 500, emaPeriod: 5, hysteresis: 99 } }));
     expect(cfg.depthLevels).toBe(50);
     expect(cfg.emaPeriod).toBe(5);
+    expect(cfg.hysteresis).toBe(50);
+  });
+});
+
+describe("obiHysteresis", () => {
+  it("blocks a direction until it persists N ticks", () => {
+    let cand: "BUY" | "SELL" | undefined;
+    let n = 0;
+    const tick = (dir: "BUY" | "SELL" | "HOLD") => {
+      const g = obiHysteresis(dir, cand, n, 3);
+      cand = g.cand; n = g.candN;
+      return g.signal;
+    };
+    expect(tick("BUY")).toBe("HOLD");  // 1/3
+    expect(tick("BUY")).toBe("HOLD");  // 2/3
+    expect(tick("BUY")).toBe("BUY");   // 3/3 — fires
+  });
+
+  it("resets the counter when the direction flips", () => {
+    let cand: "BUY" | "SELL" | undefined;
+    let n = 0;
+    const tick = (dir: "BUY" | "SELL" | "HOLD") => {
+      const g = obiHysteresis(dir, cand, n, 2);
+      cand = g.cand; n = g.candN;
+      return g.signal;
+    };
+    expect(tick("SELL")).toBe("HOLD"); // SELL 1/2
+    expect(tick("BUY")).toBe("HOLD");  // flip → BUY 1/2 (counter reset)
+    expect(tick("BUY")).toBe("BUY");   // BUY 2/2
+  });
+
+  it("clears the candidate on HOLD and passes through when hysteresis=0", () => {
+    const g1 = obiHysteresis("HOLD", "SELL", 5, 3);
+    expect(g1.candN).toBe(0);
+    expect(obiHysteresis("BUY", undefined, 0, 0).signal).toBe("BUY");
+    expect(obiHysteresis("BUY", undefined, 0, 1).signal).toBe("BUY");
   });
 });

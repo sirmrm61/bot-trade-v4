@@ -10,7 +10,7 @@ import { runMmBacktest } from "./mm-engine";
 import { runGridBacktest } from "./grid-engine";
 import { readGridConfig } from "@/modules/trading/grid";
 import { readMmConfig } from "@/modules/trading/market-making";
-import { readMarketConfig, readExchange } from "@/modules/trading/futures";
+import { readMarketConfig, readExchange, SYMBOLIC_MAX_LEVERAGE } from "@/modules/trading/futures";
 import { obiBacktestSignal } from "@/modules/trading/orderbook-imbalance";
 import { isSymbolicKind, symbolicSignalFn } from "@/modules/trading/symbolic-engines";
 import { smartEnabled, smartSignalFn } from "@/modules/trading/smart";
@@ -298,7 +298,10 @@ export async function runAndPersist(
       ambiguityPolicy: (bt.ambiguityPolicy as AmbiguityPolicy) ?? "SL_FIRST",
       // futures — shorts + leverage + liquidation live inside the engine
       market: marketCfg.market,
-      leverage: marketCfg.leverage,
+      // symbolic engines are leverage-capped in live — the sim must match
+      leverage: isSymbolicKind(kind)
+        ? Math.min(marketCfg.leverage, SYMBOLIC_MAX_LEVERAGE)
+        : marketCfg.leverage,
       // OBI — candle imbalance proxy; symbolic kinds — their own engine signals
       signalFn: kind === "ORDER_BOOK_IMBALANCE"
         ? obiBacktestSignal(data, v.config, v.buyThreshold, v.sellThreshold)

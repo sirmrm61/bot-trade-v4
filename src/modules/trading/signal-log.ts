@@ -18,7 +18,9 @@ export type SignalDecision =
   | "VETO_SMART"         // smart layer vetoed the entry
   | "SKIP_SPOT_SHORT"    // SELL signal on a spot market
   | "SKIP_OPEN_POSITION" // an open position already exists
-  | "SKIP_OPEN_ORDER";   // an open order already exists
+  | "SKIP_OPEN_ORDER"    // an open order already exists
+  | "SKIP_PORTFOLIO_DUP" // another live strategy already holds this symbol+side
+  | "SKIP_LOSS_COOLDOWN"; // re-entry too soon after a stop-loss on the same side
 
 export interface SignalLogInput {
   liveStrategyId: string;

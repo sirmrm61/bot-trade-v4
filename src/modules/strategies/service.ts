@@ -12,7 +12,8 @@ import { logActivity } from "@/modules/activity/service";
 /** ORDER_BOOK_IMBALANCE kind params — thresholds reuse buy/sellThreshold. */
 export interface ObiConfigInput {
   depthLevels?: number;  // top N book levels to sum (default 10)
-  emaPeriod?: number;    // EMA smoothing across ticks (default 1 = off)
+  emaPeriod?: number;    // EMA smoothing across ticks (default 10; 1 = off)
+  hysteresis?: number;   // ticks a direction must persist before entry (default 3)
 }
 
 /** MARKET_MAKING kind params. */
@@ -252,7 +253,10 @@ export function validateStrategyInput(input: StrategyInput) {
   }
   if (kind === "ORDER_BOOK_IMBALANCE") {
     const obi = input.orderBookImbalance ?? {};
-    if (!inRange(obi.depthLevels, 1, 50) || !inRange(obi.emaPeriod, 1, 200)) {
+    if (
+      !inRange(obi.depthLevels, 1, 50) || !inRange(obi.emaPeriod, 1, 200) ||
+      !inRange(obi.hysteresis, 0, 50)
+    ) {
       throw new AppError("VALIDATION", 400, { field: "orderBookImbalance" });
     }
     if (

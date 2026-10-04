@@ -59,6 +59,7 @@ const FIELD_LIMITS: Record<string, { min: number; max: number; int?: boolean }> 
   bearProbExit: { min: 0.1, max: 0.99 },
   // OBI
   depthLevels: { min: 1, max: 50, int: true },
+  hysteresis: { min: 0, max: 50, int: true },
   // MARKET_MAKING
   spreadPct: { min: 0.01, max: 10 },
   orderSizePct: { min: 0.1, max: 100 },
@@ -74,7 +75,7 @@ const PICK: Record<string, string[]> = {
   ATM_SME: ["volWindow", "gamma", "tokenMid", "tokenExtreme", "emaPeriod", "useEmaConfirm", "recoverVt", "weakenVt", "minPatternWinRate", "minPatternCount", "probWindow", "exitTrigger", "exitBack", "decayLookback"],
   RMM_BSE: ["channelLen", "squeezeAbs", "squeezeBars", "breakoutMt", "exitMt", "useVolumeConfirm", "volMult", "volPeriod"],
   DZS_HMM: ["zWindow", "dzsFeature", "emitCenter", "emitSigma", "pStay", "bullProb", "sCross", "persist", "rangeProbExit", "bearProbExit"],
-  ORDER_BOOK_IMBALANCE: ["depthLevels", "emaPeriod", "buyThreshold", "sellThreshold"],
+  ORDER_BOOK_IMBALANCE: ["depthLevels", "emaPeriod", "hysteresis", "buyThreshold", "sellThreshold"],
   MARKET_MAKING: ["spreadPct", "orderSizePct", "levels", "levelStepPct", "requotePct", "maxInventoryPct"],
 };
 
@@ -152,5 +153,19 @@ describe("suggest — every param within form + server constraints", () => {
       expect(lo.riskPerTradePct).toBeLessThan(hi.riskPerTradePct as number);
       expect(lo.maxPositionPct).toBeLessThan(hi.maxPositionPct as number);
     }
+  });
+
+  it("symbolic engines never suggest leverage above the hard cap (2)", () => {
+    for (const kind of ["ATM_SME", "RMM_BSE", "DZS_HMM"] as const) {
+      for (const risk of RISKS) {
+        const f = suggestParams(kind, risk, MARKETS.volatile).fields;
+        expect(f.leverage).toBeLessThanOrEqual(2);
+      }
+    }
+  });
+
+  it("non-symbolic kinds keep the full leverage range", () => {
+    const f = suggestParams("MARKET_MAKING", "HIGH", MARKETS.volatile).fields;
+    expect(f.leverage).toBe(5);
   });
 });

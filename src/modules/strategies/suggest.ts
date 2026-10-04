@@ -1,5 +1,7 @@
 import type { Candle } from "@/modules/exchanges/types";
 import { clamp } from "@/shared/utils";
+import { isSymbolicKind } from "@/modules/trading/symbolic-engines";
+import { SYMBOLIC_MAX_LEVERAGE } from "@/modules/trading/futures";
 
 /**
  * Market-aware parameter suggestion.
@@ -80,7 +82,8 @@ export function suggestParams(
   fields.takeProfitPct = round1(clamp(sl * rr, 0.5, 30));
   fields.trailingStop = regime === "trending";
   fields.trailingStopPct = round1(clamp(atrPct * 2.5, 0.3, 15));
-  fields.leverage = risk === "LOW" ? 2 : risk === "HIGH" ? 5 : 3;
+  const suggestedLev = risk === "LOW" ? 2 : risk === "HIGH" ? 5 : 3;
+  fields.leverage = isSymbolicKind(kind) ? Math.min(suggestedLev, SYMBOLIC_MAX_LEVERAGE) : suggestedLev;
   notes.push(
     `حد ضرر/سود از نوسان واقعی بازار (ATR≈${round2(atrPct)}٪ در کندل) اقتباس شد: SL=${fa(sl)}٪، TP=${fa(round1(clamp(sl * rr, 0.5, 30)))}٪`,
   );
@@ -148,7 +151,11 @@ export function suggestParams(
     fields.buyThreshold = th;
     fields.sellThreshold = -th;
     fields.depthLevels = volPct > 1.5 ? 15 : 10;
-    fields.emaPeriod = risk === "LOW" ? 5 : risk === "HIGH" ? 1 : 3;
+    // raw books flip every tick — without smoothing + hysteresis the engine
+    // whipsaws in and out of positions on pure noise
+    fields.emaPeriod = risk === "LOW" ? 15 : risk === "HIGH" ? 8 : 10;
+    fields.hysteresis = risk === "HIGH" ? 2 : 3;
+    notes.push("OBI خام در هر تیک می‌چرخد — هموارسازی EMA + پایداری سیگنال (hysteresis) فیلتر نویز اعمال شد.");
   }
 
   if (kind === "MARKET_MAKING") {

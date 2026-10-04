@@ -14,13 +14,17 @@ import type { ObiConfigInput } from "@/modules/strategies/service";
 export interface ObiConfig {
   depthLevels: number;
   emaPeriod: number;
+  /** consecutive ticks a direction must persist before it becomes a signal (0=off) */
+  hysteresis: number;
 }
 
 export function readObiConfig(configJson: string): ObiConfig {
   const cfg = parseJson<{ orderBookImbalance?: ObiConfigInput }>(configJson, {});
   return {
     depthLevels: clamp(Math.floor(cfg.orderBookImbalance?.depthLevels ?? 10), 1, 50),
-    emaPeriod: clamp(Math.floor(cfg.orderBookImbalance?.emaPeriod ?? 1), 1, 200),
+    // raw order books flip every tick — no smoothing produces whipsaw entries
+    emaPeriod: clamp(Math.floor(cfg.orderBookImbalance?.emaPeriod ?? 10), 1, 200),
+    hysteresis: clamp(Math.floor(cfg.orderBookImbalance?.hysteresis ?? 3), 0, 50),
   };
 }
 
@@ -37,6 +41,22 @@ export function smoothObi(raw: number, prevEma: number | undefined, emaPeriod: n
   if (emaPeriod <= 1 || prevEma === undefined || !Number.isFinite(prevEma)) return raw;
   const alpha = 2 / (emaPeriod + 1);
   return raw * alpha + prevEma * (1 - alpha);
+}
+
+/**
+ * Hysteresis gate — a direction must persist `hysteresis` consecutive ticks
+ * before it becomes a tradeable signal. Raw books flip constantly; without
+ * this the engine whipsaws in and out of positions. hysteresis ≤ 1 disables it.
+ */
+export function obiHysteresis(
+  rawDir: "BUY" | "SELL" | "HOLD",
+  cand: string | undefined,
+  candN: number,
+  hysteresis: number,
+): { signal: "BUY" | "SELL" | "HOLD"; cand?: "BUY" | "SELL"; candN: number } {
+  if (rawDir === "HOLD") return { signal: "HOLD", candN: 0 };
+  const n = rawDir === cand ? candN + 1 : 1;
+  return { signal: n >= hysteresis ? rawDir : "HOLD", cand: rawDir, candN: n };
 }
 
 // ---- Backtest proxy ------------------------------------------------------

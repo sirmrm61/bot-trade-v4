@@ -20,6 +20,9 @@ export interface MarketConfig {
 }
 
 export const MAX_LEVERAGE = 10;
+/** symbolic engines (ATM_SME/RMM_BSE/DZS_HMM) proved trend-blind in
+ *  production — their leverage is hard-capped everywhere */
+export const SYMBOLIC_MAX_LEVERAGE = 2;
 /** fraction of the theoretical liq distance kept as maintenance buffer */
 const MAINTENANCE_BUFFER = 0.9;
 

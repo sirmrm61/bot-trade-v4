@@ -1,7 +1,7 @@
 import { prisma } from "@/infrastructure/database/prisma";
 import { adapterForUser, publicAdapter } from "@/modules/exchanges/registry";
 import { computeSignal } from "@/modules/signals/engine";
-import { orderBookImbalance, readObiConfig, smoothObi } from "./orderbook-imbalance";
+import { orderBookImbalance, readObiConfig, smoothObi, obiHysteresis } from "./orderbook-imbalance";
 import { isSymbolicKind, symbolicLast, symbolicWarmup } from "./symbolic-engines";
 import type { SymbolicKind } from "./symbolic-engines";
 import {
@@ -10,7 +10,7 @@ import {
 } from "./smart";
 import { marketMakingTick, paperMarketMakingTick, cancelStrategyOrders } from "./market-making";
 import { logSignal, shouldLogEpisode, attachTradeOutcome, type SignalDecision } from "./signal-log";
-import { readMarketConfig, readExchange, liquidationPrice, futuresPnl } from "./futures";
+import { readMarketConfig, readExchange, liquidationPrice, futuresPnl, SYMBOLIC_MAX_LEVERAGE } from "./futures";
 import { atr } from "@/modules/indicators/engine";
 import { atrStopsFromIndicators } from "@/modules/backtest/service";
 import { enforceRisk } from "./risk-engine";
@@ -29,6 +29,11 @@ import { effectiveLimits, liveUsage, isSubscriptionActive } from "@/modules/subs
  * the Next.js request cycle. Each tick:
  *   fetch candles → indicators → signal → risk → order → monitor → SL/TP
  */
+
+/** after a stop-loss, same-side re-entry is blocked for this many candles */
+const LOSS_COOLDOWN_BARS = 4;
+/** N consecutive losing closes → strategy auto-pauses */
+const LOSS_STREAK_LIMIT = 3;
 
 /** Pre-flight checks when a user starts a live strategy. */
 export async function startLiveStrategy(opts: {
@@ -175,6 +180,11 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
 
     const marketCfg = readMarketConfig(live.version.config);
     const futures = marketCfg.market === "FUTURES";
+    // symbolic engines have shown trend-blindness in production — cap their
+    // leverage so a tight SL can't turn into a leveraged bleed
+    if (isSymbolicKind(live.version.kind)) {
+      marketCfg.leverage = Math.min(marketCfg.leverage, SYMBOLIC_MAX_LEVERAGE);
+    }
 
     // ---- manage open trades (SL / TP / trailing / liquidation) — runs even when PAUSED
     const openTrades = await prisma.trade.findMany({
@@ -220,6 +230,8 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     let rawSignal: "BUY" | "SELL" | "HOLD" = "HOLD"; // engine output before smart veto — what gets logged
     let score: number;
     let obiEma: number | undefined;
+    let obiCand: string | undefined;  // hysteresis: pending direction
+    let obiCandN = 0;                 // hysteresis: ticks persisted so far
     let symLabel = "";
     let symNote: string | undefined;
     let smartPending: SmartDetail | null = null; // features captured at entry — consumed on close
@@ -232,13 +244,21 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     if (live.version.kind === "ORDER_BOOK_IMBALANCE") {
       const book = await adapter.getOrderBook(live.symbol);
       const obiCfg = readObiConfig(live.version.config);
-      const prevStats = parseJson<{ obiEma?: number }>(live.stats, {});
+      const prevStats = parseJson<{ obiEma?: number; obiCand?: string; obiCandN?: number }>(live.stats, {});
       obiEma = smoothObi(orderBookImbalance(book, obiCfg.depthLevels), prevStats.obiEma, obiCfg.emaPeriod);
       score = obiEma;
-      signal = score >= live.version.buyThreshold ? "BUY"
+      rawSignal = score >= live.version.buyThreshold ? "BUY"
         : score <= live.version.sellThreshold ? "SELL" : "HOLD";
-      rawSignal = signal;
-      sigFeats = { obiEma, depthLevels: obiCfg.depthLevels, obiEmaPeriod: obiCfg.emaPeriod };
+      // hysteresis — a direction must persist `hysteresis` consecutive ticks
+      // before it becomes a tradeable signal (raw books flip constantly)
+      const gate = obiHysteresis(rawSignal, prevStats.obiCand, prevStats.obiCandN ?? 0, obiCfg.hysteresis);
+      signal = gate.signal;
+      obiCand = gate.cand;
+      obiCandN = gate.candN;
+      sigFeats = {
+        obiEma, depthLevels: obiCfg.depthLevels, obiEmaPeriod: obiCfg.emaPeriod,
+        hysteresis: obiCfg.hysteresis, persisted: obiCandN,
+      };
     } else if (isSymbolicKind(live.version.kind)) {
       // symbolic engines are candle-native — fetch enough history for their windows
       const need = Math.max(200, symbolicWarmup(live.version.kind, live.version.config));
@@ -320,7 +340,7 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
           lastSignal: signal,
           ...(symLabel ? { symLabel } : {}),
           ...(symNote ? { symNote } : { symNote: undefined }),
-          ...(obiEma !== undefined ? { obiEma } : {}),
+          ...(obiEma !== undefined ? { obiEma, obiCand, obiCandN } : {}),
           ...(obiHist ? { obiHist } : {}),
         }),
       },
@@ -377,10 +397,36 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       await logDecision("SKIP_OPEN_ORDER", side);
       return;
     }
-    if (live.lastSignalAt && live.stats) {
-      const prev = parseJson<{ lastSignal?: string; lastScore?: number }>(live.stats, {});
-      // skip identical consecutive signals handled naturally by position checks
-      void prev;
+
+    // portfolio-level dedup — another live strategy of the same user must not
+    // double the exposure on this symbol in the same direction
+    const portfolioDup = await prisma.trade.findFirst({
+      where: {
+        userId: live.userId, symbol: live.symbol, side, status: "OPEN",
+        liveStrategyId: { not: live.id },
+        liveStrategy: { status: { in: ["STARTING", "RUNNING", "PAUSED", "DEGRADED"] } },
+      },
+    });
+    if (portfolioDup) {
+      await logDecision("SKIP_PORTFOLIO_DUP", side);
+      return;
+    }
+
+    // post-loss cooldown — after a stop-loss/liquidation on this side the
+    // signal must not re-enter the same direction for LOSS_COOLDOWN_BARS
+    // candles (breaks the SL → instant re-entry revenge loop)
+    const lastLoss = await prisma.trade.findFirst({
+      where: {
+        liveStrategyId: live.id, side, status: "CLOSED",
+        exitReason: { in: ["STOP_LOSS", "LIQUIDATED"] },
+      },
+      orderBy: { closedAt: "desc" },
+      select: { closedAt: true },
+    });
+    const cooldownMs = LOSS_COOLDOWN_BARS * tfMs(live.version.timeframe);
+    if (lastLoss?.closedAt && Date.now() - lastLoss.closedAt.getTime() < cooldownMs) {
+      await logDecision("SKIP_LOSS_COOLDOWN", side);
+      return;
     }
 
     // sizing: risk-based position — ATR stops when configured, else fixed pct
@@ -621,6 +667,28 @@ async function manageOpenTrade(
     },
   });
   await attachTradeOutcome(trade.id, pnlPct, exitReason);
+
+  // consecutive-loss circuit breaker — N losing closes in a row means the
+  // strategy is misreading the market; pause it instead of bleeding more
+  if (pnlPct <= 0) {
+    const recent = await prisma.trade.findMany({
+      where: { liveStrategyId: live.id, status: "CLOSED" },
+      orderBy: { closedAt: "desc" },
+      take: LOSS_STREAK_LIMIT,
+      select: { pnlPct: true },
+    });
+    if (recent.length === LOSS_STREAK_LIMIT && recent.every((t) => (t.pnlPct ?? 0) <= 0)) {
+      await prisma.liveStrategy.update({
+        where: { id: live.id }, data: { status: "PAUSED" },
+      });
+      await notify({
+        userId: live.userId, type: "SL_HIT", severity: "ERROR",
+        title: "قفل باخت‌های متوالی",
+        body: `استراتژی روی ${live.symbol} پس از ${LOSS_STREAK_LIMIT} معامله‌ی زیان‌ده‌ی متوالی متوقف (PAUSED) شد. پوزیشن باز نمی‌ماند — برای ادامه دستی آن را از سر بگیرید.`,
+      });
+    }
+  }
+
   // smart layer — fold this outcome into the strategy's learn state
   if (isSymbolicKind(version.kind) && smartEnabled(version.config)) {
     try {

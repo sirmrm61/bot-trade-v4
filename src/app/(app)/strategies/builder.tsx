@@ -244,7 +244,8 @@ export function StrategyBuilder({
       ...(kind === "ORDER_BOOK_IMBALANCE" && {
         orderBookImbalance: {
           depthLevels: num("depthLevels", 10),
-          emaPeriod: num("emaPeriod", 1),
+          emaPeriod: num("emaPeriod", 10),
+          hysteresis: num("hysteresis", 3),
         },
       }),
       ...(kind === "MARKET_MAKING" && {
@@ -504,9 +505,13 @@ export function StrategyBuilder({
               help="تعداد سطوح برتر دفتر سفارش که حجم bid/ask آن‌ها در محاسبه‌ی عدم‌توازن جمع می‌شود. مقدار کمتر = تمرکز روی لایه‌ی نزدیک قیمت و سیگنال تندتر؛ مقدار بیشتر = تصویر عمیق‌تر بازار و سیگنال نرم‌تر. پیش‌فرض ۱۰.">
               <Input name="depthLevels" type="number" min={1} max={50} defaultValue={10} required />
             </Field>
-            <Field label="هموارسازی EMA (تیک)" hint="۱ یعنی بدون هموارسازی"
-              help="میانگین متحرک نمایی روی امتیاز OBI در تیک‌های متوالی. ۱ یعنی مقدار خام — واکنش سریع ولی نویزی. اعداد بزرگ‌تر نویز لحظه‌ای را صاف می‌کنند ولی ورود/خروج را با تأخیر می‌اندازند.">
-              <Input name="emaPeriod" type="number" min={1} max={200} defaultValue={1} required />
+            <Field label="هموارسازی EMA (تیک)" hint="۱ یعنی بدون هموارسازی — نویزی"
+              help="میانگین متحرک نمایی روی امتیاز OBI در تیک‌های متوالی. ۱ یعنی مقدار خام — واکنش سریع ولی نویزی (توصیه نمی‌شود). اعداد بزرگ‌تر نویز لحظه‌ای را صاف می‌کنند ولی ورود/خروج را با تأخیر می‌اندازند. پیش‌فرض ۱۰.">
+              <Input name="emaPeriod" type="number" min={1} max={200} defaultValue={10} required />
+            </Field>
+            <Field label="پایداری سیگنال (تیک)" hint="۰ یعنی خاموش"
+              help="جهت سیگنال باید این تعداد تیکِ پشت‌سرهم یکسان بماند تا واقعاً معامله شود. جلوی ورود و خروج‌های ویپ‌سا (وامپ) ناشی از نوسان لحظه‌ای دفتر سفارش را می‌گیرد. پیش‌فرض ۳.">
+              <Input name="hysteresis" type="number" min={0} max={50} defaultValue={3} required />
             </Field>
           </div>
         </div>
@@ -782,7 +787,7 @@ export function StrategyBuilder({
             </Field>
             {market === "FUTURES" && (
             <Field label="لورج (اهرم)"
-              help="ضریب اهرمی پوزیشن — مثلاً ۳× یعنی با هر ۱ تومان مارجین، ۳ تومان موقعیت. سود و زیان به نسبت اهرم بزرگ‌تر می‌شود و فاصله‌ی لیکوییدیشن ≈ ۱۰۰÷اهرم درصد است (۳× ⇒ ~۳۰٪). حداکثر ۱۰، گام‌های ۰٫۵.">
+              help="ضریب اهرمی پوزیشن — مثلاً ۳× یعنی با هر ۱ تومان مارجین، ۳ تومان موقعیت. سود و زیان به نسبت اهرم بزرگ‌تر می‌شود و فاصله‌ی لیکوییدیشن ≈ ۱۰۰÷اهرم درصد است (۳× ⇒ ~۳۰٪). حداکثر ۱۰، گام‌های ۰٫۵. برای موتورهای نمادین (ATM-SME، RMM-BSE، DZS-HMM) لورج در اجرا به ۲ محدود می‌شود.">
               <Input name="leverage" type="number" step="any" min={1} max={10} defaultValue={initial?.leverage ?? 3} required />
             </Field>
             )}
