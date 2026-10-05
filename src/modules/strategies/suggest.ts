@@ -158,6 +158,30 @@ export function suggestParams(
     notes.push("OBI خام در هر تیک می‌چرخد — هموارسازی EMA + پایداری سیگنال (hysteresis) فیلتر نویز اعمال شد.");
   }
 
+  if (kind === "PRICE_ACTION") {
+    // pick the setup family that matches the measured regime
+    fields.paSetup =
+      regime === "trending" ? "TREND_PULLBACK" :
+      regime === "ranging" ? "RANGE_REVERSION" : "LIQUIDITY_SWEEP";
+    fields.paLookback = volPct > 1.5 ? 80 : volPct > 0.8 ? 60 : 40;
+    fields.paSwingLen = risk === "LOW" ? 5 : risk === "HIGH" ? 2 : 3;
+    // zone tolerance ≈ half the per-candle ATR — a "touch" must be meaningful
+    fields.paZoneTolPct = round05(clamp(atrPct * 0.5, 0.1, 3));
+    fields.paMinWickRatio = risk === "LOW" ? 2.5 : risk === "HIGH" ? 1.5 : 2;
+    fields.paImpulseAtrMult = risk === "LOW" ? 2 : risk === "HIGH" ? 1.2 : 1.5;
+    fields.paEmaPeriod = volPct > 1.5 ? 34 : 50;
+    fields.paBodyRatio = risk === "LOW" ? 0.7 : risk === "HIGH" ? 0.5 : 0.6;
+    fields.paVolMult = risk === "LOW" ? 2 : risk === "HIGH" ? 1.2 : 1.5;
+    fields.paRangeMaxPct = round05(clamp(atrPct * (stats.candles > 0 ? 30 : 30), 3, 15));
+    notes.push(
+      regime === "trending"
+        ? "روند فعال است — ستاپ «پولبک در روند» پیشنهاد شد تا وارد شدن در جهت غالب با اصلاح انجام شود."
+        : regime === "ranging"
+          ? "بازار سایدوی است — ستاپ «بازگشت به میانگین در رنج» برای خرید از کف و فروش از سقف پیشنهاد شد."
+          : "بازار پرنوسان است — ستاپ «شکار نقدینگی» پیشنهاد شد چون فیک‌اوت‌های استاپی در این رژیم زیاد می‌شوند.",
+    );
+  }
+
   if (kind === "MARKET_MAKING") {
     // spread must beat fees + noise — base it on per-candle range
     fields.spreadPct = round05(clamp(atrPct * 1.5, 0.15, 4));

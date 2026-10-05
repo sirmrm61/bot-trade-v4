@@ -7,6 +7,8 @@ import {
   isSymbolicKind, readAtmSmeConfig, readRmmBseConfig, readDzsHmmConfig,
 } from "@/modules/trading/symbolic-engines";
 import { readMmConfig } from "@/modules/trading/market-making";
+import { readPaConfig } from "@/modules/trading/price-action";
+import { PRICE_ACTION_SETUP_LABELS } from "@/shared/constants";
 import { readMarketConfig, liquidationPrice } from "@/modules/trading/futures";
 import { AppError } from "@/shared/errors";
 import type {
@@ -93,6 +95,12 @@ function buildWatch(
     lines.push({ tone: "buy", text: `ورود به خرید: P(صعودی) ≥ ${cfg.bullProb}${cfg.persist > 1 ? ` برای ${cfg.persist} کندل متوالی` : ""}` });
     lines.push({ tone: "sell", text: `خروج: P(رنج) ≥ ${cfg.rangeProbExit} یا P(نزولی) ≥ ${cfg.bearProbExit}` });
     if (score !== null) lines.push({ tone: "info", text: `تراز رژیم فعلی (صعودی منهای نزولی): ${score}` });
+  } else if (kind === "PRICE_ACTION") {
+    const cfg = readPaConfig(version.config);
+    const setupFa = PRICE_ACTION_SETUP_LABELS[cfg.setup] ?? cfg.setup;
+    lines.push({ tone: "buy", text: `ورود به ${futures ? "لانگ" : "خرید"}: تشکیل ستاپ «${setupFa}» روی آخرین کندل بسته‌شده` });
+    lines.push({ tone: "sell", text: futures ? `ورود به شورت: تشکیل ستاپ مخالف «${setupFa}»` : `سیگنال فروش: تشکیل ستاپ مخالف «${setupFa}»` });
+    lines.push({ tone: "info", text: `پنجره ساختار ${cfg.lookback} کندل · عرض سوینگ ${cfg.swingLen} · تلرانس ناحیه ${cfg.zoneTolPct}٪` });
   } else {
     // SIGNAL + ORDER_BOOK_IMBALANCE — score crossing the configured thresholds
     const metric = kind === "ORDER_BOOK_IMBALANCE" ? "OBI هموارشده" : "امتیاز ترکیبی اندیکاتورها";
@@ -180,7 +188,7 @@ export const GET = api(async (_req, ctx) => {
   let oscillators: OscillatorSeries[] = [];
   let signals: SignalMark[] = [];
 
-  if (kind === "SIGNAL" || isSymbolicKind(kind)) {
+  if (kind === "SIGNAL" || isSymbolicKind(kind) || kind === "PRICE_ACTION") {
     // same rendering pipeline as the backtest chart — indicators + signal diamonds
     // (symbolic kinds render their engine pane + entry/exit marks)
     const r = await loadBacktestChart(

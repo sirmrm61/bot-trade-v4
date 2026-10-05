@@ -3,6 +3,7 @@ import { readExchange } from "@/modules/trading/futures";
 import { sma, ema, rsi, macd, bollinger, vwap, atr, stochastic, obv, computeIndicator, evaluateCondition, defaultScore, NON_SCORING, type Condition } from "@/modules/indicators/engine";
 import { obiProxySeries } from "@/modules/trading/orderbook-imbalance";
 import { isSymbolicKind, symbolicChartSeries, symbolicSignalFn } from "@/modules/trading/symbolic-engines";
+import { paSignalFn } from "@/modules/trading/price-action";
 import { parseJson } from "@/shared/utils";
 import type { ChartCandle, OverlaySeries, OscillatorSeries, SignalMark } from "@/components/candle-chart";
 
@@ -155,6 +156,19 @@ export async function loadBacktestChart(
     const pane = symbolicChartSeries(kind, candles, config);
     fullOsc.push({ name: pane.name, kind: "line", values: pane.values, line: pane.line, bands: pane.bands });
     const fn = symbolicSignalFn(kind, candles, config);
+    for (let i = 0; i < candles.length; i++) {
+      const sig = fn(i);
+      if (sig === "BUY") {
+        fullSignals[i] = { time: candles[i].time, price: candles[i].close, type: "BUY" };
+      } else if (sig === "SELL") {
+        fullSignals[i] = { time: candles[i].time, price: candles[i].close, type: "SELL" };
+      }
+    }
+  }
+
+  // price action — per-candle setup marks (no indicator pane)
+  if (kind === "PRICE_ACTION" && config !== undefined) {
+    const fn = paSignalFn(config, candles);
     for (let i = 0; i < candles.length; i++) {
       const sig = fn(i);
       if (sig === "BUY") {

@@ -9,7 +9,7 @@ export type IndicatorName = (typeof INDICATORS)[number];
 
 /** Strategy engine kinds — SIGNAL uses candle indicators; OBI/MM are order-book driven;
  *  the SYMBOLIC_* kinds are candle-native symbolic engines (see modules/trading/symbolic-engines). */
-export const STRATEGY_KINDS = ["SIGNAL", "ORDER_BOOK_IMBALANCE", "MARKET_MAKING", "GRID", "ATM_SME", "RMM_BSE", "DZS_HMM"] as const;
+export const STRATEGY_KINDS = ["SIGNAL", "ORDER_BOOK_IMBALANCE", "MARKET_MAKING", "GRID", "ATM_SME", "RMM_BSE", "DZS_HMM", "PRICE_ACTION"] as const;
 export type StrategyKind = (typeof STRATEGY_KINDS)[number];
 
 export const STRATEGY_KIND_LABELS: Record<StrategyKind, string> = {
@@ -20,6 +20,35 @@ export const STRATEGY_KIND_LABELS: Record<StrategyKind, string> = {
   ATM_SME: "سمبلیک مومنتوم (ATM-SME)",
   RMM_BSE: "سمبلیک شکست کانال (RMM-BSE)",
   DZS_HMM: "سمبلیک رژیم بازار (DZS-HMM)",
+  PRICE_ACTION: "پرایس‌اکشن",
+};
+
+/** PRICE_ACTION setups — `priceAction.setup` selects which detector runs. */
+export const PRICE_ACTION_SETUPS = [
+  "PIN_BAR", "ENGULFING", "INSIDE_BAR", "STAR",
+  "BOS", "CHOCH", "TREND_PULLBACK", "TRENDLINE_BOUNCE",
+  "ORDER_BLOCK", "FVG", "LIQUIDITY_SWEEP", "SR_BOUNCE",
+  "BREAKOUT_RETEST", "RANGE_REVERSION", "MOMENTUM_CANDLE", "EMA_PULLBACK",
+] as const;
+export type PriceActionSetup = (typeof PRICE_ACTION_SETUPS)[number];
+
+export const PRICE_ACTION_SETUP_LABELS: Record<PriceActionSetup, string> = {
+  PIN_BAR: "پین‌بار — سایه‌ی رد قیمت",
+  ENGULFING: "بلع صعودی/نزولی",
+  INSIDE_BAR: "شکست کندل داخلی",
+  STAR: "ستاره‌ی صبح/عصر",
+  BOS: "شکست ساختار (BOS)",
+  CHOCH: "تغییر ساختار (CHoCH)",
+  TREND_PULLBACK: "پولبک در روند",
+  TRENDLINE_BOUNCE: "برگشت از خط روند",
+  ORDER_BLOCK: "اوردر بلاک",
+  FVG: "گپ ارزش منصفانه (FVG)",
+  LIQUIDITY_SWEEP: "شکار نقدینگی",
+  SR_BOUNCE: "برگشت از حمایت/مقاومت",
+  BREAKOUT_RETEST: "شکست + تست مجدد",
+  RANGE_REVERSION: "بازگشت به میانگین در رنج",
+  MOMENTUM_CANDLE: "کندل مومنتوم",
+  EMA_PULLBACK: "پولبک به EMA",
 };
 
 /** Exchanges with an adapter in modules/exchanges — drives strategy exchange picker. */

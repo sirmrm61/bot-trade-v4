@@ -1,6 +1,6 @@
 import { prisma } from "@/infrastructure/database/prisma";
 import { AppError } from "@/shared/errors";
-import { INDICATORS, STRATEGY_KINDS, TIMEFRAMES, EXCHANGE_IDS, type StrategyKind } from "@/shared/constants";
+import { INDICATORS, STRATEGY_KINDS, TIMEFRAMES, EXCHANGE_IDS, PRICE_ACTION_SETUPS, type StrategyKind } from "@/shared/constants";
 import type { StrategyIndicatorConfig } from "@/modules/signals/engine";
 import { logActivity } from "@/modules/activity/service";
 
@@ -85,6 +85,20 @@ export interface DzsHmmConfigInput {
   bearProbExit?: number;    // exit P(bear) (default 0.60)
 }
 
+/** PRICE_ACTION kind params — `setup` selects the detector; rest are shared knobs. */
+export interface PriceActionConfigInput {
+  setup?: string;           // one of PRICE_ACTION_SETUPS (default PIN_BAR)
+  lookback?: number;        // structure/zone window (default 60)
+  swingLen?: number;        // fractal width (default 3)
+  zoneTolPct?: number;      // touch tolerance % (default 0.3)
+  minWickRatio?: number;    // wick/body for pin bar (default 2)
+  impulseAtrMult?: number;  // impulse = mult × ATR (default 1.5)
+  emaPeriod?: number;       // EMA anchor for pullbacks (default 50)
+  bodyRatio?: number;       // min body/range (default 0.6)
+  volMult?: number;         // volume confirm, 0 = off (default 1.5)
+  rangeMaxPct?: number;     // max range % for mean-reversion (default 6)
+}
+
 export interface StrategyInput {
   name: string;
   description?: string;
@@ -112,6 +126,7 @@ export interface StrategyInput {
   atmSme?: AtmSmeConfigInput;
   rmmBse?: RmmBseConfigInput;
   dzsHmm?: DzsHmmConfigInput;
+  priceAction?: PriceActionConfigInput;
   /** smart mode — symbolic engines learn from their own closed trades */
   smart?: boolean;
 }
@@ -245,6 +260,24 @@ export function validateStrategyInput(input: StrategyInput) {
       !inRange(c.bearProbExit, 0.1, 0.99)
     ) {
       throw new AppError("VALIDATION", 400, { field: "dzsHmm" });
+    }
+  }
+
+  if (kind === "PRICE_ACTION") {
+    const c = input.priceAction ?? {};
+    if (
+      (c.setup !== undefined && !PRICE_ACTION_SETUPS.includes(c.setup as never)) ||
+      !inRange(c.lookback, 10, 500) ||
+      !inRange(c.swingLen, 1, 20) ||
+      !inRange(c.zoneTolPct, 0.05, 5) ||
+      !inRange(c.minWickRatio, 1, 10) ||
+      !inRange(c.impulseAtrMult, 0.5, 10) ||
+      !inRange(c.emaPeriod, 5, 300) ||
+      !inRange(c.bodyRatio, 0.3, 0.95) ||
+      !inRange(c.volMult, 0, 20) ||
+      !inRange(c.rangeMaxPct, 1, 30)
+    ) {
+      throw new AppError("VALIDATION", 400, { field: "priceAction" });
     }
   }
 

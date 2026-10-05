@@ -3,6 +3,7 @@ import { adapterForUser, publicAdapter } from "@/modules/exchanges/registry";
 import { computeSignal } from "@/modules/signals/engine";
 import { orderBookImbalance, readObiConfig, smoothObi, obiHysteresis } from "./orderbook-imbalance";
 import { isSymbolicKind, symbolicLast, symbolicWarmup } from "./symbolic-engines";
+import { paSignal, paWarmup, readPaConfig } from "./price-action";
 import type { SymbolicKind } from "./symbolic-engines";
 import {
   adaptConfig, decideEntry, readLearn, recordOutcome, smartEnabled,
@@ -298,6 +299,22 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
           symNote = `هوشمند: امتیاز ${(d.smartScore * 100) | 0}٪ · سایز ×${d.sizeMult.toFixed(2)}`;
         }
       }
+    } else if (live.version.kind === "PRICE_ACTION") {
+      const need = Math.max(200, paWarmup(live.version.config));
+      candles = await getCandles({
+        symbol: live.symbol,
+        timeframe: live.version.timeframe,
+        start: new Date(Date.now() - need * tfMs(live.version.timeframe)),
+        end: new Date(),
+        exchange,
+      });
+      if (candles.length < Math.min(60, need / 2)) return;
+      const r = paSignal(live.version.config, candles);
+      signal = r.signal;
+      rawSignal = r.signal;
+      score = r.score;
+      symLabel = r.label;
+      sigFeats = { setup: readPaConfig(live.version.config).setup, ...r.detail };
     } else {
       candles = await getCandles({
         symbol: live.symbol,

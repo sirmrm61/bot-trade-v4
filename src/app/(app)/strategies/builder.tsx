@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Field, HelpTip, Input, Select, SearchableSelect } from "@/components/client";
 import { toast } from "@/components/toast";
 import { cn } from "@/shared/utils";
-import { TIMEFRAMES, STRATEGY_KINDS, STRATEGY_KIND_LABELS, EXCHANGE_IDS, EXCHANGE_LABELS, type StrategyKind } from "@/shared/constants";
+import { TIMEFRAMES, STRATEGY_KINDS, STRATEGY_KIND_LABELS, EXCHANGE_IDS, EXCHANGE_LABELS, PRICE_ACTION_SETUPS, PRICE_ACTION_SETUP_LABELS, type StrategyKind } from "@/shared/constants";
 import { INDICATORS, INDICATOR_MAP } from "@/modules/indicators/registry";
 
 /**
@@ -306,6 +306,20 @@ export function StrategyBuilder({
           bearProbExit: num("bearProbExit", 0.6),
         },
       }),
+      ...(kind === "PRICE_ACTION" && {
+        priceAction: {
+          setup: String(fd.get("paSetup") ?? "PIN_BAR"),
+          lookback: num("paLookback", 60),
+          swingLen: num("paSwingLen", 3),
+          zoneTolPct: num("paZoneTolPct", 0.3),
+          minWickRatio: num("paMinWickRatio", 2),
+          impulseAtrMult: num("paImpulseAtrMult", 1.5),
+          emaPeriod: num("paEmaPeriod", 50),
+          bodyRatio: num("paBodyRatio", 0.6),
+          volMult: num("paVolMult", 1.5),
+          rangeMaxPct: num("paRangeMaxPct", 6),
+        },
+      }),
     };
 
     try {
@@ -377,7 +391,7 @@ export function StrategyBuilder({
         <Field label="توضیحات">
           <Input name="description" defaultValue={initial?.description ?? ""} />
         </Field>
-        <Field label="تایم‌فریم" hint={kind === "SIGNAL" || SYMBOLIC.has(kind) ? undefined : "برای بک‌تست شبیه‌سازی‌شده و کندل‌های چارت استفاده می‌شود"}>
+        <Field label="تایم‌فریم" hint={kind === "SIGNAL" || SYMBOLIC.has(kind) || kind === "PRICE_ACTION" ? undefined : "برای بک‌تست شبیه‌سازی‌شده و کندل‌های چارت استفاده می‌شود"}>
           <Select name="timeframe" defaultValue={initial?.timeframe ?? (kind === "SIGNAL" ? "15m" : "1m")}
             options={TIMEFRAMES.map((t) => ({ value: t, label: t }))} />
         </Field>
@@ -729,6 +743,60 @@ export function StrategyBuilder({
             <Field label="آستانه خروج P(نزولی)" hint="۰–۱"
               help="خروج وقتی احتمال رژیم نزولی به این آستانه برسد — یعنی روند برعکس شده. پایین‌تر = خروج حساس‌تر به چرخش بازار؛ بالاتر = فقط با اطمینان بالای نزولی خارج می‌شود.">
               <Input name="bearProbExit" type="number" step="any" min={0.1} max={0.99} defaultValue={0.6} required />
+            </Field>
+          </div>
+        </div>
+      )}
+
+      {kind === "PRICE_ACTION" && (
+        <div className="rounded-2xl border border-border p-4">
+          <h3 className="mb-3 font-bold">تنظیمات پرایس‌اکشن</h3>
+          <p className="mb-3 text-xs text-muted">
+            موتور پرایس‌اکشن فقط از شکل کندل‌ها، سوینگ‌های ساختار بازار و نواحی نقدینگی استفاده می‌کند —
+            بدون اندیکاتور کلاسیک (جز ATR برای اندازه‌ی تلرانس و EMA در ستاپ پولبک). ستاپ موردنظر را انتخاب کنید؛
+            بقیه‌ی پارامترها بین ستاپ‌ها مشترک‌اند و هر ستاپ فقط پارامترهای مرتبط خودش را می‌خواند.
+          </p>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            <Field label="ستاپ" hint="۱۶ الگوی پرایس‌اکشن"
+              help="الگوی مورد استفاده: الگوهای کندلی (پین‌بار، بلع، کندل داخلی، ستاره)، ساختار بازار (BOS، CHoCH، پولبک، خط روند)، نواحی و نقدینگی (اوردر بلاک، FVG، شکار نقدینگی، حمایت/مقاومت) و ترکیبی کلاسیک (شکست+تست مجدد، بازگشت در رنج، کندل مومنتوم، پولبک EMA).">
+              <Select name="paSetup" defaultValue="PIN_BAR"
+                options={PRICE_ACTION_SETUPS.map((s) => ({ value: s, label: PRICE_ACTION_SETUP_LABELS[s] }))} />
+            </Field>
+            <Field label="پنجره ساختار (کندل)" hint="lookback"
+              help="تعداد کندل‌هایی که برای یافتن سوینگ‌ها، نواحی، شکست‌ها و رنج جست‌وجو می‌شود. بزرگ‌تر = ساختارهای بزرگ‌تر و سیگنال کمتر؛ کوچک‌تر = واکنش سریع‌تر ولی ساختارهای کوچک‌تر.">
+              <Input name="paLookback" type="number" min={10} max={500} defaultValue={60} required />
+            </Field>
+            <Field label="عرض سوینگ (فرکتال)" hint="swingLen"
+              help="تعداد کندل در هر طرف برای تأیید سقف/کف سوینگ. ۲–۳ حساس‌تر؛ ۵+ فقط سوینگ‌های مهم را می‌گیرد. در BOS، CHoCH، شکار نقدینگی، S/R و خط روند استفاده می‌شود.">
+              <Input name="paSwingLen" type="number" min={1} max={20} defaultValue={3} required />
+            </Field>
+            <Field label="تلرانس ناحیه ٪" hint="zoneTolPct"
+              help="فاصله‌ی مجاز قیمت از ناحیه برای «لمس» (درصد قیمت). هرچه بزرگ‌تر، لمس‌های بیشتری ثبت می‌شود — برای نمادهای کم‌نوسان بزرگ‌تر بگیرید تا لمس دیده شود.">
+              <Input name="paZoneTolPct" type="number" step="any" min={0.05} max={5} defaultValue={0.3} required />
+            </Field>
+            <Field label="نسبت سایه به بدنه" hint="پین‌بار"
+              help="حداقل نسبت سایه‌ی ردکننده به بدنه در ستاپ پین‌بار. ۲ = سایه حداقل دوبرابر بدنه؛ بزرگ‌تر = فقط پین‌بارهای خیلی قوی.">
+              <Input name="paMinWickRatio" type="number" step="any" min={1} max={10} defaultValue={2} required />
+            </Field>
+            <Field label="ضریب حرکت انفجاری" hint="× ATR"
+              help="ضریبی از ATR که حداقل اندازه‌ی یک حرکت/کندل انفجاری را تعریف می‌کند — در اوردر بلاک، کندل مومنتوم و کندل داخلی استفاده می‌شود. بزرگ‌تر = فقط حرکت‌های خیلی قوی.">
+              <Input name="paImpulseAtrMult" type="number" step="any" min={0.5} max={10} defaultValue={1.5} required />
+            </Field>
+            <Field label="دوره EMA" hint="پولبک در روند و پولبک EMA"
+              help="پریود میانگین متحرک نمایی — در ستاپ «پولبک به EMA» لنگر ورود است و در «پولبک در روند» جهت روند را می‌سنجد. روی تایم‌فریم بالاتر عدد بزرگ‌تر روند بلندمدت‌تری می‌گیرد.">
+              <Input name="paEmaPeriod" type="number" min={5} max={300} defaultValue={50} required />
+            </Field>
+            <Field label="نسبت بدنه به رنج" hint="مومنتوم/بلع/ستاره"
+              help="حداقل نسبت بدنه به کل رنج کندل برای کندل‌های قدرتمند (مومنتوم، بلع‌کننده، پایه‌ی ستاره). بالاتر = فقط کندل‌های تمام‌بدن؛ پایین‌تر = کندل‌های سایه‌دار هم قبول.">
+              <Input name="paBodyRatio" type="number" step="any" min={0.3} max={0.95} defaultValue={0.6} required />
+            </Field>
+            <Field label="ضریب حجم" hint="کندل مومنتوم (۰=خاموش)"
+              help="تأیید حجم در کندل مومنتوم: حجم کندل باید ≥ این ضرب‌در میانگین حجم ۲۰ کندل قبلی باشد. ۰ = بدون شرط حجم.">
+              <Input name="paVolMult" type="number" step="any" min={0} max={20} defaultValue={1.5} required />
+            </Field>
+            <Field label="سقف رنج ٪" hint="بازگشت در رنج"
+              help="ستاپ «بازگشت به میانگین در رنج» فقط وقتی فعال است که ارتفاع رنج (سقف منهای کف) از این درصد کمتر باشد — یعنی بازار واقعاً سایدوی است نه ترند.">
+              <Input name="paRangeMaxPct" type="number" step="any" min={1} max={30} defaultValue={6} required />
             </Field>
           </div>
         </div>

@@ -7,6 +7,7 @@ import { readMarketConfig, readExchange } from "@/modules/trading/futures";
 import { obiBacktestSignal } from "@/modules/trading/orderbook-imbalance";
 import { isSymbolicKind, symbolicSignalFn } from "@/modules/trading/symbolic-engines";
 import { smartEnabled, smartSignalFn } from "@/modules/trading/smart";
+import { paSignalFn } from "@/modules/trading/price-action";
 import { parseJson } from "@/shared/utils";
 import type { StrategyIndicatorConfig } from "@/modules/signals/engine";
 import type { TraceEvent } from "./types";
@@ -138,11 +139,13 @@ export async function replayTrade(userId: string, tradeTraceId: string) {
     market: marketCfg.market, leverage: marketCfg.leverage,
     signalFn: kind === "ORDER_BOOK_IMBALANCE"
       ? obiBacktestSignal(candles, v.config, v.buyThreshold, v.sellThreshold)
-      : isSymbolicKind(kind)
-        ? smartEnabled(v.config)
-          ? smartSignalFn(kind, candles, v.config)
-          : symbolicSignalFn(kind, candles, v.config)
-        : undefined,
+      : kind === "PRICE_ACTION"
+        ? paSignalFn(v.config, candles)
+        : isSymbolicKind(kind)
+          ? smartEnabled(v.config)
+            ? smartSignalFn(kind, candles, v.config)
+            : symbolicSignalFn(kind, candles, v.config)
+          : undefined,
   });
 
   // the replayed run may contain several trades — match by entry timestamp,
