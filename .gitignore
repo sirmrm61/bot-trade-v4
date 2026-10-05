@@ -51,3 +51,7 @@ src/generated/
 
 # reserved DOS device name — can be created accidentally by "> nul" redirects
 nul
+
+# never commit the devin cli credentials mounted into the worker
+devin-credentials.toml
+data/

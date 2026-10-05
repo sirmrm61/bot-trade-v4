@@ -235,6 +235,18 @@ async function main() {
     }
   }, tickSec * 1000);
 
+  // trading agents — every 60s, run reviews for agents whose interval elapsed.
+  // agentTick holds a Redis lock so a long CLI run can't overlap itself.
+  setInterval(async () => {
+    try {
+      const { runAgentCycle } = await import("@/modules/agent/service");
+      const n = await runAgentCycle();
+      if (n > 0) logger.info("agent cycle", { module: "agent", due: n });
+    } catch (e) {
+      logger.warn("agent scheduler error", { module: "agent", errorCode: String(e).slice(0, 120) });
+    }
+  }, 60_000);
+
   // cron-style repeatables via BullMQ job schedulers — retry until Redis is up
   const repeatable = async (queue: string, name: string, data: object, everyMs: number) => {
     await getQueue(queue as never).upsertJobScheduler(`cron:${name}`, { every: everyMs }, { name, data });

@@ -426,6 +426,8 @@ export const ModelName = {
   ActivityLog: 'ActivityLog',
   SystemSetting: 'SystemSetting',
   IdempotencyKey: 'IdempotencyKey',
+  TradingAgent: 'TradingAgent',
+  TradingAgentLog: 'TradingAgentLog',
   JobRecord: 'JobRecord'
 } as const
 
@@ -442,7 +444,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "traceEvent" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "opportunity" | "whaleEvent" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "jobRecord"
+    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "traceEvent" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "opportunity" | "whaleEvent" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "tradingAgent" | "tradingAgentLog" | "jobRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2592,6 +2594,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    TradingAgent: {
+      payload: Prisma.$TradingAgentPayload<ExtArgs>
+      fields: Prisma.TradingAgentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TradingAgentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TradingAgentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload>
+        }
+        findFirst: {
+          args: Prisma.TradingAgentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TradingAgentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload>
+        }
+        findMany: {
+          args: Prisma.TradingAgentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload>[]
+        }
+        create: {
+          args: Prisma.TradingAgentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload>
+        }
+        createMany: {
+          args: Prisma.TradingAgentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TradingAgentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload>[]
+        }
+        delete: {
+          args: Prisma.TradingAgentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload>
+        }
+        update: {
+          args: Prisma.TradingAgentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload>
+        }
+        deleteMany: {
+          args: Prisma.TradingAgentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TradingAgentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TradingAgentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload>[]
+        }
+        upsert: {
+          args: Prisma.TradingAgentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentPayload>
+        }
+        aggregate: {
+          args: Prisma.TradingAgentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTradingAgent>
+        }
+        groupBy: {
+          args: Prisma.TradingAgentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TradingAgentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TradingAgentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TradingAgentCountAggregateOutputType> | number
+        }
+      }
+    }
+    TradingAgentLog: {
+      payload: Prisma.$TradingAgentLogPayload<ExtArgs>
+      fields: Prisma.TradingAgentLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TradingAgentLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TradingAgentLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload>
+        }
+        findFirst: {
+          args: Prisma.TradingAgentLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TradingAgentLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload>
+        }
+        findMany: {
+          args: Prisma.TradingAgentLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload>[]
+        }
+        create: {
+          args: Prisma.TradingAgentLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload>
+        }
+        createMany: {
+          args: Prisma.TradingAgentLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TradingAgentLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload>[]
+        }
+        delete: {
+          args: Prisma.TradingAgentLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload>
+        }
+        update: {
+          args: Prisma.TradingAgentLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.TradingAgentLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TradingAgentLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TradingAgentLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.TradingAgentLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TradingAgentLogPayload>
+        }
+        aggregate: {
+          args: Prisma.TradingAgentLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTradingAgentLog>
+        }
+        groupBy: {
+          args: Prisma.TradingAgentLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TradingAgentLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TradingAgentLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TradingAgentLogCountAggregateOutputType> | number
+        }
+      }
+    }
     JobRecord: {
       payload: Prisma.$JobRecordPayload<ExtArgs>
       fields: Prisma.JobRecordFieldRefs
@@ -3299,6 +3449,36 @@ export const IdempotencyKeyScalarFieldEnum = {
 export type IdempotencyKeyScalarFieldEnum = (typeof IdempotencyKeyScalarFieldEnum)[keyof typeof IdempotencyKeyScalarFieldEnum]
 
 
+export const TradingAgentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  symbol: 'symbol',
+  exchange: 'exchange',
+  mode: 'mode',
+  status: 'status',
+  strategyId: 'strategyId',
+  liveStrategyId: 'liveStrategyId',
+  tickIntervalSec: 'tickIntervalSec',
+  lastTickAt: 'lastTickAt',
+  lastError: 'lastError',
+  createdAt: 'createdAt',
+  stoppedAt: 'stoppedAt'
+} as const
+
+export type TradingAgentScalarFieldEnum = (typeof TradingAgentScalarFieldEnum)[keyof typeof TradingAgentScalarFieldEnum]
+
+
+export const TradingAgentLogScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  level: 'level',
+  message: 'message',
+  createdAt: 'createdAt'
+} as const
+
+export type TradingAgentLogScalarFieldEnum = (typeof TradingAgentLogScalarFieldEnum)[keyof typeof TradingAgentLogScalarFieldEnum]
+
+
 export const JobRecordScalarFieldEnum = {
   id: 'id',
   queue: 'queue',
@@ -3558,6 +3738,8 @@ export type GlobalOmitConfig = {
   activityLog?: Prisma.ActivityLogOmit
   systemSetting?: Prisma.SystemSettingOmit
   idempotencyKey?: Prisma.IdempotencyKeyOmit
+  tradingAgent?: Prisma.TradingAgentOmit
+  tradingAgentLog?: Prisma.TradingAgentLogOmit
   jobRecord?: Prisma.JobRecordOmit
 }
 

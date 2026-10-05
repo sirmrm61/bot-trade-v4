@@ -7,6 +7,7 @@ import { cn } from "@/shared/utils";
 import { ScannerDialog } from "./scanner-dialog";
 import { WhaleDialog } from "./whale-dialog";
 import { GridDialog } from "./grid-dialog";
+import { AgentDialog } from "./agent-dialog";
 
 /**
  * Smart Trader mosaic — data-driven idea tiles. To add an idea, append an
@@ -14,7 +15,7 @@ import { GridDialog } from "./grid-dialog";
  * and clicking opens the matching dialog.
  */
 
-type IconKind = "radar" | "sparkle" | "pulse";
+type IconKind = "radar" | "sparkle" | "pulse" | "brain";
 
 interface Idea {
   id: string;
@@ -54,6 +55,15 @@ const IDEAS: Idea[] = [
     accent: "from-amber-500/15 to-orange-400/15 text-amber-500",
     badge: "فعال",
   },
+  {
+    id: "trading-agent",
+    title: "ایجنت معامله‌گر",
+    description:
+      "یک ایجنت هوشمند (SWE-2) برای هر جفت‌ارز که دوره‌ای بازار را بررسی می‌کند، استراتژی می‌سازد و بهینه می‌کند، معامله باز و بسته می‌کند و گزارش هر اقدام را می‌نویسد — تا وقتی خودتان متوقفش کنید.",
+    icon: "brain",
+    accent: "from-emerald-500/15 to-teal-400/15 text-emerald-500",
+    badge: "فعال",
+  },
 ];
 
 /** Layered animated icon — pure CSS, driven by `icon` kind. */
@@ -81,10 +91,19 @@ function TileIcon({ kind, accent }: { kind: IconKind; accent: string }) {
           <span className="tile-ring tile-ring-delay" />
         </>
       )}
+      {kind === "brain" && (
+        <>
+          <span className="tile-ring" />
+          <span className="tile-sparkle left-2 top-2 size-1.5 rounded-full bg-current" />
+          <span className="tile-sparkle bottom-1 right-3 size-1 rounded-full bg-current" style={{ animationDelay: "0.7s" }} />
+          <span className="tile-sparkle right-2 top-3 size-1 rounded-full bg-current" style={{ animationDelay: "1.3s" }} />
+        </>
+      )}
       <span className="tile-float relative z-10">
         {kind === "radar" && <RadarGlyph />}
         {kind === "sparkle" && <SparkleGlyph />}
         {kind === "pulse" && <PulseGlyph />}
+        {kind === "brain" && <BrainGlyph />}
       </span>
     </div>
   );
@@ -114,6 +133,16 @@ function PulseGlyph() {
   return (
     <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M2 12h4l2.5-6 3.5 12L14 12h4l2-3" />
+    </svg>
+  );
+}
+
+function BrainGlyph() {
+  return (
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="6" y="6" width="12" height="12" rx="2.5" />
+      <path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4" />
+      <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -191,6 +220,19 @@ export function SmartTraderMosaic({ pairs }: { pairs: { symbol: string; exchange
         }
       >
         <GridDialog pairs={pairs} />
+      </Modal>
+
+      <Modal
+        open={active === "trading-agent"}
+        onClose={() => setActive(null)}
+        title={
+          <span className="flex items-center gap-2">
+            {idea?.title}
+            <Badge tone="success">ایجنت SWE-2</Badge>
+          </span>
+        }
+      >
+        <AgentDialog pairs={pairs} />
       </Modal>
     </>
   );

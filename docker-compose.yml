@@ -73,8 +73,13 @@ services:
     environment:
       REDIS_URL: redis://redis:6379
       DATABASE_URL: file:/app/data/dev.db
+      AGENT_API_URL: http://app:3000
+      AGENT_WORKSPACE_DIR: /app/data/agents
+      AGENT_TEMPLATE_DIR: /app/agent/workspace
+      DEVIN_CREDENTIALS_SRC: /run/secrets/devin-credentials.toml
     volumes:
       - app-data:/app/data
+      - ./devin-credentials.toml:/run/secrets/devin-credentials.toml:ro
     depends_on:
       redis:
         condition: service_healthy

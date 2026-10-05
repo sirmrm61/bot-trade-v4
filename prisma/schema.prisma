@@ -56,6 +56,7 @@ model User {
   orders              Order[]
   trades              Trade[]
   idempotencyKeys     IdempotencyKey[]
+  tradingAgents       TradingAgent[]
 }
 
 model Session {
@@ -249,6 +250,7 @@ model Strategy {
   listings    MarketplaceListing[]
   backtests   Backtest[]
   liveStrategies LiveStrategy[]
+  tradingAgents TradingAgent[]
 
   @@index([userId])
 }
@@ -775,6 +777,44 @@ model IdempotencyKey {
   expiresAt  DateTime?
 
   @@index([key])
+}
+
+// ------------------------------------------------------------
+// Trading Agents — AI-driven per-symbol agents (Devin CLI + SWE-2)
+// ------------------------------------------------------------
+
+model TradingAgent {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  symbol          String
+  exchange        String   @default("NOBITEX")
+  mode            String   @default("PAPER")   // PAPER | REAL
+  status          String   @default("RUNNING") // RUNNING | STOPPED | ERROR
+  strategyId      String?                      // strategy the agent manages
+  strategy        Strategy? @relation(fields: [strategyId], references: [id])
+  liveStrategyId  String?                      // its live/paper instance
+  tickIntervalSec Int      @default(600)       // min seconds between agent reviews
+  lastTickAt      DateTime?
+  lastError       String?
+  createdAt       DateTime @default(now())
+  stoppedAt       DateTime?
+
+  logs TradingAgentLog[]
+
+  @@unique([userId, symbol, mode])
+  @@index([userId, status])
+}
+
+model TradingAgentLog {
+  id        String   @id @default(cuid())
+  agentId   String
+  agent     TradingAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  level     String   @default("INFO") // INFO | ACTION | DECISION | ERROR
+  message   String
+  createdAt DateTime @default(now())
+
+  @@index([agentId, createdAt])
 }
 
 // Queue job persistence for durable records (BullMQ holds runtime state)

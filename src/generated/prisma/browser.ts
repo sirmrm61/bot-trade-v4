@@ -163,6 +163,16 @@ export type SystemSetting = Prisma.SystemSettingModel
  */
 export type IdempotencyKey = Prisma.IdempotencyKeyModel
 /**
+ * Model TradingAgent
+ * 
+ */
+export type TradingAgent = Prisma.TradingAgentModel
+/**
+ * Model TradingAgentLog
+ * 
+ */
+export type TradingAgentLog = Prisma.TradingAgentLogModel
+/**
  * Model JobRecord
  * 
  */

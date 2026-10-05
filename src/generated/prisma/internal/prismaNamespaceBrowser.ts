@@ -80,6 +80,8 @@ export const ModelName = {
   ActivityLog: 'ActivityLog',
   SystemSetting: 'SystemSetting',
   IdempotencyKey: 'IdempotencyKey',
+  TradingAgent: 'TradingAgent',
+  TradingAgentLog: 'TradingAgentLog',
   JobRecord: 'JobRecord'
 } as const
 
@@ -691,6 +693,36 @@ export const IdempotencyKeyScalarFieldEnum = {
 } as const
 
 export type IdempotencyKeyScalarFieldEnum = (typeof IdempotencyKeyScalarFieldEnum)[keyof typeof IdempotencyKeyScalarFieldEnum]
+
+
+export const TradingAgentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  symbol: 'symbol',
+  exchange: 'exchange',
+  mode: 'mode',
+  status: 'status',
+  strategyId: 'strategyId',
+  liveStrategyId: 'liveStrategyId',
+  tickIntervalSec: 'tickIntervalSec',
+  lastTickAt: 'lastTickAt',
+  lastError: 'lastError',
+  createdAt: 'createdAt',
+  stoppedAt: 'stoppedAt'
+} as const
+
+export type TradingAgentScalarFieldEnum = (typeof TradingAgentScalarFieldEnum)[keyof typeof TradingAgentScalarFieldEnum]
+
+
+export const TradingAgentLogScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  level: 'level',
+  message: 'message',
+  createdAt: 'createdAt'
+} as const
+
+export type TradingAgentLogScalarFieldEnum = (typeof TradingAgentLogScalarFieldEnum)[keyof typeof TradingAgentLogScalarFieldEnum]
 
 
 export const JobRecordScalarFieldEnum = {

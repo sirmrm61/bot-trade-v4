@@ -39,12 +39,19 @@ CMD ["node", "server.js"]
 FROM node:24-slim AS worker
 WORKDIR /app
 ENV NODE_ENV=production
-RUN groupadd -r app && useradd -r -g app app && mkdir -p /app/data && chown app:app /app/data
+# curl: agent API calls + the Devin CLI installer; git: CLI file ops
+RUN apt-get update && apt-get install -y --no-install-recommends curl git ca-certificates && rm -rf /var/lib/apt/lists/*
+# Devin CLI (SWE) — installed as root, then shared on PATH for the app user
+RUN curl -fsSL https://cli.devin.ai/install.sh | bash && cp /root/.local/bin/devin /usr/local/bin/devin && chmod +x /usr/local/bin/devin
+RUN groupadd -r app && useradd -r -g app app && mkdir -p /app/data /app/data/agents && chown -R app:app /app/data
+# HOME under the data volume → CLI sessions + credentials persist across deploys
+ENV HOME=/app/data
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/agent ./agent
 USER app
 CMD ["npx", "tsx", "src/workers/index.ts"]

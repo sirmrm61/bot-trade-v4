@@ -235,6 +235,7 @@ export type StrategyWhereInput = {
   listings?: Prisma.MarketplaceListingListRelationFilter
   backtests?: Prisma.BacktestListRelationFilter
   liveStrategies?: Prisma.LiveStrategyListRelationFilter
+  tradingAgents?: Prisma.TradingAgentListRelationFilter
 }
 
 export type StrategyOrderByWithRelationInput = {
@@ -254,6 +255,7 @@ export type StrategyOrderByWithRelationInput = {
   listings?: Prisma.MarketplaceListingOrderByRelationAggregateInput
   backtests?: Prisma.BacktestOrderByRelationAggregateInput
   liveStrategies?: Prisma.LiveStrategyOrderByRelationAggregateInput
+  tradingAgents?: Prisma.TradingAgentOrderByRelationAggregateInput
 }
 
 export type StrategyWhereUniqueInput = Prisma.AtLeast<{
@@ -276,6 +278,7 @@ export type StrategyWhereUniqueInput = Prisma.AtLeast<{
   listings?: Prisma.MarketplaceListingListRelationFilter
   backtests?: Prisma.BacktestListRelationFilter
   liveStrategies?: Prisma.LiveStrategyListRelationFilter
+  tradingAgents?: Prisma.TradingAgentListRelationFilter
 }, "id">
 
 export type StrategyOrderByWithAggregationInput = {
@@ -328,6 +331,7 @@ export type StrategyCreateInput = {
   listings?: Prisma.MarketplaceListingCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyUncheckedCreateInput = {
@@ -346,6 +350,7 @@ export type StrategyUncheckedCreateInput = {
   listings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestUncheckedCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyUncheckedCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyUpdateInput = {
@@ -364,6 +369,7 @@ export type StrategyUpdateInput = {
   listings?: Prisma.MarketplaceListingUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyUncheckedUpdateInput = {
@@ -382,6 +388,7 @@ export type StrategyUncheckedUpdateInput = {
   listings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUncheckedUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUncheckedUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyCreateManyInput = {
@@ -482,6 +489,11 @@ export type StrategyScalarRelationFilter = {
   isNot?: Prisma.StrategyWhereInput
 }
 
+export type StrategyNullableScalarRelationFilter = {
+  is?: Prisma.StrategyWhereInput | null
+  isNot?: Prisma.StrategyWhereInput | null
+}
+
 export type StrategyCreateNestedManyWithoutUserInput = {
   create?: Prisma.XOR<Prisma.StrategyCreateWithoutUserInput, Prisma.StrategyUncheckedCreateWithoutUserInput> | Prisma.StrategyCreateWithoutUserInput[] | Prisma.StrategyUncheckedCreateWithoutUserInput[]
   connectOrCreate?: Prisma.StrategyCreateOrConnectWithoutUserInput | Prisma.StrategyCreateOrConnectWithoutUserInput[]
@@ -580,6 +592,22 @@ export type StrategyUpdateOneRequiredWithoutLiveStrategiesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.StrategyUpdateToOneWithWhereWithoutLiveStrategiesInput, Prisma.StrategyUpdateWithoutLiveStrategiesInput>, Prisma.StrategyUncheckedUpdateWithoutLiveStrategiesInput>
 }
 
+export type StrategyCreateNestedOneWithoutTradingAgentsInput = {
+  create?: Prisma.XOR<Prisma.StrategyCreateWithoutTradingAgentsInput, Prisma.StrategyUncheckedCreateWithoutTradingAgentsInput>
+  connectOrCreate?: Prisma.StrategyCreateOrConnectWithoutTradingAgentsInput
+  connect?: Prisma.StrategyWhereUniqueInput
+}
+
+export type StrategyUpdateOneWithoutTradingAgentsNestedInput = {
+  create?: Prisma.XOR<Prisma.StrategyCreateWithoutTradingAgentsInput, Prisma.StrategyUncheckedCreateWithoutTradingAgentsInput>
+  connectOrCreate?: Prisma.StrategyCreateOrConnectWithoutTradingAgentsInput
+  upsert?: Prisma.StrategyUpsertWithoutTradingAgentsInput
+  disconnect?: Prisma.StrategyWhereInput | boolean
+  delete?: Prisma.StrategyWhereInput | boolean
+  connect?: Prisma.StrategyWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StrategyUpdateToOneWithWhereWithoutTradingAgentsInput, Prisma.StrategyUpdateWithoutTradingAgentsInput>, Prisma.StrategyUncheckedUpdateWithoutTradingAgentsInput>
+}
+
 export type StrategyCreateWithoutUserInput = {
   id?: string
   name: string
@@ -595,6 +623,7 @@ export type StrategyCreateWithoutUserInput = {
   listings?: Prisma.MarketplaceListingCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyUncheckedCreateWithoutUserInput = {
@@ -612,6 +641,7 @@ export type StrategyUncheckedCreateWithoutUserInput = {
   listings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestUncheckedCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyUncheckedCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyCreateOrConnectWithoutUserInput = {
@@ -671,6 +701,7 @@ export type StrategyCreateWithoutVersionsInput = {
   listings?: Prisma.MarketplaceListingCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyUncheckedCreateWithoutVersionsInput = {
@@ -688,6 +719,7 @@ export type StrategyUncheckedCreateWithoutVersionsInput = {
   listings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestUncheckedCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyUncheckedCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyCreateOrConnectWithoutVersionsInput = {
@@ -721,6 +753,7 @@ export type StrategyUpdateWithoutVersionsInput = {
   listings?: Prisma.MarketplaceListingUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyUncheckedUpdateWithoutVersionsInput = {
@@ -738,6 +771,7 @@ export type StrategyUncheckedUpdateWithoutVersionsInput = {
   listings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUncheckedUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUncheckedUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyCreateWithoutListingsInput = {
@@ -755,6 +789,7 @@ export type StrategyCreateWithoutListingsInput = {
   versions?: Prisma.StrategyVersionCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyUncheckedCreateWithoutListingsInput = {
@@ -772,6 +807,7 @@ export type StrategyUncheckedCreateWithoutListingsInput = {
   versions?: Prisma.StrategyVersionUncheckedCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestUncheckedCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyUncheckedCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyCreateOrConnectWithoutListingsInput = {
@@ -805,6 +841,7 @@ export type StrategyUpdateWithoutListingsInput = {
   versions?: Prisma.StrategyVersionUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyUncheckedUpdateWithoutListingsInput = {
@@ -822,6 +859,7 @@ export type StrategyUncheckedUpdateWithoutListingsInput = {
   versions?: Prisma.StrategyVersionUncheckedUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUncheckedUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUncheckedUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyCreateWithoutBacktestsInput = {
@@ -839,6 +877,7 @@ export type StrategyCreateWithoutBacktestsInput = {
   versions?: Prisma.StrategyVersionCreateNestedManyWithoutStrategyInput
   listings?: Prisma.MarketplaceListingCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyUncheckedCreateWithoutBacktestsInput = {
@@ -856,6 +895,7 @@ export type StrategyUncheckedCreateWithoutBacktestsInput = {
   versions?: Prisma.StrategyVersionUncheckedCreateNestedManyWithoutStrategyInput
   listings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutStrategyInput
   liveStrategies?: Prisma.LiveStrategyUncheckedCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyCreateOrConnectWithoutBacktestsInput = {
@@ -889,6 +929,7 @@ export type StrategyUpdateWithoutBacktestsInput = {
   versions?: Prisma.StrategyVersionUpdateManyWithoutStrategyNestedInput
   listings?: Prisma.MarketplaceListingUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyUncheckedUpdateWithoutBacktestsInput = {
@@ -906,6 +947,7 @@ export type StrategyUncheckedUpdateWithoutBacktestsInput = {
   versions?: Prisma.StrategyVersionUncheckedUpdateManyWithoutStrategyNestedInput
   listings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUncheckedUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyCreateWithoutLiveStrategiesInput = {
@@ -923,6 +965,7 @@ export type StrategyCreateWithoutLiveStrategiesInput = {
   versions?: Prisma.StrategyVersionCreateNestedManyWithoutStrategyInput
   listings?: Prisma.MarketplaceListingCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyUncheckedCreateWithoutLiveStrategiesInput = {
@@ -940,6 +983,7 @@ export type StrategyUncheckedCreateWithoutLiveStrategiesInput = {
   versions?: Prisma.StrategyVersionUncheckedCreateNestedManyWithoutStrategyInput
   listings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutStrategyInput
   backtests?: Prisma.BacktestUncheckedCreateNestedManyWithoutStrategyInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutStrategyInput
 }
 
 export type StrategyCreateOrConnectWithoutLiveStrategiesInput = {
@@ -973,6 +1017,7 @@ export type StrategyUpdateWithoutLiveStrategiesInput = {
   versions?: Prisma.StrategyVersionUpdateManyWithoutStrategyNestedInput
   listings?: Prisma.MarketplaceListingUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyUncheckedUpdateWithoutLiveStrategiesInput = {
@@ -990,6 +1035,95 @@ export type StrategyUncheckedUpdateWithoutLiveStrategiesInput = {
   versions?: Prisma.StrategyVersionUncheckedUpdateManyWithoutStrategyNestedInput
   listings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUncheckedUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutStrategyNestedInput
+}
+
+export type StrategyCreateWithoutTradingAgentsInput = {
+  id?: string
+  name: string
+  description?: string | null
+  status?: string
+  sourceStrategyId?: string | null
+  parentVersionId?: string | null
+  isAiGenerated?: boolean
+  origin?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutStrategiesInput
+  versions?: Prisma.StrategyVersionCreateNestedManyWithoutStrategyInput
+  listings?: Prisma.MarketplaceListingCreateNestedManyWithoutStrategyInput
+  backtests?: Prisma.BacktestCreateNestedManyWithoutStrategyInput
+  liveStrategies?: Prisma.LiveStrategyCreateNestedManyWithoutStrategyInput
+}
+
+export type StrategyUncheckedCreateWithoutTradingAgentsInput = {
+  id?: string
+  userId: string
+  name: string
+  description?: string | null
+  status?: string
+  sourceStrategyId?: string | null
+  parentVersionId?: string | null
+  isAiGenerated?: boolean
+  origin?: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  versions?: Prisma.StrategyVersionUncheckedCreateNestedManyWithoutStrategyInput
+  listings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutStrategyInput
+  backtests?: Prisma.BacktestUncheckedCreateNestedManyWithoutStrategyInput
+  liveStrategies?: Prisma.LiveStrategyUncheckedCreateNestedManyWithoutStrategyInput
+}
+
+export type StrategyCreateOrConnectWithoutTradingAgentsInput = {
+  where: Prisma.StrategyWhereUniqueInput
+  create: Prisma.XOR<Prisma.StrategyCreateWithoutTradingAgentsInput, Prisma.StrategyUncheckedCreateWithoutTradingAgentsInput>
+}
+
+export type StrategyUpsertWithoutTradingAgentsInput = {
+  update: Prisma.XOR<Prisma.StrategyUpdateWithoutTradingAgentsInput, Prisma.StrategyUncheckedUpdateWithoutTradingAgentsInput>
+  create: Prisma.XOR<Prisma.StrategyCreateWithoutTradingAgentsInput, Prisma.StrategyUncheckedCreateWithoutTradingAgentsInput>
+  where?: Prisma.StrategyWhereInput
+}
+
+export type StrategyUpdateToOneWithWhereWithoutTradingAgentsInput = {
+  where?: Prisma.StrategyWhereInput
+  data: Prisma.XOR<Prisma.StrategyUpdateWithoutTradingAgentsInput, Prisma.StrategyUncheckedUpdateWithoutTradingAgentsInput>
+}
+
+export type StrategyUpdateWithoutTradingAgentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceStrategyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  parentVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAiGenerated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  origin?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutStrategiesNestedInput
+  versions?: Prisma.StrategyVersionUpdateManyWithoutStrategyNestedInput
+  listings?: Prisma.MarketplaceListingUpdateManyWithoutStrategyNestedInput
+  backtests?: Prisma.BacktestUpdateManyWithoutStrategyNestedInput
+  liveStrategies?: Prisma.LiveStrategyUpdateManyWithoutStrategyNestedInput
+}
+
+export type StrategyUncheckedUpdateWithoutTradingAgentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  sourceStrategyId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  parentVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isAiGenerated?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  origin?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  versions?: Prisma.StrategyVersionUncheckedUpdateManyWithoutStrategyNestedInput
+  listings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutStrategyNestedInput
+  backtests?: Prisma.BacktestUncheckedUpdateManyWithoutStrategyNestedInput
+  liveStrategies?: Prisma.LiveStrategyUncheckedUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyCreateManyUserInput = {
@@ -1020,6 +1154,7 @@ export type StrategyUpdateWithoutUserInput = {
   listings?: Prisma.MarketplaceListingUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyUncheckedUpdateWithoutUserInput = {
@@ -1037,6 +1172,7 @@ export type StrategyUncheckedUpdateWithoutUserInput = {
   listings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutStrategyNestedInput
   backtests?: Prisma.BacktestUncheckedUpdateManyWithoutStrategyNestedInput
   liveStrategies?: Prisma.LiveStrategyUncheckedUpdateManyWithoutStrategyNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutStrategyNestedInput
 }
 
 export type StrategyUncheckedUpdateManyWithoutUserInput = {
@@ -1062,6 +1198,7 @@ export type StrategyCountOutputType = {
   listings: number
   backtests: number
   liveStrategies: number
+  tradingAgents: number
 }
 
 export type StrategyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1069,6 +1206,7 @@ export type StrategyCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensio
   listings?: boolean | StrategyCountOutputTypeCountListingsArgs
   backtests?: boolean | StrategyCountOutputTypeCountBacktestsArgs
   liveStrategies?: boolean | StrategyCountOutputTypeCountLiveStrategiesArgs
+  tradingAgents?: boolean | StrategyCountOutputTypeCountTradingAgentsArgs
 }
 
 /**
@@ -1109,6 +1247,13 @@ export type StrategyCountOutputTypeCountLiveStrategiesArgs<ExtArgs extends runti
   where?: Prisma.LiveStrategyWhereInput
 }
 
+/**
+ * StrategyCountOutputType without action
+ */
+export type StrategyCountOutputTypeCountTradingAgentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TradingAgentWhereInput
+}
+
 
 export type StrategySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1127,6 +1272,7 @@ export type StrategySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   listings?: boolean | Prisma.Strategy$listingsArgs<ExtArgs>
   backtests?: boolean | Prisma.Strategy$backtestsArgs<ExtArgs>
   liveStrategies?: boolean | Prisma.Strategy$liveStrategiesArgs<ExtArgs>
+  tradingAgents?: boolean | Prisma.Strategy$tradingAgentsArgs<ExtArgs>
   _count?: boolean | Prisma.StrategyCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["strategy"]>
 
@@ -1181,6 +1327,7 @@ export type StrategyInclude<ExtArgs extends runtime.Types.Extensions.InternalArg
   listings?: boolean | Prisma.Strategy$listingsArgs<ExtArgs>
   backtests?: boolean | Prisma.Strategy$backtestsArgs<ExtArgs>
   liveStrategies?: boolean | Prisma.Strategy$liveStrategiesArgs<ExtArgs>
+  tradingAgents?: boolean | Prisma.Strategy$tradingAgentsArgs<ExtArgs>
   _count?: boolean | Prisma.StrategyCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type StrategyIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1198,6 +1345,7 @@ export type $StrategyPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     listings: Prisma.$MarketplaceListingPayload<ExtArgs>[]
     backtests: Prisma.$BacktestPayload<ExtArgs>[]
     liveStrategies: Prisma.$LiveStrategyPayload<ExtArgs>[]
+    tradingAgents: Prisma.$TradingAgentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1610,6 +1758,7 @@ export interface Prisma__StrategyClient<T, Null = never, ExtArgs extends runtime
   listings<T extends Prisma.Strategy$listingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Strategy$listingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MarketplaceListingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   backtests<T extends Prisma.Strategy$backtestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Strategy$backtestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BacktestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   liveStrategies<T extends Prisma.Strategy$liveStrategiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Strategy$liveStrategiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LiveStrategyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  tradingAgents<T extends Prisma.Strategy$tradingAgentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Strategy$tradingAgentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TradingAgentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2142,6 +2291,30 @@ export type Strategy$liveStrategiesArgs<ExtArgs extends runtime.Types.Extensions
   take?: number
   skip?: number
   distinct?: Prisma.LiveStrategyScalarFieldEnum | Prisma.LiveStrategyScalarFieldEnum[]
+}
+
+/**
+ * Strategy.tradingAgents
+ */
+export type Strategy$tradingAgentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TradingAgent
+   */
+  select?: Prisma.TradingAgentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TradingAgent
+   */
+  omit?: Prisma.TradingAgentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TradingAgentInclude<ExtArgs> | null
+  where?: Prisma.TradingAgentWhereInput
+  orderBy?: Prisma.TradingAgentOrderByWithRelationInput | Prisma.TradingAgentOrderByWithRelationInput[]
+  cursor?: Prisma.TradingAgentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TradingAgentScalarFieldEnum | Prisma.TradingAgentScalarFieldEnum[]
 }
 
 /**

@@ -275,6 +275,7 @@ export type UserWhereInput = {
   orders?: Prisma.OrderListRelationFilter
   trades?: Prisma.TradeListRelationFilter
   idempotencyKeys?: Prisma.IdempotencyKeyListRelationFilter
+  tradingAgents?: Prisma.TradingAgentListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -313,6 +314,7 @@ export type UserOrderByWithRelationInput = {
   orders?: Prisma.OrderOrderByRelationAggregateInput
   trades?: Prisma.TradeOrderByRelationAggregateInput
   idempotencyKeys?: Prisma.IdempotencyKeyOrderByRelationAggregateInput
+  tradingAgents?: Prisma.TradingAgentOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -354,6 +356,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   orders?: Prisma.OrderListRelationFilter
   trades?: Prisma.TradeListRelationFilter
   idempotencyKeys?: Prisma.IdempotencyKeyListRelationFilter
+  tradingAgents?: Prisma.TradingAgentListRelationFilter
 }, "id" | "username" | "email" | "mobile" | "referralCode">
 
 export type UserOrderByWithAggregationInput = {
@@ -431,6 +434,7 @@ export type UserCreateInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -468,6 +472,7 @@ export type UserUncheckedCreateInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -505,6 +510,7 @@ export type UserUpdateInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -542,6 +548,7 @@ export type UserUncheckedUpdateInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1009,6 +1016,20 @@ export type UserUpdateOneWithoutIdempotencyKeysNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutIdempotencyKeysInput, Prisma.UserUpdateWithoutIdempotencyKeysInput>, Prisma.UserUncheckedUpdateWithoutIdempotencyKeysInput>
 }
 
+export type UserCreateNestedOneWithoutTradingAgentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTradingAgentsInput, Prisma.UserUncheckedCreateWithoutTradingAgentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTradingAgentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutTradingAgentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutTradingAgentsInput, Prisma.UserUncheckedCreateWithoutTradingAgentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutTradingAgentsInput
+  upsert?: Prisma.UserUpsertWithoutTradingAgentsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutTradingAgentsInput, Prisma.UserUpdateWithoutTradingAgentsInput>, Prisma.UserUncheckedUpdateWithoutTradingAgentsInput>
+}
+
 export type UserCreateWithoutReferralsInput = {
   id?: string
   username: string
@@ -1043,6 +1064,7 @@ export type UserCreateWithoutReferralsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReferralsInput = {
@@ -1079,6 +1101,7 @@ export type UserUncheckedCreateWithoutReferralsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReferralsInput = {
@@ -1120,6 +1143,7 @@ export type UserCreateWithoutReferredByInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReferredByInput = {
@@ -1156,6 +1180,7 @@ export type UserUncheckedCreateWithoutReferredByInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReferredByInput = {
@@ -1212,6 +1237,7 @@ export type UserUpdateWithoutReferralsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReferralsInput = {
@@ -1248,6 +1274,7 @@ export type UserUncheckedUpdateWithoutReferralsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithWhereUniqueWithoutReferredByInput = {
@@ -1320,6 +1347,7 @@ export type UserCreateWithoutSessionsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -1356,6 +1384,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -1408,6 +1437,7 @@ export type UserUpdateWithoutSessionsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -1444,6 +1474,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutSubscriptionsInput = {
@@ -1480,6 +1511,7 @@ export type UserCreateWithoutSubscriptionsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSubscriptionsInput = {
@@ -1516,6 +1548,7 @@ export type UserUncheckedCreateWithoutSubscriptionsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSubscriptionsInput = {
@@ -1568,6 +1601,7 @@ export type UserUpdateWithoutSubscriptionsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSubscriptionsInput = {
@@ -1604,6 +1638,7 @@ export type UserUncheckedUpdateWithoutSubscriptionsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPlanOverridesInput = {
@@ -1640,6 +1675,7 @@ export type UserCreateWithoutPlanOverridesInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPlanOverridesInput = {
@@ -1676,6 +1712,7 @@ export type UserUncheckedCreateWithoutPlanOverridesInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPlanOverridesInput = {
@@ -1728,6 +1765,7 @@ export type UserUpdateWithoutPlanOverridesInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPlanOverridesInput = {
@@ -1764,6 +1802,7 @@ export type UserUncheckedUpdateWithoutPlanOverridesInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWalletInput = {
@@ -1800,6 +1839,7 @@ export type UserCreateWithoutWalletInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWalletInput = {
@@ -1836,6 +1876,7 @@ export type UserUncheckedCreateWithoutWalletInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWalletInput = {
@@ -1888,6 +1929,7 @@ export type UserUpdateWithoutWalletInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWalletInput = {
@@ -1924,6 +1966,7 @@ export type UserUncheckedUpdateWithoutWalletInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutWalletTransactionsInput = {
@@ -1960,6 +2003,7 @@ export type UserCreateWithoutWalletTransactionsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutWalletTransactionsInput = {
@@ -1996,6 +2040,7 @@ export type UserUncheckedCreateWithoutWalletTransactionsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutWalletTransactionsInput = {
@@ -2048,6 +2093,7 @@ export type UserUpdateWithoutWalletTransactionsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutWalletTransactionsInput = {
@@ -2084,6 +2130,7 @@ export type UserUncheckedUpdateWithoutWalletTransactionsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutExchangeAccountsInput = {
@@ -2120,6 +2167,7 @@ export type UserCreateWithoutExchangeAccountsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutExchangeAccountsInput = {
@@ -2156,6 +2204,7 @@ export type UserUncheckedCreateWithoutExchangeAccountsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutExchangeAccountsInput = {
@@ -2208,6 +2257,7 @@ export type UserUpdateWithoutExchangeAccountsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutExchangeAccountsInput = {
@@ -2244,6 +2294,7 @@ export type UserUncheckedUpdateWithoutExchangeAccountsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutStrategiesInput = {
@@ -2280,6 +2331,7 @@ export type UserCreateWithoutStrategiesInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutStrategiesInput = {
@@ -2316,6 +2368,7 @@ export type UserUncheckedCreateWithoutStrategiesInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutStrategiesInput = {
@@ -2368,6 +2421,7 @@ export type UserUpdateWithoutStrategiesInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStrategiesInput = {
@@ -2404,6 +2458,7 @@ export type UserUncheckedUpdateWithoutStrategiesInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutMarketplaceListingsInput = {
@@ -2440,6 +2495,7 @@ export type UserCreateWithoutMarketplaceListingsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMarketplaceListingsInput = {
@@ -2476,6 +2532,7 @@ export type UserUncheckedCreateWithoutMarketplaceListingsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMarketplaceListingsInput = {
@@ -2528,6 +2585,7 @@ export type UserUpdateWithoutMarketplaceListingsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMarketplaceListingsInput = {
@@ -2564,6 +2622,7 @@ export type UserUncheckedUpdateWithoutMarketplaceListingsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPurchasesInput = {
@@ -2600,6 +2659,7 @@ export type UserCreateWithoutPurchasesInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPurchasesInput = {
@@ -2636,6 +2696,7 @@ export type UserUncheckedCreateWithoutPurchasesInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPurchasesInput = {
@@ -2677,6 +2738,7 @@ export type UserCreateWithoutSalesInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutSalesInput = {
@@ -2713,6 +2775,7 @@ export type UserUncheckedCreateWithoutSalesInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutSalesInput = {
@@ -2765,6 +2828,7 @@ export type UserUpdateWithoutPurchasesInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPurchasesInput = {
@@ -2801,6 +2865,7 @@ export type UserUncheckedUpdateWithoutPurchasesInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutSalesInput = {
@@ -2848,6 +2913,7 @@ export type UserUpdateWithoutSalesInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSalesInput = {
@@ -2884,6 +2950,7 @@ export type UserUncheckedUpdateWithoutSalesInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutBacktestsInput = {
@@ -2920,6 +2987,7 @@ export type UserCreateWithoutBacktestsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutBacktestsInput = {
@@ -2956,6 +3024,7 @@ export type UserUncheckedCreateWithoutBacktestsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutBacktestsInput = {
@@ -3008,6 +3077,7 @@ export type UserUpdateWithoutBacktestsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBacktestsInput = {
@@ -3044,6 +3114,7 @@ export type UserUncheckedUpdateWithoutBacktestsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutLiveStrategiesInput = {
@@ -3080,6 +3151,7 @@ export type UserCreateWithoutLiveStrategiesInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutLiveStrategiesInput = {
@@ -3116,6 +3188,7 @@ export type UserUncheckedCreateWithoutLiveStrategiesInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutLiveStrategiesInput = {
@@ -3168,6 +3241,7 @@ export type UserUpdateWithoutLiveStrategiesInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLiveStrategiesInput = {
@@ -3204,6 +3278,7 @@ export type UserUncheckedUpdateWithoutLiveStrategiesInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutOrdersInput = {
@@ -3240,6 +3315,7 @@ export type UserCreateWithoutOrdersInput = {
   marketplaceListings?: Prisma.MarketplaceListingCreateNestedManyWithoutSellerInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutOrdersInput = {
@@ -3276,6 +3352,7 @@ export type UserUncheckedCreateWithoutOrdersInput = {
   marketplaceListings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutSellerInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutOrdersInput = {
@@ -3328,6 +3405,7 @@ export type UserUpdateWithoutOrdersInput = {
   marketplaceListings?: Prisma.MarketplaceListingUpdateManyWithoutSellerNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutOrdersInput = {
@@ -3364,6 +3442,7 @@ export type UserUncheckedUpdateWithoutOrdersInput = {
   marketplaceListings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutSellerNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTradesInput = {
@@ -3400,6 +3479,7 @@ export type UserCreateWithoutTradesInput = {
   marketplaceListings?: Prisma.MarketplaceListingCreateNestedManyWithoutSellerInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutTradesInput = {
@@ -3436,6 +3516,7 @@ export type UserUncheckedCreateWithoutTradesInput = {
   marketplaceListings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutSellerInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutTradesInput = {
@@ -3488,6 +3569,7 @@ export type UserUpdateWithoutTradesInput = {
   marketplaceListings?: Prisma.MarketplaceListingUpdateManyWithoutSellerNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTradesInput = {
@@ -3524,6 +3606,7 @@ export type UserUncheckedUpdateWithoutTradesInput = {
   marketplaceListings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutSellerNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutReferralRecordsInput = {
@@ -3560,6 +3643,7 @@ export type UserCreateWithoutReferralRecordsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReferralRecordsInput = {
@@ -3596,6 +3680,7 @@ export type UserUncheckedCreateWithoutReferralRecordsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReferralRecordsInput = {
@@ -3637,6 +3722,7 @@ export type UserCreateWithoutReferredRecordsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutReferredRecordsInput = {
@@ -3673,6 +3759,7 @@ export type UserUncheckedCreateWithoutReferredRecordsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutReferredRecordsInput = {
@@ -3725,6 +3812,7 @@ export type UserUpdateWithoutReferralRecordsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReferralRecordsInput = {
@@ -3761,6 +3849,7 @@ export type UserUncheckedUpdateWithoutReferralRecordsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUpsertWithoutReferredRecordsInput = {
@@ -3808,6 +3897,7 @@ export type UserUpdateWithoutReferredRecordsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReferredRecordsInput = {
@@ -3844,6 +3934,7 @@ export type UserUncheckedUpdateWithoutReferredRecordsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -3880,6 +3971,7 @@ export type UserCreateWithoutNotificationsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -3916,6 +4008,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -3968,6 +4061,7 @@ export type UserUpdateWithoutNotificationsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -4004,6 +4098,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutActivityLogsInput = {
@@ -4040,6 +4135,7 @@ export type UserCreateWithoutActivityLogsInput = {
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutActivityLogsInput = {
@@ -4076,6 +4172,7 @@ export type UserUncheckedCreateWithoutActivityLogsInput = {
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutActivityLogsInput = {
@@ -4128,6 +4225,7 @@ export type UserUpdateWithoutActivityLogsInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutActivityLogsInput = {
@@ -4164,6 +4262,7 @@ export type UserUncheckedUpdateWithoutActivityLogsInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutIdempotencyKeysInput = {
@@ -4200,6 +4299,7 @@ export type UserCreateWithoutIdempotencyKeysInput = {
   marketplaceListings?: Prisma.MarketplaceListingCreateNestedManyWithoutSellerInput
   orders?: Prisma.OrderCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutIdempotencyKeysInput = {
@@ -4236,6 +4336,7 @@ export type UserUncheckedCreateWithoutIdempotencyKeysInput = {
   marketplaceListings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutSellerInput
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
   trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
+  tradingAgents?: Prisma.TradingAgentUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutIdempotencyKeysInput = {
@@ -4288,6 +4389,7 @@ export type UserUpdateWithoutIdempotencyKeysInput = {
   marketplaceListings?: Prisma.MarketplaceListingUpdateManyWithoutSellerNestedInput
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutIdempotencyKeysInput = {
@@ -4324,6 +4426,171 @@ export type UserUncheckedUpdateWithoutIdempotencyKeysInput = {
   marketplaceListings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutSellerNestedInput
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutTradingAgentsInput = {
+  id?: string
+  username: string
+  email?: string | null
+  mobile?: string | null
+  passwordHash: string
+  role?: string
+  status?: string
+  referralCode: string
+  telegramChatId?: string | null
+  totpSecretEnc?: string | null
+  totpEnabled?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  referredBy?: Prisma.UserCreateNestedOneWithoutReferralsInput
+  referrals?: Prisma.UserCreateNestedManyWithoutReferredByInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  wallet?: Prisma.WalletCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.UserSubscriptionCreateNestedManyWithoutUserInput
+  planOverrides?: Prisma.UserPlanOverrideCreateNestedManyWithoutUserInput
+  exchangeAccounts?: Prisma.ExchangeAccountCreateNestedManyWithoutUserInput
+  strategies?: Prisma.StrategyCreateNestedManyWithoutUserInput
+  purchases?: Prisma.StrategyPurchaseCreateNestedManyWithoutBuyerInput
+  sales?: Prisma.StrategyPurchaseCreateNestedManyWithoutSellerInput
+  backtests?: Prisma.BacktestCreateNestedManyWithoutUserInput
+  liveStrategies?: Prisma.LiveStrategyCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutUserInput
+  activityLogs?: Prisma.ActivityLogCreateNestedManyWithoutUserInput
+  referralRecords?: Prisma.ReferralCreateNestedManyWithoutReferrerInput
+  referredRecords?: Prisma.ReferralCreateNestedManyWithoutRefereeInput
+  walletTransactions?: Prisma.WalletTransactionCreateNestedManyWithoutUserInput
+  marketplaceListings?: Prisma.MarketplaceListingCreateNestedManyWithoutSellerInput
+  orders?: Prisma.OrderCreateNestedManyWithoutUserInput
+  trades?: Prisma.TradeCreateNestedManyWithoutUserInput
+  idempotencyKeys?: Prisma.IdempotencyKeyCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutTradingAgentsInput = {
+  id?: string
+  username: string
+  email?: string | null
+  mobile?: string | null
+  passwordHash: string
+  role?: string
+  status?: string
+  referralCode: string
+  referredById?: string | null
+  telegramChatId?: string | null
+  totpSecretEnc?: string | null
+  totpEnabled?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  referrals?: Prisma.UserUncheckedCreateNestedManyWithoutReferredByInput
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  wallet?: Prisma.WalletUncheckedCreateNestedOneWithoutUserInput
+  subscriptions?: Prisma.UserSubscriptionUncheckedCreateNestedManyWithoutUserInput
+  planOverrides?: Prisma.UserPlanOverrideUncheckedCreateNestedManyWithoutUserInput
+  exchangeAccounts?: Prisma.ExchangeAccountUncheckedCreateNestedManyWithoutUserInput
+  strategies?: Prisma.StrategyUncheckedCreateNestedManyWithoutUserInput
+  purchases?: Prisma.StrategyPurchaseUncheckedCreateNestedManyWithoutBuyerInput
+  sales?: Prisma.StrategyPurchaseUncheckedCreateNestedManyWithoutSellerInput
+  backtests?: Prisma.BacktestUncheckedCreateNestedManyWithoutUserInput
+  liveStrategies?: Prisma.LiveStrategyUncheckedCreateNestedManyWithoutUserInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutUserInput
+  activityLogs?: Prisma.ActivityLogUncheckedCreateNestedManyWithoutUserInput
+  referralRecords?: Prisma.ReferralUncheckedCreateNestedManyWithoutReferrerInput
+  referredRecords?: Prisma.ReferralUncheckedCreateNestedManyWithoutRefereeInput
+  walletTransactions?: Prisma.WalletTransactionUncheckedCreateNestedManyWithoutUserInput
+  marketplaceListings?: Prisma.MarketplaceListingUncheckedCreateNestedManyWithoutSellerInput
+  orders?: Prisma.OrderUncheckedCreateNestedManyWithoutUserInput
+  trades?: Prisma.TradeUncheckedCreateNestedManyWithoutUserInput
+  idempotencyKeys?: Prisma.IdempotencyKeyUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutTradingAgentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutTradingAgentsInput, Prisma.UserUncheckedCreateWithoutTradingAgentsInput>
+}
+
+export type UserUpsertWithoutTradingAgentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutTradingAgentsInput, Prisma.UserUncheckedUpdateWithoutTradingAgentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutTradingAgentsInput, Prisma.UserUncheckedCreateWithoutTradingAgentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutTradingAgentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutTradingAgentsInput, Prisma.UserUncheckedUpdateWithoutTradingAgentsInput>
+}
+
+export type UserUpdateWithoutTradingAgentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mobile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  referralCode?: Prisma.StringFieldUpdateOperationsInput | string
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecretEnc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  referredBy?: Prisma.UserUpdateOneWithoutReferralsNestedInput
+  referrals?: Prisma.UserUpdateManyWithoutReferredByNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  wallet?: Prisma.WalletUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.UserSubscriptionUpdateManyWithoutUserNestedInput
+  planOverrides?: Prisma.UserPlanOverrideUpdateManyWithoutUserNestedInput
+  exchangeAccounts?: Prisma.ExchangeAccountUpdateManyWithoutUserNestedInput
+  strategies?: Prisma.StrategyUpdateManyWithoutUserNestedInput
+  purchases?: Prisma.StrategyPurchaseUpdateManyWithoutBuyerNestedInput
+  sales?: Prisma.StrategyPurchaseUpdateManyWithoutSellerNestedInput
+  backtests?: Prisma.BacktestUpdateManyWithoutUserNestedInput
+  liveStrategies?: Prisma.LiveStrategyUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutUserNestedInput
+  activityLogs?: Prisma.ActivityLogUpdateManyWithoutUserNestedInput
+  referralRecords?: Prisma.ReferralUpdateManyWithoutReferrerNestedInput
+  referredRecords?: Prisma.ReferralUpdateManyWithoutRefereeNestedInput
+  walletTransactions?: Prisma.WalletTransactionUpdateManyWithoutUserNestedInput
+  marketplaceListings?: Prisma.MarketplaceListingUpdateManyWithoutSellerNestedInput
+  orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
+  trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
+  idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutTradingAgentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mobile?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.StringFieldUpdateOperationsInput | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  referralCode?: Prisma.StringFieldUpdateOperationsInput | string
+  referredById?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  telegramChatId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpSecretEnc?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  totpEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  referrals?: Prisma.UserUncheckedUpdateManyWithoutReferredByNestedInput
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  wallet?: Prisma.WalletUncheckedUpdateOneWithoutUserNestedInput
+  subscriptions?: Prisma.UserSubscriptionUncheckedUpdateManyWithoutUserNestedInput
+  planOverrides?: Prisma.UserPlanOverrideUncheckedUpdateManyWithoutUserNestedInput
+  exchangeAccounts?: Prisma.ExchangeAccountUncheckedUpdateManyWithoutUserNestedInput
+  strategies?: Prisma.StrategyUncheckedUpdateManyWithoutUserNestedInput
+  purchases?: Prisma.StrategyPurchaseUncheckedUpdateManyWithoutBuyerNestedInput
+  sales?: Prisma.StrategyPurchaseUncheckedUpdateManyWithoutSellerNestedInput
+  backtests?: Prisma.BacktestUncheckedUpdateManyWithoutUserNestedInput
+  liveStrategies?: Prisma.LiveStrategyUncheckedUpdateManyWithoutUserNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutUserNestedInput
+  activityLogs?: Prisma.ActivityLogUncheckedUpdateManyWithoutUserNestedInput
+  referralRecords?: Prisma.ReferralUncheckedUpdateManyWithoutReferrerNestedInput
+  referredRecords?: Prisma.ReferralUncheckedUpdateManyWithoutRefereeNestedInput
+  walletTransactions?: Prisma.WalletTransactionUncheckedUpdateManyWithoutUserNestedInput
+  marketplaceListings?: Prisma.MarketplaceListingUncheckedUpdateManyWithoutSellerNestedInput
+  orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
+  trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
+  idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyReferredByInput = {
@@ -4376,6 +4643,7 @@ export type UserUpdateWithoutReferredByInput = {
   orders?: Prisma.OrderUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReferredByInput = {
@@ -4412,6 +4680,7 @@ export type UserUncheckedUpdateWithoutReferredByInput = {
   orders?: Prisma.OrderUncheckedUpdateManyWithoutUserNestedInput
   trades?: Prisma.TradeUncheckedUpdateManyWithoutUserNestedInput
   idempotencyKeys?: Prisma.IdempotencyKeyUncheckedUpdateManyWithoutUserNestedInput
+  tradingAgents?: Prisma.TradingAgentUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutReferredByInput = {
@@ -4455,6 +4724,7 @@ export type UserCountOutputType = {
   orders: number
   trades: number
   idempotencyKeys: number
+  tradingAgents: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -4477,6 +4747,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   orders?: boolean | UserCountOutputTypeCountOrdersArgs
   trades?: boolean | UserCountOutputTypeCountTradesArgs
   idempotencyKeys?: boolean | UserCountOutputTypeCountIdempotencyKeysArgs
+  tradingAgents?: boolean | UserCountOutputTypeCountTradingAgentsArgs
 }
 
 /**
@@ -4622,6 +4893,13 @@ export type UserCountOutputTypeCountIdempotencyKeysArgs<ExtArgs extends runtime.
   where?: Prisma.IdempotencyKeyWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountTradingAgentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TradingAgentWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -4659,6 +4937,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
   trades?: boolean | Prisma.User$tradesArgs<ExtArgs>
   idempotencyKeys?: boolean | Prisma.User$idempotencyKeysArgs<ExtArgs>
+  tradingAgents?: boolean | Prisma.User$tradingAgentsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -4738,6 +5017,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   orders?: boolean | Prisma.User$ordersArgs<ExtArgs>
   trades?: boolean | Prisma.User$tradesArgs<ExtArgs>
   idempotencyKeys?: boolean | Prisma.User$idempotencyKeysArgs<ExtArgs>
+  tradingAgents?: boolean | Prisma.User$tradingAgentsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -4771,6 +5051,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     orders: Prisma.$OrderPayload<ExtArgs>[]
     trades: Prisma.$TradePayload<ExtArgs>[]
     idempotencyKeys: Prisma.$IdempotencyKeyPayload<ExtArgs>[]
+    tradingAgents: Prisma.$TradingAgentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -5202,6 +5483,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   orders<T extends Prisma.User$ordersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$ordersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   trades<T extends Prisma.User$tradesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$tradesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TradePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   idempotencyKeys<T extends Prisma.User$idempotencyKeysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$idempotencyKeysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$IdempotencyKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  tradingAgents<T extends Prisma.User$tradingAgentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$tradingAgentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TradingAgentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -6135,6 +6417,30 @@ export type User$idempotencyKeysArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.IdempotencyKeyScalarFieldEnum | Prisma.IdempotencyKeyScalarFieldEnum[]
+}
+
+/**
+ * User.tradingAgents
+ */
+export type User$tradingAgentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TradingAgent
+   */
+  select?: Prisma.TradingAgentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TradingAgent
+   */
+  omit?: Prisma.TradingAgentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TradingAgentInclude<ExtArgs> | null
+  where?: Prisma.TradingAgentWhereInput
+  orderBy?: Prisma.TradingAgentOrderByWithRelationInput | Prisma.TradingAgentOrderByWithRelationInput[]
+  cursor?: Prisma.TradingAgentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TradingAgentScalarFieldEnum | Prisma.TradingAgentScalarFieldEnum[]
 }
 
 /**
