@@ -36,19 +36,32 @@ export const workspaceDir = (agentId: string) => path.join(WORKSPACE_ROOT(), age
 
 export async function createAgent(
   userId: string,
-  opts: { symbol: string; exchange?: string; mode?: "PAPER" | "REAL"; tickIntervalSec?: number },
+  opts: { symbol?: string; exchange?: string; mode?: "PAPER" | "REAL"; maxPairs?: number; tickIntervalSec?: number },
 ) {
-  const symbol = opts.symbol.toUpperCase();
+  // symbol omitted → "AUTO": the agent picks its pairs itself via scan_pairs
+  const auto = !opts.symbol;
+  const symbol = auto ? "AUTO" : opts.symbol!.toUpperCase();
   const exchange = (opts.exchange ?? "NOBITEX").toUpperCase();
   const mode = opts.mode ?? "PAPER";
+  const maxPairs = Math.min(Math.max(opts.maxPairs ?? 1, 1), 10);
 
-  const pair = await prisma.pair.findFirst({ where: { symbol, exchange, active: true } });
-  if (!pair) throw new AppError("VALIDATION", 400, { field: "symbol", reason: "pair not found" });
+  if (!auto) {
+    const pair = await prisma.pair.findFirst({ where: { symbol, exchange, active: true } });
+    if (!pair) throw new AppError("VALIDATION", 400, { field: "symbol", reason: "pair not found" });
+  } else {
+    const anyPair = await prisma.pair.findFirst({ where: { exchange, active: true }, select: { id: true } });
+    if (!anyPair) throw new AppError("VALIDATION", 400, { field: "exchange", reason: "no active pairs on this exchange" });
+  }
 
   const existing = await prisma.tradingAgent.findFirst({
     where: { userId, symbol, mode, status: { not: "STOPPED" } },
   });
-  if (existing) throw new AppError("VALIDATION", 400, { field: "symbol", reason: "agent already running for this symbol" });
+  if (existing) {
+    throw new AppError("VALIDATION", 400, {
+      field: "symbol",
+      reason: auto ? "یک ایجنت خودکار فعال است — اول آن را متوقف کن" : "agent already running for this symbol",
+    });
+  }
 
   const running = await prisma.tradingAgent.count({ where: { userId, status: "RUNNING" } });
   if (running >= 5) throw new AppError("VALIDATION", 400, { reason: "حداکثر ۵ ایجنت هم‌زمان مجاز است" });
@@ -63,18 +76,22 @@ export async function createAgent(
         where: { id: stopped.id },
         data: {
           status: "RUNNING", lastError: null, lastTickAt: null, stoppedAt: null,
-          exchange, tickIntervalSec: Math.max(TICK_MIN_INTERVAL_SEC, opts.tickIntervalSec ?? 600),
+          exchange, maxPairs: auto ? maxPairs : 1,
+          tickIntervalSec: Math.max(TICK_MIN_INTERVAL_SEC, opts.tickIntervalSec ?? 600),
         },
       })
     : await prisma.tradingAgent.create({
         data: {
           userId, symbol, exchange, mode,
+          maxPairs: auto ? maxPairs : 1,
           tickIntervalSec: Math.max(TICK_MIN_INTERVAL_SEC, opts.tickIntervalSec ?? 600),
         },
       });
   provisionWorkspace(agent.id);
   await agentLog(agent.id, "INFO",
-    `ایجنت برای ${symbol} (${exchange}) در حالت ${mode === "PAPER" ? "تست زنده" : "واقعی"} ساخته شد — اولین بررسی به‌زودی انجام می‌شود.`);
+    auto
+      ? `ایجنت خودکار روی ${exchange} در حالت ${mode === "PAPER" ? "تست زنده" : "واقعی"} ساخته شد — خودش تا ${maxPairs} جفت‌ارز انتخاب می‌کند. اولین بررسی به‌زودی انجام می‌شود.`
+      : `ایجنت برای ${symbol} (${exchange}) در حالت ${mode === "PAPER" ? "تست زنده" : "واقعی"} ساخته شد — اولین بررسی به‌زودی انجام می‌شود.`);
   return agent;
 }
 
@@ -86,10 +103,17 @@ export async function stopAgent(userId: string, agentId: string) {
     where: { id: agent.id },
     data: { status: "STOPPED", stoppedAt: new Date() },
   });
-  // pause the managed live strategy so no new entries fire — open trades
+  // pause every managed live strategy so no new entries fire — open trades
   // keep being managed by the engine's SL/TP loop
-  if (agent.liveStrategyId) {
-    await pauseLiveStrategy(userId, agent.liveStrategyId).catch(() => {});
+  const liveIds = new Set<string>();
+  if (agent.liveStrategyId) liveIds.add(agent.liveStrategyId);
+  try {
+    for (const m of JSON.parse(agent.managed ?? "[]") as { liveStrategyId?: string }[]) {
+      if (m?.liveStrategyId) liveIds.add(m.liveStrategyId);
+    }
+  } catch { /* malformed managed json — legacy column already covered */ }
+  for (const id of liveIds) {
+    await pauseLiveStrategy(userId, id).catch(() => {});
   }
   await agentLog(agent.id, "ACTION", "ایجنت توسط کاربر متوقف شد.");
   return updated;
@@ -181,9 +205,9 @@ const TICK_PROMPT = `Perform your scheduled trading review now.
 
 Follow the workflow in AGENTS.md exactly:
 1. Read state.md for your standing plan.
-2. Call market_summary, list_trades and list_strategies via the agent API.
-3. Decide: manage open trades, tune the strategy, or open/close a position — only if evidence supports it.
-4. If no strategy exists yet, create one that fits the current market regime.
+2. If you manage no pairs yet: call scan_pairs, pick the best candidates, call set_pairs, then give each pair a strategy (select_strategy on an existing user strategy, or create_strategy — optionally validate with backtest first).
+3. For every managed pair: call market_summary and list_trades, then decide — manage open trades, tune the strategy, open/close a position — only if evidence supports it.
+4. Call performance to see 24h progress toward the 5% daily target; if a pair consistently underperforms, consider replacing it via set_pairs with a better candidate.
 5. Write your actions and reasoning to state.md.
 6. Finish by calling the "log" action with a concise Persian summary for the user panel (what you checked, what you did, why — and what you'll watch next).
 

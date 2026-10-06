@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "TradingAgent" ADD COLUMN "maxPairs" INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE "TradingAgent" ADD COLUMN "managed" TEXT NOT NULL DEFAULT '[]';

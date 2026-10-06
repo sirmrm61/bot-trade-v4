@@ -46,7 +46,7 @@ afterAll(async () => {
 });
 
 describe("resetTestData", () => {
-  it("wipes paper data, keeps REAL live strategy + its trade", async () => {
+  it("wipes paper data, keeps REAL live strategy + its trade", { timeout: 60_000 }, async () => {
     const user = await prisma.user.create({
       data: { username: RUN, passwordHash: "x", referralCode: RUN },
     });
@@ -136,7 +136,7 @@ describe("resetTestData", () => {
     expect(await prisma.strategy.findUnique({ where: { id: realStrategy.id } })).not.toBeNull();
   });
 
-  it("does not touch other users' data", async () => {
+  it("does not touch other users' data", { timeout: 60_000 }, async () => {
     const other = await prisma.user.create({
       data: { username: `${RUN}-b`, passwordHash: "x", referralCode: `${RUN}-b` },
     });

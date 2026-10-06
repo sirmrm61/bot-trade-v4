@@ -59,6 +59,14 @@ describe("createAgent", () => {
     expect(real.mode).toBe("REAL");
   });
 
+  it("creates an AUTO agent that picks its own pairs (maxPairs, no symbol)", async () => {
+    const a = await createAgent(userId, { exchange: "NOBITEX", maxPairs: 3 });
+    expect(a.symbol).toBe("AUTO");
+    expect(a.maxPairs).toBe(3);
+    // only one auto agent per mode
+    await expect(createAgent(userId, { exchange: "NOBITEX" })).rejects.toMatchObject({ code: "VALIDATION" });
+  });
+
   it("clamps tickIntervalSec to the 60s floor", async () => {
     await makePair(`${SYM}B-USDT`);
     const a = await createAgent(userId, { symbol: `${SYM}B-USDT`, tickIntervalSec: 5 });

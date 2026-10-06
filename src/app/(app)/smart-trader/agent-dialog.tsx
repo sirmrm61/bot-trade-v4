@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Spinner, Field, Select, SearchableSelect } from "@/components/client";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Spinner, Field, Select } from "@/components/client";
 import { Badge, EmptyState } from "@/components/ui";
 import { toast } from "@/components/toast";
 import { cn } from "@/shared/utils";
@@ -13,14 +13,16 @@ interface AgentLog {
   createdAt: string;
 }
 
+interface ManagedPair { symbol: string; strategyId: string | null; liveStrategyId: string | null }
+
 interface Agent {
   id: string;
-  symbol: string;
+  symbol: string;            // "AUTO" or a fixed pair
   exchange: string;
   mode: "PAPER" | "REAL";
   status: "RUNNING" | "STOPPED" | "ERROR";
-  strategyId: string | null;
-  liveStrategyId: string | null;
+  maxPairs: number;
+  managed: string;           // JSON ManagedPair[]
   tickIntervalSec: number;
   lastTickAt: string | null;
   lastError: string | null;
@@ -39,6 +41,14 @@ const LEVEL_TONE: Record<string, "default" | "info" | "success" | "danger"> = {
 const fmtTime = (iso: string) =>
   new Date(iso).toLocaleString("fa-IR", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 
+const managedSymbols = (a: Agent): string[] => {
+  try {
+    const list = JSON.parse(a.managed ?? "[]") as ManagedPair[];
+    if (list.length) return list.map((m) => m.symbol);
+  } catch { /* fall through */ }
+  return a.symbol === "AUTO" ? [] : [a.symbol];
+};
+
 export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: string }[] }) {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,9 +57,13 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
   const [expanded, setExpanded] = useState<string | null>(null);
   const [logs, setLogs] = useState<Record<string, AgentLog[]>>({});
 
-  const [symbol, setSymbol] = useState("");
+  const exchanges = useMemo(() => [...new Set(pairs.map((p) => p.exchange))].sort(), [pairs]);
+  const [exchange, setExchange] = useState("");
+  const [maxPairs, setMaxPairs] = useState("2");
   const [mode, setMode] = useState<"PAPER" | "REAL">("PAPER");
   const [tickMin, setTickMin] = useState("10");
+
+  useEffect(() => { if (!exchange && exchanges.length) setExchange(exchanges[0]); }, [exchanges, exchange]);
 
   const load = useCallback(async () => {
     try {
@@ -80,17 +94,15 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
   };
 
   const create = async () => {
-    if (!symbol) return;
     setCreating(true);
     try {
-      const pair = pairs.find((p) => p.symbol === symbol);
       const res = await fetch("/api/agents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          symbol,
-          exchange: pair?.exchange,
+          exchange: exchange || undefined,
           mode,
+          maxPairs: Math.max(1, Number(maxPairs) || 1),
           tickIntervalSec: Math.max(1, Number(tickMin) || 10) * 60,
         }),
       });
@@ -99,8 +111,7 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
         toast(json.error ?? "خطا در ساخت ایجنت", "error");
         return;
       }
-      toast(`ایجنت ${symbol} فعال شد`, "success");
-      setSymbol("");
+      toast("ایجنت فعال شد — خودش جفت‌ارزها را انتخاب می‌کند", "success");
       load();
     } finally {
       setCreating(false);
@@ -130,17 +141,29 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
     <div className="space-y-5">
       <div className="rounded-xl border border-border bg-surface p-4">
         <p className="text-xs leading-6 text-muted">
-          برای هر جفت‌ارز یک ایجنت مستقل (با مدل SWE-2) باز می‌شود که دوره‌ای بازار را بررسی می‌کند،
-          استراتژی می‌سازد یا اصلاح می‌کند، معامله باز/بسته می‌کند و گزارشش را همین‌جا می‌نویسد.
-          هر ایجنت سشن و حافظه‌ی خودش را دارد.
+          ایجنت (مدل SWE-2) خودش بهترین جفت‌ارزهای صرافی را اسکن و انتخاب می‌کند، برای هرکدام استراتژی
+          مناسب می‌سازد یا از استراتژی‌های موجودت استفاده می‌کند، بک‌تست می‌گیرد و معامله مدیریت می‌کند.
+          هدف: حداقل ۵٪ سود در هر ۲۴ ساعت. تو فقط صرافی، تعداد جفت‌ارز و حالت را تعیین می‌کنی.
         </p>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
-          <Field label="جفت‌ارز">
-            <SearchableSelect
-              value={symbol}
-              onValueChange={setSymbol}
-              placeholder="انتخاب…"
-              options={pairs.map((p) => ({ value: p.symbol, label: p.symbol }))}
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-5">
+          <Field label="صرافی">
+            <Select
+              value={exchange}
+              onChange={(e) => setExchange(e.target.value)}
+              options={exchanges.map((x) => ({ value: x, label: x }))}
+            />
+          </Field>
+          <Field label="تعداد جفت‌ارز">
+            <Select
+              value={maxPairs}
+              onChange={(e) => setMaxPairs(e.target.value)}
+              options={[
+                { value: "1", label: "۱ جفت" },
+                { value: "2", label: "۲ جفت" },
+                { value: "3", label: "۳ جفت" },
+                { value: "4", label: "۴ جفت" },
+                { value: "5", label: "۵ جفت" },
+              ]}
             />
           </Field>
           <Field label="حالت">
@@ -153,7 +176,7 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
               ]}
             />
           </Field>
-          <Field label="فاصله‌ی بررسی (دقیقه)">
+          <Field label="فاصله‌ی بررسی">
             <Select
               value={tickMin}
               onChange={(e) => setTickMin(e.target.value)}
@@ -169,7 +192,7 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
             <button
               type="button"
               onClick={create}
-              disabled={creating || !symbol}
+              disabled={creating}
               className="w-full rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
             >
               {creating ? <Spinner /> : "فعال‌سازی ایجنت"}
@@ -181,20 +204,28 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
       {loading ? (
         <div className="flex justify-center py-8"><Spinner /></div>
       ) : agents.length === 0 ? (
-        <EmptyState title="ایجنتی فعال نیست" hint="بالا یک جفت‌ارز انتخاب کن تا اولین ایجنت ساخته شود." />
+        <EmptyState title="ایجنتی فعال نیست" hint="بالا صرافی و تعداد جفت‌ارز را انتخاب کن تا ایجنت شروع کند." />
       ) : (
         <div className="space-y-2">
           {active.length > 0 && <p className="text-xs font-bold text-muted">ایجنت‌های فعال ({active.length})</p>}
-          {[...active, ...stopped].map((a) => (
+          {[...active, ...stopped].map((a) => {
+            const symbols = managedSymbols(a);
+            return (
             <div key={a.id} className="rounded-xl border border-border bg-card">
               <div className="flex flex-wrap items-center gap-2 p-3">
                 <button type="button" onClick={() => toggle(a.id)} className="flex flex-1 flex-wrap items-center gap-2 text-start">
-                  <span className="font-mono text-sm font-bold">{a.symbol}</span>
+                  {a.symbol === "AUTO" ? (
+                    <span className="font-mono text-sm font-bold">
+                      {symbols.length ? symbols.join(" · ") : `در انتظار انتخاب ${a.maxPairs} جفت‌ارز`}
+                    </span>
+                  ) : (
+                    <span className="font-mono text-sm font-bold">{a.symbol}</span>
+                  )}
+                  <Badge tone="default">{a.exchange}</Badge>
                   <Badge tone={a.mode === "REAL" ? "warning" : "info"}>{a.mode === "REAL" ? "واقعی" : "تست زنده"}</Badge>
                   <Badge tone={a.status === "RUNNING" ? "success" : "default"}>
                     {a.status === "RUNNING" ? "در حال کار" : a.status === "ERROR" ? "خطا" : "متوقف"}
                   </Badge>
-                  {a.strategy && <Badge tone="default">{a.strategy.name}</Badge>}
                   <span className="text-[11px] text-muted">
                     هر {Math.round(a.tickIntervalSec / 60)} دقیقه
                     {a.lastTickAt ? ` · آخرین بررسی ${fmtTime(a.lastTickAt)}` : " · در انتظار اولین بررسی"}
@@ -238,7 +269,8 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
                 </div>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

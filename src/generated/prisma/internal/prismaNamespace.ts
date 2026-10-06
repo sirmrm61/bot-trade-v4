@@ -3458,6 +3458,8 @@ export const TradingAgentScalarFieldEnum = {
   status: 'status',
   strategyId: 'strategyId',
   liveStrategyId: 'liveStrategyId',
+  maxPairs: 'maxPairs',
+  managed: 'managed',
   tickIntervalSec: 'tickIntervalSec',
   lastTickAt: 'lastTickAt',
   lastError: 'lastError',

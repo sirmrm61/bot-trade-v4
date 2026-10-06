@@ -1,6 +1,6 @@
 ---
 name: trading-agent
-description: Call the trading platform agent API — market data, strategies, trades, logs. Use in every review cycle for a trading agent workspace.
+description: Call the trading platform agent API — pair scanning, market data, strategies, backtests, trades, logs. Use in every review cycle for a trading agent workspace.
 ---
 
 # Trading Agent API
@@ -19,7 +19,7 @@ call_action() {
     -d "{\"action\": \"$1\", \"params\": $2}"
 }
 # example:
-call_action market_summary '{}'
+call_action market_summary '{"symbol":"BTC-USDT"}'
 ```
 
 Response: `{ "ok": true, "result": ... }` or `{ "error": "...", "detail": "...", "code": "..." }`.
@@ -28,40 +28,66 @@ reason when a risk check rejects a call — read it before retrying.
 
 ## Actions
 
-### market_summary — read first every cycle
+### scan_pairs — discover candidates (AUTO agents)
 
-`{}` → symbol, price, bid/ask, RSI14, EMA20/50, ATR14, `regime`
+`{}` → `maxPairs`, currently `managed` symbols, and top-ranked `candidates`
+with symbol, marketType, score, volumeUsd24h, spreadPct, volatilityPct,
+dayRangePct, change24hPct, alreadyManaged, reasons.
+
+### set_pairs — lock in your pair set
+
+`{"symbols": ["BTC-USDT", "ETH-USDT"]}` → sets managed pairs (max `maxPairs`,
+all must exist on your exchange). Pairs you drop are auto-PAUSED.
+
+### market_summary — read per pair every cycle
+
+`{"symbol": "BTC-USDT"}` → price, bid/ask, RSI14, EMA20/50, ATR14, `regime`
 (ranging|trending|volatile), `trendPct`, `volPct`, `atrPct`, `liveStatus`.
+
+### performance — 24h progress vs the 5% daily target
+
+`{}` → realized/unrealized PnL across all managed pairs, capital total,
+trade counts, `onTarget` flag.
 
 ### list_trades — positions you manage
 
-`{}` → `open`: id, side, entryPrice, amount, invested, SL/TP, live `pnlPct`.
-`closed`: last 10 with exitPrice, pnlPct, exitReason.
+`{}` (all pairs) or `{"symbol": "..."}` → `open`: id, symbol, side,
+entryPrice, amount, invested, SL/TP, live `pnlPct`. `closed`: last 15 with
+exitPrice, pnlPct, exitReason.
 
-### open_trade — enter a position (max one open)
+### open_trade — enter a position (max one open per pair)
 
-`{"side": "LONG"|"SHORT"}` → creates a trade at market price using the managed
-strategy's SL/TP/size config. Fails with `detail` if a position is already open.
+`{"symbol": "BTC-USDT", "side": "LONG"|"SHORT"}` → creates a trade at market
+price using that pair's strategy SL/TP/size config. Fails with `detail` if a
+position is already open on that pair.
 
 ### close_trade — exit manually
 
 `{"tradeId": "...", "reason": "short explanation"}` → closes at market price.
 Use when the entry thesis is invalidated. Reports final PnL.
 
-### list_strategies — adopt or create
+### list_strategies — the user's existing strategies
 
-`{}` → user's strategies with kind, symbol, live status, and a `managed` flag.
+`{}` → strategies with kind, symbol, live status, and `managedFor` (which of
+your pairs use each). Includes both user-built and AI-created strategies.
+
+### select_strategy — adopt an existing strategy for a pair
+
+`{"symbol": "BTC-USDT", "strategyId": "...", "allocatedCapital": 500}` →
+pauses the pair's previous live, starts this strategy in the agent's mode.
+The strategy's version symbol must match the pair.
 
 ### create_strategy — build a new strategy + go live
 
-`{"input": {...StrategyInput}, "allocatedCapital": 500}` → creates a strategy
-(with origin "AI"), starts it in the agent's mode, links it to this agent.
+`{"symbol": "BTC-USDT", "input": {...StrategyInput}, "allocatedCapital": 500}`
+→ creates a strategy (origin "AI"), pauses the pair's previous live, starts it
+in the agent's mode, links it to that pair.
 
 StrategyInput (exact field names — do NOT invent other shapes):
 ```json
 {
   "name": "...", "description": "...", "kind": "SIGNAL",
-  "symbol": "<fixed to your symbol>", "timeframe": "15m",
+  "symbol": "<fixed to the pair>", "timeframe": "15m",
   "market": "SPOT", "orderType": "MARKET", "leverage": 1,
   "buyThreshold": 0.5, "sellThreshold": -0.5,
   "stopLossPct": 1.5, "takeProfitPct": 3.0,
@@ -92,15 +118,22 @@ PIN_BAR, ENGULFING, ORDER_BLOCK, FVG, LIQUIDITY_SWEEP, BREAKOUT_RETEST,
 RANGE_REVERSION, EMA_PULLBACK …), `GRID`, `ORDER_BOOK_IMBALANCE`,
 `MARKET_MAKING`, `ATM_SME`, `RMM_BSE`, `DZS_HMM` (symbolic — leverage ≤ 2).
 
-### update_strategy — tune the managed strategy
+### update_strategy — tune a pair's strategy
 
-`{"patch": {"stopLossPct": 2.0, "takeProfitPct": 4.5}}` → merges onto the
-current config, creates a new version. Small deltas; justify in state.md.
+`{"symbol": "BTC-USDT", "patch": {"stopLossPct": 2.0, "takeProfitPct": 4.5}}`
+→ merges onto the current config, creates a new version. Small deltas;
+justify in state.md.
+
+### backtest — validate a strategy before trusting it
+
+`{"symbol": "BTC-USDT", "days": 30}` (uses the pair's managed strategy) or
+`{"strategyId": "...", "days": 30}` → runs a backtest inline and returns
+profitPct, winRate, totalTrades, maxDrawdownPct, profitFactor.
 
 ### pause_live / resume_live
 
-`{}` — pause stops new entries (open trades still managed by SL/TP).
-Resume sets the live strategy back to RUNNING.
+`{"symbol": "BTC-USDT"}` — pause stops new entries (open trades still
+managed by SL/TP). Resume sets the live strategy back to RUNNING.
 
 ### log — report to the user panel (call last every cycle)
 
@@ -109,5 +142,6 @@ Write 2–4 plain Persian sentences: what you checked, what you decided, why.
 
 ## Workflow reminder
 
-Follow `AGENTS.md` — state.md → market_summary → list_trades → decide →
-maybe act → update state.md → `log`. HOLD is a valid decision.
+Follow `AGENTS.md` — state.md → scan/set pairs if needed → per-pair
+market_summary + list_trades → decide → maybe act → performance →
+update state.md → `log`. HOLD is a valid decision.

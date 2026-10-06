@@ -787,13 +787,15 @@ model TradingAgent {
   id              String   @id @default(cuid())
   userId          String
   user            User     @relation(fields: [userId], references: [id])
-  symbol          String
+  symbol          String   @default("AUTO")  // fixed pair, or "AUTO" = agent picks pairs itself
   exchange        String   @default("NOBITEX")
   mode            String   @default("PAPER")   // PAPER | REAL
   status          String   @default("RUNNING") // RUNNING | STOPPED | ERROR
-  strategyId      String?                      // strategy the agent manages
+  strategyId      String?                      // legacy: first managed strategy
   strategy        Strategy? @relation(fields: [strategyId], references: [id])
-  liveStrategyId  String?                      // its live/paper instance
+  liveStrategyId  String?                      // legacy: first managed live instance
+  maxPairs        Int      @default(1)         // how many pairs the agent may manage concurrently
+  managed         String   @default("[]")      // JSON [{symbol, strategyId, liveStrategyId}] per managed pair
   tickIntervalSec Int      @default(600)       // min seconds between agent reviews
   lastTickAt      DateTime?
   lastError       String?
