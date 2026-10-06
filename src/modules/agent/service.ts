@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { existsSync, mkdirSync, cpSync, writeFileSync, copyFileSync } from "node:fs";
+import { existsSync, mkdirSync, cpSync, readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import path from "node:path";
 import { prisma } from "@/infrastructure/database/prisma";
 import { AppError } from "@/shared/errors";
@@ -20,7 +20,7 @@ import { pauseLiveStrategy } from "@/modules/trading/live-engine";
  */
 
 const TICK_MIN_INTERVAL_SEC = 60;
-const CLI_TIMEOUT_MS = 4 * 60_000;
+const CLI_TIMEOUT_MS = 8 * 60_000;
 const AGENT_TOKEN = () => process.env.AGENT_TOKEN ?? "";
 const API_URL = () => process.env.AGENT_API_URL ?? "http://127.0.0.1:3000";
 const WORKSPACE_ROOT = () => process.env.AGENT_WORKSPACE_DIR ?? path.join(process.cwd(), "data", "agents");
@@ -123,13 +123,20 @@ export async function agentLog(agentId: string, level: string, message: string) 
 // workspace provisioning — each agent gets .devin/skills + AGENTS.md + state.md
 // ---------------------------------------------------------------------------
 
-/** copy the bundled skill template into the agent workspace (first boot only) */
+/** copy the bundled skill template into the agent workspace.
+ *  Runs every tick — the .devin skill dir is re-synced so template updates
+ *  reach existing agents without wiping their state.md/session history. */
 export function provisionWorkspace(agentId: string) {
   const dir = workspaceDir(agentId);
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true });
-    const tpl = TEMPLATE_DIR();
-    if (existsSync(tpl)) cpSync(tpl, dir, { recursive: true });
+  }
+  const tpl = TEMPLATE_DIR();
+  if (existsSync(tpl)) {
+    const skills = path.join(tpl, ".devin");
+    if (existsSync(skills)) cpSync(skills, path.join(dir, ".devin"), { recursive: true });
+    if (!existsSync(path.join(dir, "AGENTS.md"))) cpSync(path.join(tpl, "AGENTS.md"), path.join(dir, "AGENTS.md"));
+    if (!existsSync(path.join(dir, "state.md"))) cpSync(path.join(tpl, "state.md"), path.join(dir, "state.md"));
   }
   ensureDevinCredentials();
   return dir;
@@ -140,13 +147,29 @@ export function provisionWorkspace(agentId: string) {
  *  (≈ $HOME/.local/share/devin/) — NOT ~/.config. */
 export function ensureDevinCredentials() {
   const src = process.env.DEVIN_CREDENTIALS_SRC;
-  if (!src || !existsSync(src)) return;
+  if (src && existsSync(src)) {
+    const home = process.env.HOME ?? "/root";
+    const destDir = path.join(process.env.XDG_DATA_HOME ?? path.join(home, ".local", "share"), "devin");
+    const dest = path.join(destDir, "credentials.toml");
+    if (!existsSync(dest)) {
+      mkdirSync(destDir, { recursive: true });
+      copyFileSync(src, dest);
+    }
+  }
+  // non-interactive workers can't "trust" a workspace — disable the gate once
+  // in the user-level CLI config ($HOME/.config/devin/config.json)
   const home = process.env.HOME ?? "/root";
-  const destDir = path.join(process.env.XDG_DATA_HOME ?? path.join(home, ".local", "share"), "devin");
-  const dest = path.join(destDir, "credentials.toml");
-  if (!existsSync(dest)) {
-    mkdirSync(destDir, { recursive: true });
-    copyFileSync(src, dest);
+  const cfgDir = path.join(home, ".config", "devin");
+  const cfgPath = path.join(cfgDir, "config.json");
+  try {
+    const cfg = existsSync(cfgPath) ? JSON.parse(readFileSync(cfgPath, "utf8")) : {};
+    if (cfg.respect_workspace_trust !== false) {
+      mkdirSync(cfgDir, { recursive: true });
+      writeFileSync(cfgPath, JSON.stringify({ ...cfg, respect_workspace_trust: false }, null, 2));
+    }
+  } catch {
+    mkdirSync(cfgDir, { recursive: true });
+    writeFileSync(cfgPath, JSON.stringify({ respect_workspace_trust: false }, null, 2));
   }
 }
 
@@ -183,6 +206,7 @@ export async function agentTick(agentId: string) {
     const args = [
       "--model", CLI_MODEL(),
       "--permission-mode", "bypass",
+      "--respect-workspace-trust", "false",
       ...(continued ? ["-c"] : []),
       "-p", TICK_PROMPT,
     ];

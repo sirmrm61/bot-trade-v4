@@ -57,17 +57,36 @@ Use when the entry thesis is invalidated. Reports final PnL.
 `{"input": {...StrategyInput}, "allocatedCapital": 500}` → creates a strategy
 (with origin "AI"), starts it in the agent's mode, links it to this agent.
 
-StrategyInput (all required unless noted):
+StrategyInput (exact field names — do NOT invent other shapes):
 ```json
 {
   "name": "...", "description": "...", "kind": "SIGNAL",
   "symbol": "<fixed to your symbol>", "timeframe": "15m",
-  "market": "SPOT", "orderType": "MARKET",
-  "stopLossPct": 1.5, "takeProfitPct": 3.0, "trailingStopPct": 0,
-  "riskPerTradePct": 1, "maxPositionPct": 25, "leverage": 1,
-  "indicators": [{"type": "RSI", "period": 14, "buyBelow": 35, "sellAbove": 65}]
+  "market": "SPOT", "orderType": "MARKET", "leverage": 1,
+  "buyThreshold": 0.5, "sellThreshold": -0.5,
+  "stopLossPct": 1.5, "takeProfitPct": 3.0,
+  "riskPerTradePct": 1, "maxPositionPct": 25,
+  "indicators": [
+    {
+      "name": "RSI", "enabled": true, "weight": 0.6,
+      "parameters": {"period": 7},
+      "buyCondition": {"op": "lt", "value": 30},
+      "sellCondition": {"op": "gt", "value": 70}
+    },
+    {
+      "name": "EMA", "enabled": true, "weight": 0.4,
+      "parameters": {"period": 9},
+      "buyCondition": {"op": "cross_above", "target": "price"},
+      "sellCondition": {"op": "cross_below", "target": "price"}
+    }
+  ]
 }
 ```
+Indicator names: RSI, EMA, SMA, MACD, BOLLINGER, VWAP, STOCHASTIC, OBV, ATR.
+Condition ops: lt, lte, gt, gte, eq, between{a,b}, cross_above, cross_below —
+`target:"price"` compares the close against the indicator line.
+`buyThreshold`/`sellThreshold` are REQUIRED (weighted-score cutoffs, -1..+1).
+SIGNAL kind needs ≥1 enabled non-ATR indicator. FUTURES needs `leverage` 1–10.
 Kinds: `SIGNAL` (indicator rules), `PRICE_ACTION` (set `priceAction.setup` —
 PIN_BAR, ENGULFING, ORDER_BLOCK, FVG, LIQUIDITY_SWEEP, BREAKOUT_RETEST,
 RANGE_REVERSION, EMA_PULLBACK …), `GRID`, `ORDER_BOOK_IMBALANCE`,
