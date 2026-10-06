@@ -135,17 +135,18 @@ export function provisionWorkspace(agentId: string) {
   return dir;
 }
 
-/** seed CLI auth from the mounted credentials file (container: read-only mount) */
+/** seed CLI auth from the mounted credentials file (container: read-only mount).
+ *  The CLI reads credentials from $XDG_DATA_HOME/devin/credentials.toml
+ *  (≈ $HOME/.local/share/devin/) — NOT ~/.config. */
 export function ensureDevinCredentials() {
   const src = process.env.DEVIN_CREDENTIALS_SRC;
   if (!src || !existsSync(src)) return;
   const home = process.env.HOME ?? "/root";
-  const destDir = path.join(home, ".config", "devin");
+  const destDir = path.join(process.env.XDG_DATA_HOME ?? path.join(home, ".local", "share"), "devin");
   const dest = path.join(destDir, "credentials.toml");
   if (!existsSync(dest)) {
     mkdirSync(destDir, { recursive: true });
     copyFileSync(src, dest);
-    // the CLI stores sessions under the same dir — keep it writable
   }
 }
 

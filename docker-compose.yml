@@ -24,9 +24,9 @@ services:
       - pg-data:/var/lib/postgresql/data
 
   migrate:
-    build:
-      context: .
-      target: worker
+    # shares the worker image — build worker first (`docker compose build worker`),
+    # keeping migrate as a separate build target doubled its storage footprint
+    image: bot-trade-v4-worker:latest
     env_file: .env
     environment:
       DATABASE_URL: file:/app/data/dev.db
@@ -63,6 +63,7 @@ services:
     build:
       context: .
       target: worker
+    image: bot-trade-v4-worker:latest
     restart: unless-stopped
     logging:
       driver: json-file

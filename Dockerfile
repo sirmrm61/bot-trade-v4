@@ -41,8 +41,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 # curl: agent API calls + the Devin CLI installer; git: CLI file ops
 RUN apt-get update && apt-get install -y --no-install-recommends curl git ca-certificates && rm -rf /var/lib/apt/lists/*
-# Devin CLI (SWE) — installed as root, then shared on PATH for the app user
-RUN curl -fsSL https://cli.devin.ai/install.sh | bash && cp /root/.local/bin/devin /usr/local/bin/devin && chmod +x /usr/local/bin/devin
+# Devin CLI (SWE) — HOME is unset in buildkit so install under /opt/devin;
+# the installer ends with an interactive `devin setup` (login) — drop that
+# line, then verify the binary actually exists through the symlink chain
+RUN mkdir -p /opt/devin \
+ && curl -fsSL https://cli.devin.ai/install.sh | sed '/setup$/d' | HOME=/opt/devin bash \
+ && chmod -R a+rx /opt/devin && ln -sf /opt/devin/.local/bin/devin /usr/local/bin/devin \
+ && test -x /usr/local/bin/devin
 RUN groupadd -r app && useradd -r -g app app && mkdir -p /app/data /app/data/agents && chown -R app:app /app/data
 # HOME under the data volume → CLI sessions + credentials persist across deploys
 ENV HOME=/app/data
