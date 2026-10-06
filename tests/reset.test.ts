@@ -37,6 +37,7 @@ async function wipeUser(uid: string) {
   await prisma.backtest.deleteMany({ where: { userId: uid } });
   await prisma.opportunity.deleteMany({ where: { userId: uid } });
   await prisma.whaleEvent.deleteMany({ where: { userId: uid } });
+  await prisma.tradingAgent.deleteMany({ where: { userId: uid } });
   await prisma.user.delete({ where: { id: uid } });
 }
 
@@ -91,19 +92,39 @@ describe("resetTestData", () => {
     });
     const orphan = await mkStrategy(`${RUN}-orphan`);
 
+    // legacy orphan trade (liveStrategyId NULL) + its order — must be wiped
+    const orphanTrade = await prisma.trade.create({
+      data: { userId, symbol: "BTCUSDT", entryPrice: 100, amount: 1, invested: 100, status: "CLOSED" },
+    });
+    await prisma.order.create({
+      data: { userId, tradeId: orphanTrade.id, symbol: "BTCUSDT", side: "BUY", type: "MARKET", amount: 1, idempotencyKey: `${RUN}-o2` },
+    });
+
+    // PAPER agent (test artifact — must go) + REAL agent (must stay)
+    const paperAgent = await prisma.tradingAgent.create({
+      data: { userId, symbol: "AVA-USDT", mode: "PAPER" },
+    });
+    const realAgent = await prisma.tradingAgent.create({
+      data: { userId, symbol: "BTC-USDT", mode: "REAL" },
+    });
+
     const s = await resetTestData(userId);
 
     expect(s.stoppedPaperLives).toBe(1);
     expect(s.deletedBacktests).toBe(1);
-    expect(s.deletedTrades).toBe(1);
-    expect(s.deletedOrders).toBe(1);
+    expect(s.deletedTrades).toBe(2); // paper trade + orphan trade
+    expect(s.deletedOrders).toBe(2);
     expect(s.deletedSignalLogs).toBe(1);
     expect(s.deletedOpportunities).toBe(1);
     expect(s.deletedWhaleEvents).toBe(1);
     expect(s.deletedStrategies).toBe(2); // paper + orphan
+    expect(s.deletedAgents).toBe(1); // PAPER agent removed
 
     expect(await prisma.liveStrategy.findUnique({ where: { id: paperLive.id } })).toBeNull();
     expect(await prisma.trade.findUnique({ where: { id: paperTrade.id } })).toBeNull();
+    expect(await prisma.trade.findUnique({ where: { id: orphanTrade.id } })).toBeNull();
+    expect(await prisma.tradingAgent.findUnique({ where: { id: paperAgent.id } })).toBeNull();
+    expect(await prisma.tradingAgent.findUnique({ where: { id: realAgent.id } })).not.toBeNull();
     expect(await prisma.backtest.findUnique({ where: { id: bt.id } })).toBeNull();
     expect(await prisma.strategy.findUnique({ where: { id: orphan.id } })).toBeNull();
     expect(await prisma.strategy.findUnique({ where: { id: paperStrategy.id } })).toBeNull();
