@@ -352,8 +352,9 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       data: {
         lastSignalAt: new Date(),
         // a successful tick self-heals DEGRADED too — otherwise a strategy that
-        // recovered stays flagged until worker restart
-        ...(live.status === "STARTING" || live.status === "DEGRADED"
+        // recovered stays flagged until worker restart; also clear any stale
+        // failure counter left over from a degraded streak
+        ...(live.status === "STARTING" || live.status === "DEGRADED" || live.circuitBreakerFailures > 0
           ? { status: "RUNNING" as const, circuitBreakerFailures: 0, lastError: null }
           : {}),
         stats: JSON.stringify({
