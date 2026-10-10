@@ -197,6 +197,11 @@ export type TradingAgent = Prisma.TradingAgentModel
  */
 export type TradingAgentLog = Prisma.TradingAgentLogModel
 /**
+ * Model AgentJournal
+ * 
+ */
+export type AgentJournal = Prisma.AgentJournalModel
+/**
  * Model JobRecord
  * 
  */

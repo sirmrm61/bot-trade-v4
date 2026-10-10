@@ -135,6 +135,25 @@ profitPct, winRate, totalTrades, maxDrawdownPct, profitFactor.
 `{"symbol": "BTC-USDT"}` — pause stops new entries (open trades still
 managed by SL/TP). Resume sets the live strategy back to RUNNING.
 
+### journal — your structured memory
+
+`{"take": 50, "type": "LESSON"}` → recent journal entries: type, summary,
+reason, createdAt. Types: DECISION, TRADE_OPEN, TRADE_CLOSE,
+STRATEGY_CHANGE, BACKTEST, INCIDENT, LESSON, GOAL_UPDATE.
+Every action you take is journaled automatically — read this when
+AGENT_STATE.md isn't enough context.
+
+## Hard guardrails (server-enforced, cannot be loosened)
+
+- Max risk per trade: 1% of allocated capital
+- Daily loss limit: 3% → new entries halted until next UTC day
+- Max drawdown: 10% → agent PAUSED until human review
+- Max leverage: 1× spot / 2× futures · Max 3 concurrent positions
+- Every trade needs a stop-loss · Min reward:risk 1.5
+- Min composite signal-quality score 0.5 (per-version gate can be higher)
+Violations return `RISK_VIOLATION` with a Persian `detail` — accept and
+adapt, never work around them.
+
 ### log — report to the user panel (call last every cycle)
 
 `{"level": "INFO"|"ACTION"|"DECISION"|"ERROR", "message": "Persian summary"}`

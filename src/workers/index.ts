@@ -176,7 +176,7 @@ async function main() {
     {},
   );
 
-  // 10. cleanup
+  // 10. cleanup — sessions, candles, rotated logs, disk watchdog, sqlite vacuum
   mkWorker(
     QUEUE_NAMES.CLEANUP,
     async (job: Job) => {
@@ -186,6 +186,48 @@ async function main() {
       }
       if (type === "OLD_CANDLES") {
         await prisma.historicalCandle.deleteMany({ where: { time: { lt: new Date(Date.now() - 90 * 86_400_000) } } });
+      }
+      if (type === "OLD_LOGS") {
+        // 30-day retention for chatty tables — SignalLog is the ML dataset
+        // so it keeps a longer horizon
+        const month = new Date(Date.now() - 30 * 86_400_000);
+        const quarter = new Date(Date.now() - 90 * 86_400_000);
+        const [a, b, c, d] = await Promise.all([
+          prisma.tradingAgentLog.deleteMany({ where: { createdAt: { lt: month } } }),
+          prisma.agentJournal.deleteMany({ where: { createdAt: { lt: quarter } } }),
+          prisma.signalLog.deleteMany({ where: { createdAt: { lt: quarter } } }),
+          prisma.notification.deleteMany({ where: { createdAt: { lt: month } } }),
+        ]);
+        const n = a.count + b.count + c.count + d.count;
+        if (n > 0) logger.info("log rotation", { module: "worker", deleted: n });
+      }
+      if (type === "SQLITE_VACUUM") {
+        await prisma.$executeRawUnsafe("VACUUM").catch((e) =>
+          logger.warn("sqlite vacuum failed", { module: "worker", error: String(e).slice(0, 120) }));
+      }
+      if (type === "DISK_CHECK") {
+        try {
+          const { statfsSync } = await import("node:fs");
+          const s = statfsSync(process.cwd());
+          const usedPct = 100 * (1 - s.bavail / s.blocks);
+          if (usedPct > 85) {
+            const flag = await redis.set("disk:warn", "1", "EX", 86_400, "NX");
+            if (flag) {
+              const { notify } = await import("@/modules/notifications/service");
+              const owners = await prisma.tradingAgent.findMany({
+                where: { status: "RUNNING" }, select: { userId: true }, distinct: ["userId"],
+              });
+              for (const o of owners) {
+                await notify({
+                  userId: o.userId, type: "SYSTEM", severity: "WARNING",
+                  title: "هشدار فضای دیسک",
+                  body: `مصرف دیسک سرور به ${usedPct.toFixed(0)}٪ رسیده است — پاک‌سازی لازم است.`,
+                });
+              }
+            }
+            logger.warn("disk usage high", { module: "worker", usedPct: usedPct.toFixed(1) });
+          }
+        } catch { /* statfs unsupported — skip */ }
       }
     },
     {},
@@ -247,6 +289,62 @@ async function main() {
     }
   }, 60_000);
 
+  // live-tick watchdog — every 2 min: a RUNNING/STARTING live whose
+  // lastSignalAt is older than ~3 tick cycles is stale (missed jobs, poisoned
+  // jobId, queue stall). Log it, record an incident, force a tick now.
+  setInterval(async () => {
+    try {
+      const stale = await prisma.liveStrategy.findMany({
+        where: {
+          status: { in: ["RUNNING", "STARTING"] },
+          OR: [
+            { lastSignalAt: { lt: new Date(Date.now() - 3 * tickSec * 1000) } },
+            { lastSignalAt: null, startedAt: { lt: new Date(Date.now() - 5 * 60_000) } },
+          ],
+        },
+        select: { id: true, symbol: true, userId: true, circuitBreakerFailures: true, lastSignalAt: true },
+      });
+      for (const s of stale) {
+        logger.warn("live tick watchdog — stale strategy", {
+          module: "worker", liveStrategyId: s.id, symbol: s.symbol,
+          lastSignalAt: s.lastSignalAt?.toISOString() ?? null,
+        });
+        // agent-managed? record a journal incident the CLI will see
+        const agent = await prisma.tradingAgent.findFirst({
+          where: { managed: { contains: s.id }, status: "RUNNING" }, select: { id: true },
+        });
+        if (agent) {
+          const { journalWrite } = await import("@/modules/agent/journal");
+          await journalWrite(agent.id, "INCIDENT",
+            `تیک استراتژی ${s.symbol} بیش از ${Math.round(3 * tickSec)} ثانیه اجرا نشد — ریکاوری خودکار`,
+            { data: { liveStrategyId: s.id, lastSignalAt: s.lastSignalAt } });
+        }
+        // recovery: clear the failure counter and enqueue a fresh tick —
+        // removeOnFail:true on the job means a stuck jobId can't block it
+        await prisma.liveStrategy.update({
+          where: { id: s.id }, data: { circuitBreakerFailures: 0 },
+        }).catch(() => {});
+        await getQueue(QUEUE_NAMES.LIVE_STRATEGY).add(
+          "tick", { liveStrategyId: s.id, action: "TICK" },
+          { jobId: `watchdog-${s.id}-${Date.now()}`, removeOnComplete: true, removeOnFail: true },
+        ).catch(() => {});
+      }
+    } catch (e) {
+      logger.warn("watchdog error", { module: "worker", errorCode: String(e).slice(0, 120) });
+    }
+  }, 120_000);
+
+  // self-improvement loop — every 30 min. Internally rate-limited to one
+  // hypothesis per strategy per 6h and gated on ≥10 fresh closed trades.
+  setInterval(async () => {
+    try {
+      const { runImprovementCycle } = await import("@/modules/agent/improve");
+      await runImprovementCycle();
+    } catch (e) {
+      logger.warn("improvement cycle error", { module: "improve", errorCode: String(e).slice(0, 120) });
+    }
+  }, 30 * 60_000);
+
   // cron-style repeatables via BullMQ job schedulers — retry until Redis is up
   const repeatable = async (queue: string, name: string, data: object, everyMs: number) => {
     await getQueue(queue as never).upsertJobScheduler(`cron:${name}`, { every: everyMs }, { name, data });
@@ -257,6 +355,9 @@ async function main() {
     await repeatable(QUEUE_NAMES.SUBSCRIPTION, "sweep", { type: "CHECK_EXPIRY" }, 5 * 60_000);
     await repeatable(QUEUE_NAMES.CLEANUP, "cleanup-sessions", { type: "EXPIRED_SESSIONS" }, 6 * 3_600_000);
     await repeatable(QUEUE_NAMES.CLEANUP, "cleanup-candles", { type: "OLD_CANDLES" }, 24 * 3_600_000);
+    await repeatable(QUEUE_NAMES.CLEANUP, "cleanup-logs", { type: "OLD_LOGS" }, 24 * 3_600_000);
+    await repeatable(QUEUE_NAMES.CLEANUP, "sqlite-vacuum", { type: "SQLITE_VACUUM" }, 7 * 24 * 3_600_000);
+    await repeatable(QUEUE_NAMES.CLEANUP, "disk-check", { type: "DISK_CHECK" }, 6 * 3_600_000);
     await redis.set(WORKER_HEARTBEAT_KEY, String(Date.now()));
   };
   const tryRegister = async () => {

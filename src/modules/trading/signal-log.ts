@@ -20,7 +20,11 @@ export type SignalDecision =
   | "SKIP_OPEN_POSITION" // an open position already exists
   | "SKIP_OPEN_ORDER"    // an open order already exists
   | "SKIP_PORTFOLIO_DUP" // another live strategy already holds this symbol+side
-  | "SKIP_LOSS_COOLDOWN"; // re-entry too soon after a stop-loss on the same side
+  | "SKIP_LOSS_COOLDOWN" // re-entry too soon after a stop-loss on the same side
+  | "SKIP_REGIME"        // hostile market regime (extreme volatility)
+  | "SKIP_LOW_SCORE"     // composite entry-quality score below the floor
+  | "SKIP_GUARDRAIL"     // hard guardrail (drawdown / max positions / no-SL / RR)
+  | "SKIP_GUARDRAIL_DAILY"; // daily-loss circuit breaker active
 
 export interface SignalLogInput {
   liveStrategyId: string;

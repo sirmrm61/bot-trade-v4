@@ -428,6 +428,7 @@ export const ModelName = {
   IdempotencyKey: 'IdempotencyKey',
   TradingAgent: 'TradingAgent',
   TradingAgentLog: 'TradingAgentLog',
+  AgentJournal: 'AgentJournal',
   JobRecord: 'JobRecord'
 } as const
 
@@ -444,7 +445,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "traceEvent" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "opportunity" | "whaleEvent" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "tradingAgent" | "tradingAgentLog" | "jobRecord"
+    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "traceEvent" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "opportunity" | "whaleEvent" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "tradingAgent" | "tradingAgentLog" | "agentJournal" | "jobRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2742,6 +2743,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AgentJournal: {
+      payload: Prisma.$AgentJournalPayload<ExtArgs>
+      fields: Prisma.AgentJournalFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AgentJournalFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AgentJournalFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload>
+        }
+        findFirst: {
+          args: Prisma.AgentJournalFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AgentJournalFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload>
+        }
+        findMany: {
+          args: Prisma.AgentJournalFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload>[]
+        }
+        create: {
+          args: Prisma.AgentJournalCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload>
+        }
+        createMany: {
+          args: Prisma.AgentJournalCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AgentJournalCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload>[]
+        }
+        delete: {
+          args: Prisma.AgentJournalDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload>
+        }
+        update: {
+          args: Prisma.AgentJournalUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload>
+        }
+        deleteMany: {
+          args: Prisma.AgentJournalDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AgentJournalUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AgentJournalUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload>[]
+        }
+        upsert: {
+          args: Prisma.AgentJournalUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AgentJournalPayload>
+        }
+        aggregate: {
+          args: Prisma.AgentJournalAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAgentJournal>
+        }
+        groupBy: {
+          args: Prisma.AgentJournalGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AgentJournalGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AgentJournalCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AgentJournalCountAggregateOutputType> | number
+        }
+      }
+    }
     JobRecord: {
       payload: Prisma.$JobRecordPayload<ExtArgs>
       fields: Prisma.JobRecordFieldRefs
@@ -3151,6 +3226,10 @@ export const BacktestScalarFieldEnum = {
   traceSymbol: 'traceSymbol',
   strictCausality: 'strictCausality',
   ambiguityPolicy: 'ambiguityPolicy',
+  trainMetrics: 'trainMetrics',
+  testMetrics: 'testMetrics',
+  passed: 'passed',
+  hypothesis: 'hypothesis',
   createdAt: 'createdAt',
   startedAt: 'startedAt',
   completedAt: 'completedAt'
@@ -3210,6 +3289,8 @@ export const LiveStrategyScalarFieldEnum = {
   status: 'status',
   stopPolicy: 'stopPolicy',
   circuitBreakerFailures: 'circuitBreakerFailures',
+  sizeScale: 'sizeScale',
+  candidateVersionId: 'candidateVersionId',
   lastSignalAt: 'lastSignalAt',
   lastError: 'lastError',
   stats: 'stats',
@@ -3271,6 +3352,7 @@ export const TradeScalarFieldEnum = {
   takeProfitPrice: 'takeProfitPrice',
   trailingPeak: 'trailingPeak',
   fee: 'fee',
+  meta: 'meta',
   openedAt: 'openedAt',
   closedAt: 'closedAt'
 } as const
@@ -3461,6 +3543,7 @@ export const TradingAgentScalarFieldEnum = {
   maxPairs: 'maxPairs',
   managed: 'managed',
   tickIntervalSec: 'tickIntervalSec',
+  pausedUntil: 'pausedUntil',
   lastTickAt: 'lastTickAt',
   lastError: 'lastError',
   createdAt: 'createdAt',
@@ -3479,6 +3562,21 @@ export const TradingAgentLogScalarFieldEnum = {
 } as const
 
 export type TradingAgentLogScalarFieldEnum = (typeof TradingAgentLogScalarFieldEnum)[keyof typeof TradingAgentLogScalarFieldEnum]
+
+
+export const AgentJournalScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  type: 'type',
+  summary: 'summary',
+  reason: 'reason',
+  data: 'data',
+  strategyId: 'strategyId',
+  versionId: 'versionId',
+  createdAt: 'createdAt'
+} as const
+
+export type AgentJournalScalarFieldEnum = (typeof AgentJournalScalarFieldEnum)[keyof typeof AgentJournalScalarFieldEnum]
 
 
 export const JobRecordScalarFieldEnum = {
@@ -3742,6 +3840,7 @@ export type GlobalOmitConfig = {
   idempotencyKey?: Prisma.IdempotencyKeyOmit
   tradingAgent?: Prisma.TradingAgentOmit
   tradingAgentLog?: Prisma.TradingAgentLogOmit
+  agentJournal?: Prisma.AgentJournalOmit
   jobRecord?: Prisma.JobRecordOmit
 }
 

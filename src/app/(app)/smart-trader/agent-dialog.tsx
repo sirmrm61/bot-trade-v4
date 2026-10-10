@@ -13,6 +13,14 @@ interface AgentLog {
   createdAt: string;
 }
 
+interface JournalEntry {
+  id: string;
+  type: string;
+  summary: string;
+  reason: string | null;
+  createdAt: string;
+}
+
 interface ManagedPair { symbol: string; strategyId: string | null; liveStrategyId: string | null }
 
 interface Agent {
@@ -20,7 +28,7 @@ interface Agent {
   symbol: string;            // "AUTO" or a fixed pair
   exchange: string;
   mode: "PAPER" | "REAL";
-  status: "RUNNING" | "STOPPED" | "ERROR";
+  status: "RUNNING" | "PAUSED" | "STOPPED" | "ERROR";
   maxPairs: number;
   managed: string;           // JSON ManagedPair[]
   tickIntervalSec: number;
@@ -56,6 +64,8 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
   const [stopping, setStopping] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [logs, setLogs] = useState<Record<string, AgentLog[]>>({});
+  const [journal, setJournal] = useState<Record<string, JournalEntry[]>>({});
+  const [tab, setTab] = useState<"logs" | "journal">("logs");
 
   const exchanges = useMemo(() => [...new Set(pairs.map((p) => p.exchange))].sort(), [pairs]);
   const [exchange, setExchange] = useState("");
@@ -82,9 +92,12 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
   }, [load]);
 
   const loadLogs = async (id: string) => {
-    const res = await fetch(`/api/agents/${id}/logs`);
-    const json = await res.json();
-    if (res.ok) setLogs((m) => ({ ...m, [id]: json.logs ?? [] }));
+    const [l, j] = await Promise.all([
+      fetch(`/api/agents/${id}/logs`).then((r) => r.json()),
+      fetch(`/api/agents/${id}/journal`).then((r) => r.json()).catch(() => ({})),
+    ]);
+    setLogs((m) => ({ ...m, [id]: l.logs ?? [] }));
+    setJournal((m) => ({ ...m, [id]: j.journal ?? [] }));
   };
 
   const toggle = (id: string) => {
@@ -223,8 +236,8 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
                   )}
                   <Badge tone="default">{a.exchange}</Badge>
                   <Badge tone={a.mode === "REAL" ? "warning" : "info"}>{a.mode === "REAL" ? "واقعی" : "تست زنده"}</Badge>
-                  <Badge tone={a.status === "RUNNING" ? "success" : "default"}>
-                    {a.status === "RUNNING" ? "در حال کار" : a.status === "ERROR" ? "خطا" : "متوقف"}
+                  <Badge tone={a.status === "RUNNING" ? "success" : a.status === "PAUSED" ? "warning" : "default"}>
+                    {a.status === "RUNNING" ? "در حال کار" : a.status === "PAUSED" ? "متوقف‌موقت (ریسک)" : a.status === "ERROR" ? "خطا" : "متوقف"}
                   </Badge>
                   <span className="text-[11px] text-muted">
                     هر {Math.round(a.tickIntervalSec / 60)} دقیقه
@@ -249,23 +262,55 @@ export function AgentDialog({ pairs }: { pairs: { symbol: string; exchange: stri
                 <p className="border-t border-border/50 px-3 py-1.5 text-[11px] text-danger">{a.lastError}</p>
               )}
               {expanded === a.id && (
-                <div className="max-h-72 space-y-1.5 overflow-y-auto border-t border-border p-3">
-                  {(logs[a.id] ?? a.logs ?? []).length === 0 ? (
-                    <p className="py-2 text-center text-xs text-muted">هنوز لاگی ثبت نشده — اولین بررسی به‌زودی انجام می‌شود.</p>
-                  ) : (
-                    (logs[a.id] ?? []).map((l) => (
-                      <div key={l.id} className={cn(
-                        "rounded-lg border px-3 py-2 text-xs leading-6",
-                        l.level === "ERROR" ? "border-danger/30 bg-danger/5" : "border-border/60 bg-surface",
-                      )}>
-                        <div className="mb-0.5 flex items-center gap-2">
-                          <Badge tone={LEVEL_TONE[l.level] ?? "default"}>{l.level}</Badge>
-                          <span className="text-[10px] text-muted">{fmtTime(l.createdAt)}</span>
+                <div className="border-t border-border">
+                  <div className="flex gap-1 border-b border-border/60 px-3 pt-2">
+                    {(["logs", "journal"] as const).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setTab(t)}
+                        className={cn(
+                          "rounded-t-lg px-3 py-1 text-[11px] font-bold",
+                          tab === t ? "bg-surface text-foreground" : "text-muted",
+                        )}
+                      >
+                        {t === "logs" ? "لاگ فعالیت" : "ژورنال تصمیمات"}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="max-h-72 space-y-1.5 overflow-y-auto p-3">
+                    {tab === "journal" ? (
+                      (journal[a.id] ?? []).length === 0 ? (
+                        <p className="py-2 text-center text-xs text-muted">ژورنال خالی است — رویدادها به‌صورت خودکار ثبت می‌شوند.</p>
+                      ) : (
+                        (journal[a.id] ?? []).map((j) => (
+                          <div key={j.id} className="rounded-lg border border-border/60 bg-surface px-3 py-2 text-xs leading-6">
+                            <div className="mb-0.5 flex items-center gap-2">
+                              <Badge tone={j.type === "INCIDENT" ? "danger" : j.type === "LESSON" ? "success" : "info"}>{j.type}</Badge>
+                              <span className="text-[10px] text-muted">{fmtTime(j.createdAt)}</span>
+                            </div>
+                            <p>{j.summary}</p>
+                            {j.reason && <p className="mt-0.5 text-[10px] text-muted">دلیل: {j.reason}</p>}
+                          </div>
+                        ))
+                      )
+                    ) : (logs[a.id] ?? a.logs ?? []).length === 0 ? (
+                      <p className="py-2 text-center text-xs text-muted">هنوز لاگی ثبت نشده — اولین بررسی به‌زودی انجام می‌شود.</p>
+                    ) : (
+                      (logs[a.id] ?? []).map((l) => (
+                        <div key={l.id} className={cn(
+                          "rounded-lg border px-3 py-2 text-xs leading-6",
+                          l.level === "ERROR" ? "border-danger/30 bg-danger/5" : "border-border/60 bg-surface",
+                        )}>
+                          <div className="mb-0.5 flex items-center gap-2">
+                            <Badge tone={LEVEL_TONE[l.level] ?? "default"}>{l.level}</Badge>
+                            <span className="text-[10px] text-muted">{fmtTime(l.createdAt)}</span>
+                          </div>
+                          <p className="whitespace-pre-wrap">{l.message}</p>
                         </div>
-                        <p className="whitespace-pre-wrap">{l.message}</p>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
               )}
             </div>

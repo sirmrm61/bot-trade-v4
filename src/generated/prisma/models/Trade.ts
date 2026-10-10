@@ -78,6 +78,7 @@ export type TradeMinAggregateOutputType = {
   takeProfitPrice: number | null
   trailingPeak: number | null
   fee: number | null
+  meta: string | null
   openedAt: Date | null
   closedAt: Date | null
 }
@@ -104,6 +105,7 @@ export type TradeMaxAggregateOutputType = {
   takeProfitPrice: number | null
   trailingPeak: number | null
   fee: number | null
+  meta: string | null
   openedAt: Date | null
   closedAt: Date | null
 }
@@ -130,6 +132,7 @@ export type TradeCountAggregateOutputType = {
   takeProfitPrice: number
   trailingPeak: number
   fee: number
+  meta: number
   openedAt: number
   closedAt: number
   _all: number
@@ -188,6 +191,7 @@ export type TradeMinAggregateInputType = {
   takeProfitPrice?: true
   trailingPeak?: true
   fee?: true
+  meta?: true
   openedAt?: true
   closedAt?: true
 }
@@ -214,6 +218,7 @@ export type TradeMaxAggregateInputType = {
   takeProfitPrice?: true
   trailingPeak?: true
   fee?: true
+  meta?: true
   openedAt?: true
   closedAt?: true
 }
@@ -240,6 +245,7 @@ export type TradeCountAggregateInputType = {
   takeProfitPrice?: true
   trailingPeak?: true
   fee?: true
+  meta?: true
   openedAt?: true
   closedAt?: true
   _all?: true
@@ -353,6 +359,7 @@ export type TradeGroupByOutputType = {
   takeProfitPrice: number | null
   trailingPeak: number | null
   fee: number
+  meta: string | null
   openedAt: Date
   closedAt: Date | null
   _count: TradeCountAggregateOutputType | null
@@ -402,6 +409,7 @@ export type TradeWhereInput = {
   takeProfitPrice?: Prisma.FloatNullableFilter<"Trade"> | number | null
   trailingPeak?: Prisma.FloatNullableFilter<"Trade"> | number | null
   fee?: Prisma.FloatFilter<"Trade"> | number
+  meta?: Prisma.StringNullableFilter<"Trade"> | string | null
   openedAt?: Prisma.DateTimeFilter<"Trade"> | Date | string
   closedAt?: Prisma.DateTimeNullableFilter<"Trade"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -432,6 +440,7 @@ export type TradeOrderByWithRelationInput = {
   takeProfitPrice?: Prisma.SortOrderInput | Prisma.SortOrder
   trailingPeak?: Prisma.SortOrderInput | Prisma.SortOrder
   fee?: Prisma.SortOrder
+  meta?: Prisma.SortOrderInput | Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -465,6 +474,7 @@ export type TradeWhereUniqueInput = Prisma.AtLeast<{
   takeProfitPrice?: Prisma.FloatNullableFilter<"Trade"> | number | null
   trailingPeak?: Prisma.FloatNullableFilter<"Trade"> | number | null
   fee?: Prisma.FloatFilter<"Trade"> | number
+  meta?: Prisma.StringNullableFilter<"Trade"> | string | null
   openedAt?: Prisma.DateTimeFilter<"Trade"> | Date | string
   closedAt?: Prisma.DateTimeNullableFilter<"Trade"> | Date | string | null
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -495,6 +505,7 @@ export type TradeOrderByWithAggregationInput = {
   takeProfitPrice?: Prisma.SortOrderInput | Prisma.SortOrder
   trailingPeak?: Prisma.SortOrderInput | Prisma.SortOrder
   fee?: Prisma.SortOrder
+  meta?: Prisma.SortOrderInput | Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.TradeCountOrderByAggregateInput
@@ -529,6 +540,7 @@ export type TradeScalarWhereWithAggregatesInput = {
   takeProfitPrice?: Prisma.FloatNullableWithAggregatesFilter<"Trade"> | number | null
   trailingPeak?: Prisma.FloatNullableWithAggregatesFilter<"Trade"> | number | null
   fee?: Prisma.FloatWithAggregatesFilter<"Trade"> | number
+  meta?: Prisma.StringNullableWithAggregatesFilter<"Trade"> | string | null
   openedAt?: Prisma.DateTimeWithAggregatesFilter<"Trade"> | Date | string
   closedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Trade"> | Date | string | null
 }
@@ -552,6 +564,7 @@ export type TradeCreateInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutTradesInput
@@ -582,6 +595,7 @@ export type TradeUncheckedCreateInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutTradeInput
@@ -606,6 +620,7 @@ export type TradeUpdateInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutTradesNestedInput
@@ -636,6 +651,7 @@ export type TradeUncheckedUpdateInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orders?: Prisma.OrderUncheckedUpdateManyWithoutTradeNestedInput
@@ -663,6 +679,7 @@ export type TradeCreateManyInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
 }
@@ -686,6 +703,7 @@ export type TradeUpdateManyMutationInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -712,6 +730,7 @@ export type TradeUncheckedUpdateManyInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -753,6 +772,7 @@ export type TradeCountOrderByAggregateInput = {
   takeProfitPrice?: Prisma.SortOrder
   trailingPeak?: Prisma.SortOrder
   fee?: Prisma.SortOrder
+  meta?: Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrder
 }
@@ -794,6 +814,7 @@ export type TradeMaxOrderByAggregateInput = {
   takeProfitPrice?: Prisma.SortOrder
   trailingPeak?: Prisma.SortOrder
   fee?: Prisma.SortOrder
+  meta?: Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrder
 }
@@ -820,6 +841,7 @@ export type TradeMinOrderByAggregateInput = {
   takeProfitPrice?: Prisma.SortOrder
   trailingPeak?: Prisma.SortOrder
   fee?: Prisma.SortOrder
+  meta?: Prisma.SortOrder
   openedAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrder
 }
@@ -1000,6 +1022,7 @@ export type TradeCreateWithoutUserInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
   liveStrategy?: Prisma.LiveStrategyCreateNestedOneWithoutTradesInput
@@ -1028,6 +1051,7 @@ export type TradeUncheckedCreateWithoutUserInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutTradeInput
@@ -1083,6 +1107,7 @@ export type TradeScalarWhereInput = {
   takeProfitPrice?: Prisma.FloatNullableFilter<"Trade"> | number | null
   trailingPeak?: Prisma.FloatNullableFilter<"Trade"> | number | null
   fee?: Prisma.FloatFilter<"Trade"> | number
+  meta?: Prisma.StringNullableFilter<"Trade"> | string | null
   openedAt?: Prisma.DateTimeFilter<"Trade"> | Date | string
   closedAt?: Prisma.DateTimeNullableFilter<"Trade"> | Date | string | null
 }
@@ -1106,6 +1131,7 @@ export type TradeCreateWithoutLiveStrategyInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutTradesInput
@@ -1134,6 +1160,7 @@ export type TradeUncheckedCreateWithoutLiveStrategyInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutTradeInput
@@ -1183,6 +1210,7 @@ export type TradeCreateWithoutOrdersInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutTradesInput
@@ -1212,6 +1240,7 @@ export type TradeUncheckedCreateWithoutOrdersInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
 }
@@ -1240,6 +1269,7 @@ export type TradeCreateWithoutEntryOrderInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
   user: Prisma.UserCreateNestedOneWithoutTradesInput
@@ -1268,6 +1298,7 @@ export type TradeUncheckedCreateWithoutEntryOrderInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
   orders?: Prisma.OrderUncheckedCreateNestedManyWithoutTradeInput
@@ -1312,6 +1343,7 @@ export type TradeUpdateWithoutOrdersInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutTradesNestedInput
@@ -1341,6 +1373,7 @@ export type TradeUncheckedUpdateWithoutOrdersInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -1382,6 +1415,7 @@ export type TradeCreateManyUserInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
 }
@@ -1405,6 +1439,7 @@ export type TradeUpdateWithoutUserInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   liveStrategy?: Prisma.LiveStrategyUpdateOneWithoutTradesNestedInput
@@ -1433,6 +1468,7 @@ export type TradeUncheckedUpdateWithoutUserInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orders?: Prisma.OrderUncheckedUpdateManyWithoutTradeNestedInput
@@ -1459,6 +1495,7 @@ export type TradeUncheckedUpdateManyWithoutUserInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -1484,6 +1521,7 @@ export type TradeCreateManyLiveStrategyInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
 }
@@ -1507,6 +1545,7 @@ export type TradeUpdateWithoutLiveStrategyInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutTradesNestedInput
@@ -1535,6 +1574,7 @@ export type TradeUncheckedUpdateWithoutLiveStrategyInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orders?: Prisma.OrderUncheckedUpdateManyWithoutTradeNestedInput
@@ -1561,6 +1601,7 @@ export type TradeUncheckedUpdateManyWithoutLiveStrategyInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -1586,6 +1627,7 @@ export type TradeCreateManyEntryOrderInput = {
   takeProfitPrice?: number | null
   trailingPeak?: number | null
   fee?: number
+  meta?: string | null
   openedAt?: Date | string
   closedAt?: Date | string | null
 }
@@ -1609,6 +1651,7 @@ export type TradeUpdateWithoutEntryOrderInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   user?: Prisma.UserUpdateOneRequiredWithoutTradesNestedInput
@@ -1637,6 +1680,7 @@ export type TradeUncheckedUpdateWithoutEntryOrderInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   orders?: Prisma.OrderUncheckedUpdateManyWithoutTradeNestedInput
@@ -1663,6 +1707,7 @@ export type TradeUncheckedUpdateManyWithoutEntryOrderInput = {
   takeProfitPrice?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   trailingPeak?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   fee?: Prisma.FloatFieldUpdateOperationsInput | number
+  meta?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   openedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -1720,6 +1765,7 @@ export type TradeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   takeProfitPrice?: boolean
   trailingPeak?: boolean
   fee?: boolean
+  meta?: boolean
   openedAt?: boolean
   closedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1751,6 +1797,7 @@ export type TradeSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   takeProfitPrice?: boolean
   trailingPeak?: boolean
   fee?: boolean
+  meta?: boolean
   openedAt?: boolean
   closedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1780,6 +1827,7 @@ export type TradeSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   takeProfitPrice?: boolean
   trailingPeak?: boolean
   fee?: boolean
+  meta?: boolean
   openedAt?: boolean
   closedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1809,11 +1857,12 @@ export type TradeSelectScalar = {
   takeProfitPrice?: boolean
   trailingPeak?: boolean
   fee?: boolean
+  meta?: boolean
   openedAt?: boolean
   closedAt?: boolean
 }
 
-export type TradeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "liveStrategyId" | "symbol" | "side" | "leverage" | "liquidationPrice" | "exchangePositionId" | "entryOrderId" | "entryPrice" | "amount" | "invested" | "status" | "exitPrice" | "exitReason" | "pnl" | "pnlPct" | "stopLossPrice" | "takeProfitPrice" | "trailingPeak" | "fee" | "openedAt" | "closedAt", ExtArgs["result"]["trade"]>
+export type TradeOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "liveStrategyId" | "symbol" | "side" | "leverage" | "liquidationPrice" | "exchangePositionId" | "entryOrderId" | "entryPrice" | "amount" | "invested" | "status" | "exitPrice" | "exitReason" | "pnl" | "pnlPct" | "stopLossPrice" | "takeProfitPrice" | "trailingPeak" | "fee" | "meta" | "openedAt" | "closedAt", ExtArgs["result"]["trade"]>
 export type TradeInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   liveStrategy?: boolean | Prisma.Trade$liveStrategyArgs<ExtArgs>
@@ -1862,6 +1911,7 @@ export type $TradePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     takeProfitPrice: number | null
     trailingPeak: number | null
     fee: number
+    meta: string | null
     openedAt: Date
     closedAt: Date | null
   }, ExtArgs["result"]["trade"]>
@@ -2312,6 +2362,7 @@ export interface TradeFieldRefs {
   readonly takeProfitPrice: Prisma.FieldRef<"Trade", 'Float'>
   readonly trailingPeak: Prisma.FieldRef<"Trade", 'Float'>
   readonly fee: Prisma.FieldRef<"Trade", 'Float'>
+  readonly meta: Prisma.FieldRef<"Trade", 'String'>
   readonly openedAt: Prisma.FieldRef<"Trade", 'DateTime'>
   readonly closedAt: Prisma.FieldRef<"Trade", 'DateTime'>
 }

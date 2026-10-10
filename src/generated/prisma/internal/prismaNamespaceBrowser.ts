@@ -82,6 +82,7 @@ export const ModelName = {
   IdempotencyKey: 'IdempotencyKey',
   TradingAgent: 'TradingAgent',
   TradingAgentLog: 'TradingAgentLog',
+  AgentJournal: 'AgentJournal',
   JobRecord: 'JobRecord'
 } as const
 
@@ -397,6 +398,10 @@ export const BacktestScalarFieldEnum = {
   traceSymbol: 'traceSymbol',
   strictCausality: 'strictCausality',
   ambiguityPolicy: 'ambiguityPolicy',
+  trainMetrics: 'trainMetrics',
+  testMetrics: 'testMetrics',
+  passed: 'passed',
+  hypothesis: 'hypothesis',
   createdAt: 'createdAt',
   startedAt: 'startedAt',
   completedAt: 'completedAt'
@@ -456,6 +461,8 @@ export const LiveStrategyScalarFieldEnum = {
   status: 'status',
   stopPolicy: 'stopPolicy',
   circuitBreakerFailures: 'circuitBreakerFailures',
+  sizeScale: 'sizeScale',
+  candidateVersionId: 'candidateVersionId',
   lastSignalAt: 'lastSignalAt',
   lastError: 'lastError',
   stats: 'stats',
@@ -517,6 +524,7 @@ export const TradeScalarFieldEnum = {
   takeProfitPrice: 'takeProfitPrice',
   trailingPeak: 'trailingPeak',
   fee: 'fee',
+  meta: 'meta',
   openedAt: 'openedAt',
   closedAt: 'closedAt'
 } as const
@@ -707,6 +715,7 @@ export const TradingAgentScalarFieldEnum = {
   maxPairs: 'maxPairs',
   managed: 'managed',
   tickIntervalSec: 'tickIntervalSec',
+  pausedUntil: 'pausedUntil',
   lastTickAt: 'lastTickAt',
   lastError: 'lastError',
   createdAt: 'createdAt',
@@ -725,6 +734,21 @@ export const TradingAgentLogScalarFieldEnum = {
 } as const
 
 export type TradingAgentLogScalarFieldEnum = (typeof TradingAgentLogScalarFieldEnum)[keyof typeof TradingAgentLogScalarFieldEnum]
+
+
+export const AgentJournalScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  type: 'type',
+  summary: 'summary',
+  reason: 'reason',
+  data: 'data',
+  strategyId: 'strategyId',
+  versionId: 'versionId',
+  createdAt: 'createdAt'
+} as const
+
+export type AgentJournalScalarFieldEnum = (typeof AgentJournalScalarFieldEnum)[keyof typeof AgentJournalScalarFieldEnum]
 
 
 export const JobRecordScalarFieldEnum = {

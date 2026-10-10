@@ -15,13 +15,15 @@ import { readMarketConfig, readExchange, liquidationPrice, futuresPnl, SYMBOLIC_
 import { atr } from "@/modules/indicators/engine";
 import { atrStopsFromIndicators } from "@/modules/backtest/service";
 import { enforceRisk } from "./risk-engine";
+import { checkEntryGuardrails, GUARDRAILS, pauseAgentOnDrawdown } from "./guardrails";
+import { entryQuality } from "@/modules/signals/quality";
 import { placeOrder } from "./order-engine";
 import { AppError } from "@/shared/errors";
 import { logger } from "@/infrastructure/logging/logger";
 import { notify } from "@/modules/notifications/service";
 import { getCandles } from "@/modules/pairs/service";
 import { getSetting } from "@/modules/settings/service";
-import { parseJson } from "@/shared/utils";
+import { parseJson, clamp } from "@/shared/utils";
 import type { StrategyIndicatorConfig } from "@/modules/signals/engine";
 import { effectiveLimits, liveUsage, isSubscriptionActive } from "@/modules/subscriptions/service";
 
@@ -472,9 +474,54 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       ? long ? Math.max(slPrice, liqPrice) : Math.min(slPrice, liqPrice)
       : slPrice;
     const stopDistPct = Math.max((Math.abs(ticker.last - effSl) / ticker.last) * 100, 0.1);
+    const tpDistPct = Math.max((Math.abs(tpPrice - ticker.last) / ticker.last) * 100, 0.1);
+
+    // ---- hard guardrails + entry quality — the fences the agent can never
+    // loosen. Runs for paper AND real, before any sizing happens.
+    const quality = candles?.length && candles.length >= 60 ? entryQuality(candles, side) : null;
+    if (quality?.blocked) {
+      await logDecision("SKIP_REGIME", side);
+      return;
+    }
+    // per-version stricter gate (improvement loop's SCORE_GATE hypothesis) —
+    // can only RAISE the floor, never lower it below the guardrail constant
+    const minScore = Math.max(
+      GUARDRAILS.MIN_SIGNAL_SCORE,
+      parseJson<{ minEntryScore?: number }>(live.version.config, {}).minEntryScore ?? 0,
+    );
+    if (quality && quality.score < minScore) {
+      await logDecision("SKIP_LOW_SCORE", side);
+      return;
+    }
+    const agentManaged = await prisma.tradingAgent.findFirst({
+      where: { managed: { contains: live.id }, status: "RUNNING" },
+      select: { id: true },
+    });
+    const verdict = await checkEntryGuardrails(live, {
+      agentId: agentManaged?.id,
+      slPct: stopDistPct,
+      tpPct: tpDistPct,
+      score: quality?.score,
+    });
+    if (!verdict.allow) {
+      if (verdict.code === "DRAWDOWN" && agentManaged) {
+        await pauseAgentOnDrawdown(agentManaged.id,
+          `دراوداون از ${GUARDRAILS.MAX_DRAWDOWN_PCT}٪ گذشت — ایجنت متوقف شد: ${verdict.reason}`);
+      }
+      await logDecision(
+        verdict.code === "DAILY_LOSS" ? "SKIP_GUARDRAIL_DAILY"
+          : verdict.code === "LOW_SCORE" ? "SKIP_LOW_SCORE"
+          : "SKIP_GUARDRAIL",
+        side,
+      );
+      return;
+    }
+    // agent-managed futures leverage is capped by the guardrail
+    if (futures && agentManaged) marketCfg.leverage = Math.min(marketCfg.leverage, GUARDRAILS.AGENT_MAX_LEVERAGE);
+    if (quality) sigFeats.quality = quality;
 
     // learned sizing — smart layer scales risk within [0.5, 1.75]; hard caps stay
-    const riskCapital = live.allocatedCapital * (live.version.riskPerTradePct / 100) * smartSizeMult;
+    const riskCapital = live.allocatedCapital * (live.version.riskPerTradePct / 100) * smartSizeMult * live.sizeScale;
     const maxPosition = live.allocatedCapital * (live.version.maxPositionPct / 100);
     // exposure bounded by risk on the stop distance AND the position cap
     // (cap scales with leverage — margin posted stays bounded by capital)
@@ -520,6 +567,8 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
         stopLossPrice: effSl,
         takeProfitPrice: tpPrice,
         trailingPeak: ticker.last,
+        // entry snapshot — full decision context for post-mortem analysis
+        meta: JSON.stringify({ features: sigFeats, context: sigContext ?? null, signal: rawSignal, score }),
       },
     });
     await logDecision("ENTERED", side, trade.id);
@@ -600,6 +649,7 @@ interface TradeLike {
   trailingPeak: number | null;
   stopLossPrice: number | null;
   takeProfitPrice: number | null;
+  meta: string | null;
 }
 
 async function manageOpenTrade(
@@ -615,6 +665,45 @@ async function manageOpenTrade(
 
   const long = trade.side !== "SHORT";
   const futures = trade.leverage > 1 || futuresAdapter !== null;
+
+  // ---- partial take-profit — bank closeFrac at TP, breakeven the runner.
+  // Bookkeeping lives in trade.meta.partial; realized partial pnl is folded
+  // into the final close so pnlPct stays honest.
+  const meta = parseJson<{ partial?: { pnl: number; frac: number } }>(trade.meta ?? "{}", {});
+  const ptpCfg = parseJson<{ partialTakeProfit?: { closeFrac: number } }>(version.config, {}).partialTakeProfit;
+  let partialPnl = meta.partial?.pnl ?? 0;
+  if (ptpCfg && !meta.partial && trade.takeProfitPrice &&
+      (long ? price >= trade.takeProfitPrice : price <= trade.takeProfitPrice)) {
+    const frac = clamp(ptpCfg.closeFrac, 0.1, 0.9);
+    const partAmount = trade.amount * frac;
+    if (!paper) {
+      await placeOrder(
+        {
+          userId: live.userId, liveStrategyId: live.id, tradeId: trade.id,
+          symbol: live.symbol, side: long ? "SELL" : "BUY", type: "MARKET",
+          amount: partAmount,
+          ...(futures ? { price, futures: { leverage: trade.leverage, positionSide: long ? "LONG" : "SHORT" } } : {}),
+        },
+        `partial:${trade.id}`,
+      );
+    }
+    partialPnl += futuresPnl(trade.entryPrice, price, partAmount, long ? "LONG" : "SHORT");
+    const remaining = trade.amount - partAmount;
+    const newMeta = { ...meta, partial: { pnl: partialPnl, frac } };
+    await prisma.trade.update({
+      where: { id: trade.id },
+      data: {
+        amount: remaining,
+        takeProfitPrice: null,              // runner exits via SL / trailing / signal
+        stopLossPrice: trade.entryPrice,    // breakeven stop
+        meta: JSON.stringify(newMeta),
+      },
+    });
+    trade.amount = remaining;
+    trade.stopLossPrice = trade.entryPrice;
+    trade.takeProfitPrice = null;
+    trade.meta = JSON.stringify(newMeta);
+  }
 
   // extreme price since entry — long tracks the max, short the min
   const peak = long
@@ -671,9 +760,9 @@ async function manageOpenTrade(
     }
   }
 
-  const pnl = exitReason === "LIQUIDATED"
+  const pnl = (exitReason === "LIQUIDATED"
     ? -trade.invested // isolated margin — the posted margin is lost
-    : futuresPnl(trade.entryPrice, price, trade.amount, long ? "LONG" : "SHORT");
+    : futuresPnl(trade.entryPrice, price, trade.amount, long ? "LONG" : "SHORT")) + partialPnl;
   const pnlPct = trade.invested > 0 ? (pnl / trade.invested) * 100 : 0;
   await prisma.trade.update({
     where: { id: trade.id },

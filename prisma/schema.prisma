@@ -410,6 +410,11 @@ model Backtest {
   traceSymbol        String?  // scope FULL traces to one symbol
   strictCausality    Boolean  @default(false) // forbid same-bar entry after signal
   ambiguityPolicy    String   @default("SL_FIRST") // TP_FIRST | SL_FIRST | CONSERVATIVE | TICK_DATA_REQUIRED
+  // walk-forward validation (self-improvement loop)
+  trainMetrics       String?  // JSON extended metrics on the in-sample slice
+  testMetrics        String?  // JSON extended metrics on the out-of-sample slice
+  passed             Boolean? // acceptance verdict (null = plain backtest)
+  hypothesis         String?  // what changed vs the previous version (fa)
   createdAt          DateTime @default(now())
   startedAt          DateTime?
   completedAt        DateTime?
@@ -487,6 +492,8 @@ model LiveStrategy {
   status        String   @default("STARTING") // STARTING | RUNNING | PAUSED | DEGRADED | STOPPING | STOPPED | ERROR
   stopPolicy    String?  // CLOSE_ALL | KEEP_MANAGING (chosen at stop time)
   circuitBreakerFailures Int @default(0)
+  sizeScale     Float    @default(1)   // <1 = candidate version in shadow probation
+  candidateVersionId String?            // version under evaluation (promote or rollback)
   lastSignalAt  DateTime?
   lastError     String?
   stats         String   @default("{}") // JSON runtime stats
@@ -560,6 +567,7 @@ model Trade {
   takeProfitPrice Float?
   trailingPeak   Float?   // highest price since entry (for trailing)
   fee            Float    @default(0)
+  meta           String?  // JSON — entry feature snapshot + partial-TP bookkeeping
   openedAt       DateTime @default(now())
   closedAt       DateTime?
 
@@ -790,19 +798,21 @@ model TradingAgent {
   symbol          String   @default("AUTO")  // fixed pair, or "AUTO" = agent picks pairs itself
   exchange        String   @default("NOBITEX")
   mode            String   @default("PAPER")   // PAPER | REAL
-  status          String   @default("RUNNING") // RUNNING | STOPPED | ERROR
+  status          String   @default("RUNNING") // RUNNING | PAUSED | STOPPED | ERROR
   strategyId      String?                      // legacy: first managed strategy
   strategy        Strategy? @relation(fields: [strategyId], references: [id])
   liveStrategyId  String?                      // legacy: first managed live instance
   maxPairs        Int      @default(1)         // how many pairs the agent may manage concurrently
   managed         String   @default("[]")      // JSON [{symbol, strategyId, liveStrategyId}] per managed pair
   tickIntervalSec Int      @default(600)       // min seconds between agent reviews
+  pausedUntil     DateTime?                     // circuit-breaker hold (daily loss / drawdown)
   lastTickAt      DateTime?
   lastError       String?
   createdAt       DateTime @default(now())
   stoppedAt       DateTime?
 
-  logs TradingAgentLog[]
+  logs     TradingAgentLog[]
+  journals AgentJournal[]
 
   @@unique([userId, symbol, mode])
   @@index([userId, status])
@@ -815,6 +825,24 @@ model TradingAgentLog {
   level     String   @default("INFO") // INFO | ACTION | DECISION | ERROR
   message   String
   createdAt DateTime @default(now())
+
+  @@index([agentId, createdAt])
+}
+
+// Structured decision journal — the agent's audit trail + memory across
+// restarts. Every meaningful event (trade, strategy change, backtest,
+// lesson learned, incident, goal update) lands here with its reason.
+model AgentJournal {
+  id         String   @id @default(cuid())
+  agentId    String
+  agent      TradingAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  type       String   // DECISION | TRADE_OPEN | TRADE_CLOSE | STRATEGY_CHANGE | BACKTEST | INCIDENT | LESSON | GOAL_UPDATE
+  summary    String   // Persian one-liner
+  reason     String?  // why this decision/event
+  data       String?  // JSON raw payload
+  strategyId String?
+  versionId  String?
+  createdAt  DateTime @default(now())
 
   @@index([agentId, createdAt])
 }

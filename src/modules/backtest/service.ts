@@ -25,6 +25,76 @@ import type { StrategyIndicatorConfig } from "@/modules/signals/engine";
 import { Tracer, backtestRunId } from "@/modules/trace/tracer";
 import type { AmbiguityPolicy, TraceLevel } from "@/modules/trace/types";
 
+/** signal source dispatch — one place for every strategy kind, reused by
+ *  runAndPersist and the walk-forward validator */
+export function signalFnFor(
+  v: { kind: string; config: string; buyThreshold: number; sellThreshold: number },
+  candles: Candle[],
+): ((i: number, holding?: boolean) => "BUY" | "SELL" | "HOLD") | undefined {
+  const kind = v.kind;
+  if (kind === "ORDER_BOOK_IMBALANCE") return obiBacktestSignal(candles, v.config, v.buyThreshold, v.sellThreshold);
+  if (kind === "PRICE_ACTION") return paSignalFn(v.config, candles);
+  if (isSymbolicKind(kind)) {
+    return smartEnabled(v.config)
+      ? smartSignalFn(kind, candles, v.config)   // learns inside the simulation
+      : symbolicSignalFn(kind, candles, v.config);
+  }
+  return undefined;
+}
+
+/**
+ * Simulate a strategy version on an arbitrary candle slice — no persistence.
+ * Used by the walk-forward validator and the improvement loop.
+ */
+export async function simulateVersion(
+  v: {
+    kind: string; config: string; buyThreshold: number; sellThreshold: number;
+    riskPerTradePct: number; stopLossPct: number; takeProfitPct: number;
+    trailingStop: boolean; trailingStopPct: number | null;
+    indicators: { name: string; parameters: string; enabled: boolean }[];
+  },
+  indicators: StrategyIndicatorConfig[],
+  candles: Candle[],
+  sim: { initialBalance: number; feePct: number; slippagePct: number; symbol: string },
+): Promise<BacktestResult> {
+  const marketCfg = readMarketConfig(v.config);
+  const kind = v.kind ?? "SIGNAL";
+  if (kind === "MARKET_MAKING" || kind === "GRID") {
+    const pair = await prisma.pair.findUnique({
+      where: { exchange_symbol: { exchange: marketCfg.exchange, symbol: sim.symbol } },
+    });
+    const quoteCur = /IRT$/.test(sim.symbol) ? "IRT" : "USDT";
+    const base = {
+      candles,
+      initialBalance: sim.initialBalance, feePct: sim.feePct,
+      pricePrecision: pair?.pricePrecision ?? (quoteCur === "IRT" ? 0 : 2),
+      amountPrecision: pair?.amountPrecision ?? 8,
+      minAmount: pair?.minAmount,
+    };
+    return kind === "GRID"
+      ? runGridBacktest({ ...base, cfg: readGridConfig(v.config) })
+      : runMmBacktest({ ...base, cfg: readMmConfig(v.config) });
+  }
+  return runBacktest({
+    candles, indicators,
+    buyThreshold: v.buyThreshold, sellThreshold: v.sellThreshold,
+    initialBalance: sim.initialBalance,
+    riskPerTradePct: v.riskPerTradePct,
+    stopLossPct: v.stopLossPct, takeProfitPct: v.takeProfitPct,
+    trailingStop: v.trailingStop, trailingStopPct: v.trailingStopPct ?? undefined,
+    partialTakeProfit: parseJson<{ partialTakeProfit?: { closeFrac: number } }>(v.config, {}).partialTakeProfit,
+    atrStops: atrStopsFromIndicators(v.indicators),
+    feePct: sim.feePct, slippagePct: sim.slippagePct,
+    symbol: sim.symbol,
+    strictCausality: true,   // validation always runs strict — no lookahead
+    market: marketCfg.market,
+    leverage: isSymbolicKind(kind)
+      ? Math.min(marketCfg.leverage, SYMBOLIC_MAX_LEVERAGE)
+      : marketCfg.leverage,
+    signalFn: signalFnFor(v, candles),
+  });
+}
+
 /** Extract dynamic SL/TP config from an enabled ATR indicator. */
 export function atrStopsFromIndicators(
   indicators: { name: string; parameters: string; enabled: boolean }[],
@@ -287,6 +357,7 @@ export async function runAndPersist(
       takeProfitPct: v.takeProfitPct,
       trailingStop: v.trailingStop,
       trailingStopPct: v.trailingStopPct ?? undefined,
+      partialTakeProfit: parseJson<{ partialTakeProfit?: { closeFrac: number } }>(v.config, {}).partialTakeProfit,
       atrStops: atrStopsFromIndicators(v.indicators),
       feePct: bt.feePct,
       slippagePct: bt.slippagePct,
@@ -304,15 +375,7 @@ export async function runAndPersist(
         ? Math.min(marketCfg.leverage, SYMBOLIC_MAX_LEVERAGE)
         : marketCfg.leverage,
       // OBI — candle imbalance proxy; symbolic kinds — their own engine signals
-      signalFn: kind === "ORDER_BOOK_IMBALANCE"
-        ? obiBacktestSignal(data, v.config, v.buyThreshold, v.sellThreshold)
-        : kind === "PRICE_ACTION"
-          ? paSignalFn(v.config, data)
-          : isSymbolicKind(kind)
-            ? smartEnabled(v.config)
-              ? smartSignalFn(kind, data, v.config)   // learns inside the simulation
-              : symbolicSignalFn(kind, data, v.config)
-            : undefined,
+      signalFn: signalFnFor(v, data),
     });
   }
 

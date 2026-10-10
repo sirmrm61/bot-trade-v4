@@ -11,6 +11,8 @@ import { futuresPnl } from "@/modules/trading/futures";
 import { executeBacktest } from "@/modules/backtest/service";
 import { getSetting } from "@/modules/settings/service";
 import { agentLog } from "./service";
+import { journalWrite, journalRecent } from "./journal";
+import { checkEntryGuardrails } from "@/modules/trading/guardrails";
 import type { TradingAgent } from "@/generated/prisma/client";
 
 /**
@@ -44,6 +46,7 @@ export async function agentAction(agent: Agent, action: string, p: Params): Prom
     case "list_trades": return listTrades(agent, p);
     case "open_trade": return openTrade(agent, p);
     case "close_trade": return closeTrade(agent, p);
+    case "journal": return getJournal(agent, p);
     case "log": return writeLog(agent, p);
     default:
       throw new AppError("VALIDATION", 400, { reason: `unknown action: ${action}` });
@@ -146,6 +149,8 @@ async function setPairs(agent: Agent, p: Params) {
 
   await agentLog(agent.id, "ACTION",
     `جفت‌ارزهای تحت مدیریت تعیین شد: ${symbols.join("، ")}${dropped.length ? ` — جفت‌های حذف‌شده متوقف شدند: ${dropped.map((d) => d.symbol).join("، ")}` : ""}`);
+  await journalWrite(agent.id, "DECISION", `جفت‌ارزها تنظیم شد: ${symbols.join("، ")}`,
+    { reason: typeof p.reason === "string" ? p.reason : undefined, data: { dropped: dropped.map((d) => d.symbol) } });
   return { managed: next };
 }
 
@@ -241,7 +246,7 @@ async function selectStrategy(agent: Agent, p: Params) {
     await pauseLiveStrategy(agent.userId, entry.liveStrategyId).catch(() => {});
   }
 
-  const capital = Number(p.allocatedCapital) || 500;
+  const capital = Number(p.allocatedCapital) || (await suggestedCapital(agent));
   const live = await startLiveStrategy({
     userId: agent.userId, strategyId: strategy.id,
     allocatedCapital: capital, mode: agent.mode === "REAL" ? "REAL" : "PAPER",
@@ -252,6 +257,8 @@ async function selectStrategy(agent: Agent, p: Params) {
   await saveManaged(agent, list);
   await agentLog(agent.id, "ACTION",
     `استراتژی موجود «${strategy.name}» برای ${entry.symbol} در حالت ${agent.mode} با سرمایه‌ی ${capital} فعال شد.`);
+  await journalWrite(agent.id, "STRATEGY_CHANGE", `استراتژی «${strategy.name}» برای ${entry.symbol} فعال شد`,
+    { reason: typeof p.reason === "string" ? p.reason : undefined, strategyId: strategy.id, versionId: version.id });
   return { strategyId: strategy.id, liveStrategyId: live.id, name: strategy.name };
 }
 
@@ -271,7 +278,7 @@ async function createAgentStrategy(agent: Agent, p: Params) {
     await pauseLiveStrategy(agent.userId, entry.liveStrategyId).catch(() => {});
   }
 
-  const capital = Number(p.allocatedCapital) || 500;
+  const capital = Number(p.allocatedCapital) || (await suggestedCapital(agent));
   const live = await startLiveStrategy({
     userId: agent.userId, strategyId: strategy.id,
     allocatedCapital: capital, mode: agent.mode === "REAL" ? "REAL" : "PAPER",
@@ -282,6 +289,8 @@ async function createAgentStrategy(agent: Agent, p: Params) {
   await saveManaged(agent, list);
   await agentLog(agent.id, "ACTION",
     `استراتژی «${strategy.name}» برای ${entry.symbol} ساخته و در حالت ${agent.mode} با سرمایه‌ی ${capital} فعال شد.`);
+  await journalWrite(agent.id, "STRATEGY_CHANGE", `استراتژی «${strategy.name}» برای ${entry.symbol} ساخته شد`,
+    { reason: typeof p.reason === "string" ? p.reason : undefined, strategyId: strategy.id });
   return { strategyId: strategy.id, liveStrategyId: live.id, name: strategy.name };
 }
 
@@ -332,6 +341,10 @@ async function runBacktestForAgent(agent: Agent, p: Params) {
   }
   await agentLog(agent.id, "ACTION",
     `بک‌تست ${days}روزه‌ی استراتژی «${strategy.name}» روی ${version.symbol}: سود خالص ${round2(result.profitPct)}٪، ${result.totalTrades} معامله، وین‌ریت ${round2(result.winRate)}٪، ماکس‌درو‌داون ${round2(result.maxDrawdown)}٪.`);
+  await journalWrite(agent.id, "BACKTEST",
+    `بک‌تست ${days}روزه‌ی «${strategy.name}» روی ${version.symbol}: ${round2(result.profitPct)}٪`,
+    { strategyId: strategy.id, versionId: version.id,
+      data: { profitPct: result.profitPct, winRate: result.winRate, totalTrades: result.totalTrades, maxDrawdown: result.maxDrawdown, profitFactor: result.profitFactor } });
   return {
     backtestId: backtest.id, strategyId: strategy.id, symbol: version.symbol,
     days, profitPct: round2(result.profitPct), winRate: round2(result.winRate),
@@ -452,6 +465,16 @@ async function openTrade(agent: Agent, p: Params) {
   const dup = await prisma.trade.findFirst({ where: { liveStrategyId: live.id, status: "OPEN" } });
   if (dup) throw new AppError("VALIDATION", 400, { reason: "position already open", detail: `trade ${dup.id}` });
 
+  // the same fences the engine enforces — the agent can't route around them
+  const guard = await checkEntryGuardrails(live, {
+    agentId: agent.id,
+    slPct: live.version.stopLossPct,
+    tpPct: live.version.takeProfitPct,
+  });
+  if (!guard.allow) {
+    throw new AppError("RISK_VIOLATION", 422, { code: guard.code }, guard.reason);
+  }
+
   const adapter = publicAdapter(agent.exchange);
   const price = (await adapter.getTicker(entry.symbol)).last;
   if (!Number.isFinite(price) || price <= 0) throw new AppError("EXCHANGE_CONNECTION_FAILED", 502);
@@ -459,7 +482,7 @@ async function openTrade(agent: Agent, p: Params) {
   const long = side === "LONG";
   const slPrice = long ? price * (1 - live.version.stopLossPct / 100) : price * (1 + live.version.stopLossPct / 100);
   const tpPrice = long ? price * (1 + live.version.takeProfitPct / 100) : price * (1 - live.version.takeProfitPct / 100);
-  const invested = live.allocatedCapital * (live.version.maxPositionPct ?? 100) / 100;
+  const invested = live.allocatedCapital * (live.version.maxPositionPct ?? 100) / 100 * (live.sizeScale ?? 1);
   const amount = invested / price;
 
   const trade = await prisma.trade.create({
@@ -471,6 +494,9 @@ async function openTrade(agent: Agent, p: Params) {
   });
   await agentLog(agent.id, "ACTION",
     `پوزیشن ${long ? "لانگ" : "شورت"} روی ${entry.symbol} باز شد — ورود ${price}، SL ${round2(slPrice)}، TP ${round2(tpPrice)}، سرمایه ${round2(invested)}.`);
+  await journalWrite(agent.id, "TRADE_OPEN", `پوزیشن ${side} روی ${entry.symbol} در ${price} باز شد`,
+    { reason: typeof p.reason === "string" ? p.reason : undefined,
+      data: { tradeId: trade.id, price, slPrice, tpPrice, invested } });
   return { tradeId: trade.id, entryPrice: price, amount, invested, stopLossPrice: slPrice, takeProfitPrice: tpPrice };
 }
 
@@ -493,7 +519,23 @@ async function closeTrade(agent: Agent, p: Params) {
   });
   await agentLog(agent.id, "ACTION",
     `پوزیشن ${long ? "لانگ" : "شورت"} ${trade.symbol} توسط ایجنت بسته شد — خروج ${price}، نتیجه ${round2(pnlPct)}٪${typeof p.reason === "string" ? ` — دلیل: ${p.reason}` : ""}.`);
+  await journalWrite(agent.id, "TRADE_CLOSE", `پوزیشن ${trade.symbol} بسته شد — ${round2(pnlPct)}٪`,
+    { reason: typeof p.reason === "string" ? p.reason : undefined,
+      data: { tradeId: trade.id, exitPrice: price, pnl, pnlPct } });
   return { tradeId: trade.id, exitPrice: price, pnl: round2(pnl), pnlPct: round2(pnlPct) };
+}
+
+/** recent journal entries — the agent's audit-trail memory */
+async function getJournal(agent: Agent, p: Params) {
+  const take = Math.min(Math.max(Number(p.take) || 50, 1), 100);
+  const type = typeof p.type === "string" ? p.type : undefined;
+  const entries = await journalRecent(agent.id, take, type as never);
+  return {
+    entries: entries.map((e) => ({
+      type: e.type, summary: e.summary, reason: e.reason,
+      strategyId: e.strategyId, createdAt: e.createdAt,
+    })),
+  };
 }
 
 async function writeLog(agent: Agent, p: Params) {
@@ -502,6 +544,26 @@ async function writeLog(agent: Agent, p: Params) {
   if (!message) throw new AppError("VALIDATION", 400, { field: "message" });
   await agentLog(agent.id, level, message);
   return { ok: true };
+}
+
+/**
+ * Default position capital when the agent doesn't specify one.
+ * REAL agents: split 80% of the free quote balance across maxPairs —
+ * sized from the user's actual exchange balance, never all-in.
+ * PAPER agents: fixed 500.
+ */
+async function suggestedCapital(agent: Agent): Promise<number> {
+  if (agent.mode !== "REAL") return 500;
+  try {
+    const { adapterForUser } = await import("@/modules/exchanges/registry");
+    const adapter = await adapterForUser(agent.userId, agent.exchange, "agent");
+    const balances = await adapter.getBalance();
+    const quote = balances.find((b) => b.currency === "USDT") ?? balances.find((b) => b.currency === "IRT");
+    if (!quote || quote.free <= 0) return 500;
+    return Math.floor((quote.free * 0.8) / Math.max(agent.maxPairs, 1));
+  } catch {
+    return 500;
+  }
 }
 
 const round2 = (v: number | null | undefined) =>

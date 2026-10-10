@@ -24,6 +24,9 @@ export interface BacktestParams {
   takeProfitPct: number;
   trailingStop: boolean;
   trailingStopPct?: number;
+  /** take-profit splits: when TP is touched, close `closeFrac` of the
+   *  position, move the stop to breakeven, keep the rest running */
+  partialTakeProfit?: { closeFrac: number };
   /** dynamic SL/TP from ATR — overrides pct-based stops when present */
   atrStops?: { period: number; slMultiplier: number; tpMultiplier: number };
   feePct: number;        // e.g. 0.25
@@ -134,6 +137,7 @@ export function runBacktest(p: BacktestParams): BacktestResult {
     liqPrice?: number;    // futures only
     traceId: string;
     lookahead: boolean;
+    partialDone?: boolean; // partial TP already realized
   }
   let openPosition: Position | null = null;
   const trades: SimTrade[] = [];
@@ -320,6 +324,42 @@ export function runBacktest(p: BacktestParams): BacktestResult {
         });
       } else if (slTouched) {
         exitPrice = pos.slPrice; exitReason = "STOP_LOSS";
+      } else if (tpTouched && p.partialTakeProfit && !pos.partialDone) {
+        // partial take-profit — bank `closeFrac` at TP, breakeven the rest
+        const frac = clamp(p.partialTakeProfit.closeFrac, 0.1, 0.9);
+        const partAmount = pos.amount * frac;
+        const partInvested = pos.invested * frac;
+        const fill = long ? pos.tpPrice * (1 - slip) : pos.tpPrice * (1 + slip);
+        const fee = partAmount * fill * feeRate;
+        if (futures) {
+          const pnlPart = (long ? (fill - pos.entryPrice) : (pos.entryPrice - fill)) * partAmount - fee;
+          balance += partInvested + pnlPart;
+          trades.push({
+            side: pos.side === "LONG" ? "BUY" : "SELL",
+            entryPrice: pos.entryPrice, exitPrice: fill, amount: partAmount, fee,
+            pnl: pnlPart, pnlPct: (pnlPart / partInvested) * 100,
+            entryTime: p.candles[pos.entryIdx].time, exitTime: c.time, exitReason: "PARTIAL_TP",
+          });
+        } else {
+          const proceeds = partAmount * fill;
+          const pnlPart = proceeds - fee - partInvested;
+          balance += proceeds - fee;
+          trades.push({
+            side: "BUY",
+            entryPrice: pos.entryPrice, exitPrice: fill, amount: partAmount, fee,
+            pnl: pnlPart, pnlPct: (pnlPart / partInvested) * 100,
+            entryTime: p.candles[pos.entryIdx].time, exitTime: c.time, exitReason: "PARTIAL_TP",
+          });
+        }
+        pos.amount -= partAmount;
+        pos.invested -= partInvested;
+        pos.partialDone = true;
+        pos.slPrice = pos.entryPrice; // breakeven stop on the runner
+        tracer?.emit({
+          stage: "EXIT", event: "PARTIAL_TP", important: true,
+          refId: pos.traceId, symbol: p.symbol, barIndex: i, candleTs: c.time,
+          data: { frac, fillPrice: fill, remainingAmount: pos.amount, newSl: pos.slPrice },
+        });
       } else if (tpTouched) {
         exitPrice = pos.tpPrice; exitReason = "TAKE_PROFIT";
       } else {

@@ -129,6 +129,11 @@ export interface StrategyInput {
   priceAction?: PriceActionConfigInput;
   /** smart mode — symbolic engines learn from their own closed trades */
   smart?: boolean;
+  /** stricter entry-quality floor for this version (0..1) — can only raise
+   *  the guardrail minimum, never lower it */
+  minEntryScore?: number;
+  /** partial take-profit — close this fraction at TP, breakeven the rest */
+  partialTakeProfit?: { closeFrac: number };
 }
 
 const inRange = (v: number | undefined, min: number, max: number) =>

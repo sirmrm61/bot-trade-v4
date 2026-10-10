@@ -29,11 +29,13 @@ export type AggregateLiveStrategy = {
 export type LiveStrategyAvgAggregateOutputType = {
   allocatedCapital: number | null
   circuitBreakerFailures: number | null
+  sizeScale: number | null
 }
 
 export type LiveStrategySumAggregateOutputType = {
   allocatedCapital: number | null
   circuitBreakerFailures: number | null
+  sizeScale: number | null
 }
 
 export type LiveStrategyMinAggregateOutputType = {
@@ -49,6 +51,8 @@ export type LiveStrategyMinAggregateOutputType = {
   status: string | null
   stopPolicy: string | null
   circuitBreakerFailures: number | null
+  sizeScale: number | null
+  candidateVersionId: string | null
   lastSignalAt: Date | null
   lastError: string | null
   stats: string | null
@@ -71,6 +75,8 @@ export type LiveStrategyMaxAggregateOutputType = {
   status: string | null
   stopPolicy: string | null
   circuitBreakerFailures: number | null
+  sizeScale: number | null
+  candidateVersionId: string | null
   lastSignalAt: Date | null
   lastError: string | null
   stats: string | null
@@ -93,6 +99,8 @@ export type LiveStrategyCountAggregateOutputType = {
   status: number
   stopPolicy: number
   circuitBreakerFailures: number
+  sizeScale: number
+  candidateVersionId: number
   lastSignalAt: number
   lastError: number
   stats: number
@@ -107,11 +115,13 @@ export type LiveStrategyCountAggregateOutputType = {
 export type LiveStrategyAvgAggregateInputType = {
   allocatedCapital?: true
   circuitBreakerFailures?: true
+  sizeScale?: true
 }
 
 export type LiveStrategySumAggregateInputType = {
   allocatedCapital?: true
   circuitBreakerFailures?: true
+  sizeScale?: true
 }
 
 export type LiveStrategyMinAggregateInputType = {
@@ -127,6 +137,8 @@ export type LiveStrategyMinAggregateInputType = {
   status?: true
   stopPolicy?: true
   circuitBreakerFailures?: true
+  sizeScale?: true
+  candidateVersionId?: true
   lastSignalAt?: true
   lastError?: true
   stats?: true
@@ -149,6 +161,8 @@ export type LiveStrategyMaxAggregateInputType = {
   status?: true
   stopPolicy?: true
   circuitBreakerFailures?: true
+  sizeScale?: true
+  candidateVersionId?: true
   lastSignalAt?: true
   lastError?: true
   stats?: true
@@ -171,6 +185,8 @@ export type LiveStrategyCountAggregateInputType = {
   status?: true
   stopPolicy?: true
   circuitBreakerFailures?: true
+  sizeScale?: true
+  candidateVersionId?: true
   lastSignalAt?: true
   lastError?: true
   stats?: true
@@ -280,6 +296,8 @@ export type LiveStrategyGroupByOutputType = {
   status: string
   stopPolicy: string | null
   circuitBreakerFailures: number
+  sizeScale: number
+  candidateVersionId: string | null
   lastSignalAt: Date | null
   lastError: string | null
   stats: string
@@ -325,6 +343,8 @@ export type LiveStrategyWhereInput = {
   status?: Prisma.StringFilter<"LiveStrategy"> | string
   stopPolicy?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   circuitBreakerFailures?: Prisma.IntFilter<"LiveStrategy"> | number
+  sizeScale?: Prisma.FloatFilter<"LiveStrategy"> | number
+  candidateVersionId?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   lastSignalAt?: Prisma.DateTimeNullableFilter<"LiveStrategy"> | Date | string | null
   lastError?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   stats?: Prisma.StringFilter<"LiveStrategy"> | string
@@ -354,6 +374,8 @@ export type LiveStrategyOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   stopPolicy?: Prisma.SortOrderInput | Prisma.SortOrder
   circuitBreakerFailures?: Prisma.SortOrder
+  sizeScale?: Prisma.SortOrder
+  candidateVersionId?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSignalAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastError?: Prisma.SortOrderInput | Prisma.SortOrder
   stats?: Prisma.SortOrder
@@ -386,6 +408,8 @@ export type LiveStrategyWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.StringFilter<"LiveStrategy"> | string
   stopPolicy?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   circuitBreakerFailures?: Prisma.IntFilter<"LiveStrategy"> | number
+  sizeScale?: Prisma.FloatFilter<"LiveStrategy"> | number
+  candidateVersionId?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   lastSignalAt?: Prisma.DateTimeNullableFilter<"LiveStrategy"> | Date | string | null
   lastError?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   stats?: Prisma.StringFilter<"LiveStrategy"> | string
@@ -415,6 +439,8 @@ export type LiveStrategyOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   stopPolicy?: Prisma.SortOrderInput | Prisma.SortOrder
   circuitBreakerFailures?: Prisma.SortOrder
+  sizeScale?: Prisma.SortOrder
+  candidateVersionId?: Prisma.SortOrderInput | Prisma.SortOrder
   lastSignalAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastError?: Prisma.SortOrderInput | Prisma.SortOrder
   stats?: Prisma.SortOrder
@@ -445,6 +471,8 @@ export type LiveStrategyScalarWhereWithAggregatesInput = {
   status?: Prisma.StringWithAggregatesFilter<"LiveStrategy"> | string
   stopPolicy?: Prisma.StringNullableWithAggregatesFilter<"LiveStrategy"> | string | null
   circuitBreakerFailures?: Prisma.IntWithAggregatesFilter<"LiveStrategy"> | number
+  sizeScale?: Prisma.FloatWithAggregatesFilter<"LiveStrategy"> | number
+  candidateVersionId?: Prisma.StringNullableWithAggregatesFilter<"LiveStrategy"> | string | null
   lastSignalAt?: Prisma.DateTimeNullableWithAggregatesFilter<"LiveStrategy"> | Date | string | null
   lastError?: Prisma.StringNullableWithAggregatesFilter<"LiveStrategy"> | string | null
   stats?: Prisma.StringWithAggregatesFilter<"LiveStrategy"> | string
@@ -463,6 +491,8 @@ export type LiveStrategyCreateInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -492,6 +522,8 @@ export type LiveStrategyUncheckedCreateInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -513,6 +545,8 @@ export type LiveStrategyUpdateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -542,6 +576,8 @@ export type LiveStrategyUncheckedUpdateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -567,6 +603,8 @@ export type LiveStrategyCreateManyInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -585,6 +623,8 @@ export type LiveStrategyUpdateManyMutationInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -607,6 +647,8 @@ export type LiveStrategyUncheckedUpdateManyInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -639,6 +681,8 @@ export type LiveStrategyCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   stopPolicy?: Prisma.SortOrder
   circuitBreakerFailures?: Prisma.SortOrder
+  sizeScale?: Prisma.SortOrder
+  candidateVersionId?: Prisma.SortOrder
   lastSignalAt?: Prisma.SortOrder
   lastError?: Prisma.SortOrder
   stats?: Prisma.SortOrder
@@ -651,6 +695,7 @@ export type LiveStrategyCountOrderByAggregateInput = {
 export type LiveStrategyAvgOrderByAggregateInput = {
   allocatedCapital?: Prisma.SortOrder
   circuitBreakerFailures?: Prisma.SortOrder
+  sizeScale?: Prisma.SortOrder
 }
 
 export type LiveStrategyMaxOrderByAggregateInput = {
@@ -666,6 +711,8 @@ export type LiveStrategyMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   stopPolicy?: Prisma.SortOrder
   circuitBreakerFailures?: Prisma.SortOrder
+  sizeScale?: Prisma.SortOrder
+  candidateVersionId?: Prisma.SortOrder
   lastSignalAt?: Prisma.SortOrder
   lastError?: Prisma.SortOrder
   stats?: Prisma.SortOrder
@@ -688,6 +735,8 @@ export type LiveStrategyMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   stopPolicy?: Prisma.SortOrder
   circuitBreakerFailures?: Prisma.SortOrder
+  sizeScale?: Prisma.SortOrder
+  candidateVersionId?: Prisma.SortOrder
   lastSignalAt?: Prisma.SortOrder
   lastError?: Prisma.SortOrder
   stats?: Prisma.SortOrder
@@ -700,6 +749,7 @@ export type LiveStrategyMinOrderByAggregateInput = {
 export type LiveStrategySumOrderByAggregateInput = {
   allocatedCapital?: Prisma.SortOrder
   circuitBreakerFailures?: Prisma.SortOrder
+  sizeScale?: Prisma.SortOrder
 }
 
 export type LiveStrategyNullableScalarRelationFilter = {
@@ -932,6 +982,8 @@ export type LiveStrategyCreateWithoutUserInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -959,6 +1011,8 @@ export type LiveStrategyUncheckedCreateWithoutUserInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1012,6 +1066,8 @@ export type LiveStrategyScalarWhereInput = {
   status?: Prisma.StringFilter<"LiveStrategy"> | string
   stopPolicy?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   circuitBreakerFailures?: Prisma.IntFilter<"LiveStrategy"> | number
+  sizeScale?: Prisma.FloatFilter<"LiveStrategy"> | number
+  candidateVersionId?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   lastSignalAt?: Prisma.DateTimeNullableFilter<"LiveStrategy"> | Date | string | null
   lastError?: Prisma.StringNullableFilter<"LiveStrategy"> | string | null
   stats?: Prisma.StringFilter<"LiveStrategy"> | string
@@ -1030,6 +1086,8 @@ export type LiveStrategyCreateWithoutPairInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1057,6 +1115,8 @@ export type LiveStrategyUncheckedCreateWithoutPairInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1103,6 +1163,8 @@ export type LiveStrategyCreateWithoutStrategyInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1130,6 +1192,8 @@ export type LiveStrategyUncheckedCreateWithoutStrategyInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1176,6 +1240,8 @@ export type LiveStrategyCreateWithoutVersionInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1203,6 +1269,8 @@ export type LiveStrategyUncheckedCreateWithoutVersionInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1249,6 +1317,8 @@ export type LiveStrategyCreateWithoutOrdersInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1277,6 +1347,8 @@ export type LiveStrategyUncheckedCreateWithoutOrdersInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1313,6 +1385,8 @@ export type LiveStrategyUpdateWithoutOrdersInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1341,6 +1415,8 @@ export type LiveStrategyUncheckedUpdateWithoutOrdersInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1361,6 +1437,8 @@ export type LiveStrategyCreateWithoutTradesInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1389,6 +1467,8 @@ export type LiveStrategyUncheckedCreateWithoutTradesInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1425,6 +1505,8 @@ export type LiveStrategyUpdateWithoutTradesInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1453,6 +1535,8 @@ export type LiveStrategyUncheckedUpdateWithoutTradesInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1473,6 +1557,8 @@ export type LiveStrategyCreateWithoutSignalLogsInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1501,6 +1587,8 @@ export type LiveStrategyUncheckedCreateWithoutSignalLogsInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1537,6 +1625,8 @@ export type LiveStrategyUpdateWithoutSignalLogsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1565,6 +1655,8 @@ export type LiveStrategyUncheckedUpdateWithoutSignalLogsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1588,6 +1680,8 @@ export type LiveStrategyCreateManyUserInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1606,6 +1700,8 @@ export type LiveStrategyUpdateWithoutUserInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1633,6 +1729,8 @@ export type LiveStrategyUncheckedUpdateWithoutUserInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1657,6 +1755,8 @@ export type LiveStrategyUncheckedUpdateManyWithoutUserInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1678,6 +1778,8 @@ export type LiveStrategyCreateManyPairInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1696,6 +1798,8 @@ export type LiveStrategyUpdateWithoutPairInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1723,6 +1827,8 @@ export type LiveStrategyUncheckedUpdateWithoutPairInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1747,6 +1853,8 @@ export type LiveStrategyUncheckedUpdateManyWithoutPairInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1768,6 +1876,8 @@ export type LiveStrategyCreateManyStrategyInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1786,6 +1896,8 @@ export type LiveStrategyUpdateWithoutStrategyInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1813,6 +1925,8 @@ export type LiveStrategyUncheckedUpdateWithoutStrategyInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1837,6 +1951,8 @@ export type LiveStrategyUncheckedUpdateManyWithoutStrategyInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1858,6 +1974,8 @@ export type LiveStrategyCreateManyVersionInput = {
   status?: string
   stopPolicy?: string | null
   circuitBreakerFailures?: number
+  sizeScale?: number
+  candidateVersionId?: string | null
   lastSignalAt?: Date | string | null
   lastError?: string | null
   stats?: string
@@ -1876,6 +1994,8 @@ export type LiveStrategyUpdateWithoutVersionInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1903,6 +2023,8 @@ export type LiveStrategyUncheckedUpdateWithoutVersionInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1927,6 +2049,8 @@ export type LiveStrategyUncheckedUpdateManyWithoutVersionInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   stopPolicy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   circuitBreakerFailures?: Prisma.IntFieldUpdateOperationsInput | number
+  sizeScale?: Prisma.FloatFieldUpdateOperationsInput | number
+  candidateVersionId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   lastSignalAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastError?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stats?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1998,6 +2122,8 @@ export type LiveStrategySelect<ExtArgs extends runtime.Types.Extensions.Internal
   status?: boolean
   stopPolicy?: boolean
   circuitBreakerFailures?: boolean
+  sizeScale?: boolean
+  candidateVersionId?: boolean
   lastSignalAt?: boolean
   lastError?: boolean
   stats?: boolean
@@ -2028,6 +2154,8 @@ export type LiveStrategySelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   status?: boolean
   stopPolicy?: boolean
   circuitBreakerFailures?: boolean
+  sizeScale?: boolean
+  candidateVersionId?: boolean
   lastSignalAt?: boolean
   lastError?: boolean
   stats?: boolean
@@ -2054,6 +2182,8 @@ export type LiveStrategySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   status?: boolean
   stopPolicy?: boolean
   circuitBreakerFailures?: boolean
+  sizeScale?: boolean
+  candidateVersionId?: boolean
   lastSignalAt?: boolean
   lastError?: boolean
   stats?: boolean
@@ -2080,6 +2210,8 @@ export type LiveStrategySelectScalar = {
   status?: boolean
   stopPolicy?: boolean
   circuitBreakerFailures?: boolean
+  sizeScale?: boolean
+  candidateVersionId?: boolean
   lastSignalAt?: boolean
   lastError?: boolean
   stats?: boolean
@@ -2089,7 +2221,7 @@ export type LiveStrategySelectScalar = {
   updatedAt?: boolean
 }
 
-export type LiveStrategyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "strategyId" | "versionId" | "pairId" | "symbol" | "exchange" | "allocatedCapital" | "mode" | "status" | "stopPolicy" | "circuitBreakerFailures" | "lastSignalAt" | "lastError" | "stats" | "startedAt" | "stoppedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["liveStrategy"]>
+export type LiveStrategyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "strategyId" | "versionId" | "pairId" | "symbol" | "exchange" | "allocatedCapital" | "mode" | "status" | "stopPolicy" | "circuitBreakerFailures" | "sizeScale" | "candidateVersionId" | "lastSignalAt" | "lastError" | "stats" | "startedAt" | "stoppedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["liveStrategy"]>
 export type LiveStrategyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   strategy?: boolean | Prisma.StrategyDefaultArgs<ExtArgs>
@@ -2137,6 +2269,8 @@ export type $LiveStrategyPayload<ExtArgs extends runtime.Types.Extensions.Intern
     status: string
     stopPolicy: string | null
     circuitBreakerFailures: number
+    sizeScale: number
+    candidateVersionId: string | null
     lastSignalAt: Date | null
     lastError: string | null
     stats: string
@@ -2586,6 +2720,8 @@ export interface LiveStrategyFieldRefs {
   readonly status: Prisma.FieldRef<"LiveStrategy", 'String'>
   readonly stopPolicy: Prisma.FieldRef<"LiveStrategy", 'String'>
   readonly circuitBreakerFailures: Prisma.FieldRef<"LiveStrategy", 'Int'>
+  readonly sizeScale: Prisma.FieldRef<"LiveStrategy", 'Float'>
+  readonly candidateVersionId: Prisma.FieldRef<"LiveStrategy", 'String'>
   readonly lastSignalAt: Prisma.FieldRef<"LiveStrategy", 'DateTime'>
   readonly lastError: Prisma.FieldRef<"LiveStrategy", 'String'>
   readonly stats: Prisma.FieldRef<"LiveStrategy", 'String'>

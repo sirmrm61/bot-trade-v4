@@ -6,6 +6,7 @@ import { AppError } from "@/shared/errors";
 import { logger } from "@/infrastructure/logging/logger";
 import { redis } from "@/infrastructure/redis/client";
 import { pauseLiveStrategy } from "@/modules/trading/live-engine";
+import { journalWrite, writeAgentState } from "./journal";
 
 /**
  * Trading Agents — per-symbol autonomous agents powered by the local
@@ -67,9 +68,11 @@ export async function createAgent(
   if (running >= 5) throw new AppError("VALIDATION", 400, { reason: "حداکثر ۵ ایجنت هم‌زمان مجاز است" });
 
   // the unique (userId, symbol, mode) key survives a stop — revive the old
-  // row (fresh workspace links, reset error state) instead of failing
+  // row (fresh workspace links, reset error state) instead of failing.
+  // PAUSED (drawdown circuit) also revives — recreating is the user's
+  // explicit "resume" gesture.
   const stopped = await prisma.tradingAgent.findFirst({
-    where: { userId, symbol, mode, status: "STOPPED" },
+    where: { userId, symbol, mode, status: { in: ["STOPPED", "PAUSED"] } },
   });
   const agent = stopped
     ? await prisma.tradingAgent.update({
@@ -159,7 +162,9 @@ export function provisionWorkspace(agentId: string) {
   if (existsSync(tpl)) {
     const skills = path.join(tpl, ".devin");
     if (existsSync(skills)) cpSync(skills, path.join(dir, ".devin"), { recursive: true });
-    if (!existsSync(path.join(dir, "AGENTS.md"))) cpSync(path.join(tpl, "AGENTS.md"), path.join(dir, "AGENTS.md"));
+    // AGENTS.md is a template doc (not agent state) — always re-sync so
+    // instruction updates reach running agents; state.md stays untouched
+    if (existsSync(path.join(tpl, "AGENTS.md"))) cpSync(path.join(tpl, "AGENTS.md"), path.join(dir, "AGENTS.md"));
     if (!existsSync(path.join(dir, "state.md"))) cpSync(path.join(tpl, "state.md"), path.join(dir, "state.md"));
   }
   ensureDevinCredentials();
@@ -203,15 +208,17 @@ export function ensureDevinCredentials() {
 
 const TICK_PROMPT = `Perform your scheduled trading review now.
 
+MANDATORY first step — bootstrap: read AGENT_STATE.md (server-generated, always fresh) and state.md. If you need deeper history, call the "journal" action. Log one line: "ادامه از: <what you were doing>". NEVER decide before reading the state file.
+
 Follow the workflow in AGENTS.md exactly:
-1. Read state.md for your standing plan.
+1. Bootstrap done above.
 2. If you manage no pairs yet: call scan_pairs, pick the best candidates, call set_pairs, then give each pair a strategy (select_strategy on an existing user strategy, or create_strategy — optionally validate with backtest first).
 3. For every managed pair: call market_summary and list_trades, then decide — manage open trades, tune the strategy, open/close a position — only if evidence supports it.
-4. Call performance to see 24h progress toward the 5% daily target; if a pair consistently underperforms, consider replacing it via set_pairs with a better candidate.
+4. Call performance to see 24h progress toward the 5% daily stretch target; if a pair consistently underperforms, consider replacing it via set_pairs with a better candidate.
 5. Write your actions and reasoning to state.md.
 6. Finish by calling the "log" action with a concise Persian summary for the user panel (what you checked, what you did, why — and what you'll watch next).
 
-Rules: never trade without a clear setup, never increase position size beyond the strategy's risk settings, and if nothing is worth doing say so — a HOLD decision is a valid outcome.`;
+Rules: never trade without a clear setup, never increase position size beyond the strategy's risk settings, and if nothing is worth doing say so — a HOLD decision is a valid outcome. The 5% daily figure is a stretch target, never a reason to loosen risk.`;
 
 /** is a CLI run already in flight for this agent? (cross-process guard) */
 const lockKey = (agentId: string) => `agent:lock:${agentId}`;
@@ -219,12 +226,20 @@ const lockKey = (agentId: string) => `agent:lock:${agentId}`;
 export async function agentTick(agentId: string) {
   const agent = await prisma.tradingAgent.findUnique({ where: { id: agentId } });
   if (!agent || agent.status !== "RUNNING") return;
+  // circuit-breaker hold — pausedUntil gates the review loop itself
+  if (agent.pausedUntil && agent.pausedUntil.getTime() > Date.now()) return;
+  if (agent.pausedUntil) {
+    await prisma.tradingAgent.update({ where: { id: agentId }, data: { pausedUntil: null } });
+  }
 
   const got = await redis.set(lockKey(agentId), "1", "EX", CLI_TIMEOUT_MS / 1000 + 60, "NX");
   if (!got) return; // previous review still running
 
   const dir = provisionWorkspace(agentId);
   const continued = existsSync(path.join(dir, ".devin-session-started"));
+
+  // refresh AGENT_STATE.md before the CLI starts so its first read is current
+  await writeAgentState(agent).catch(() => {});
 
   try {
     const args = [
@@ -249,9 +264,12 @@ export async function agentTick(agentId: string) {
       data: { lastTickAt: new Date(), lastError: msg },
     });
     await agentLog(agentId, "ERROR", `خطا در اجرای بررسی ایجنت: ${msg}`);
+    await journalWrite(agentId, "INCIDENT", "اجرای چرخه‌ی بررسی ناموفق بود", { reason: msg });
     logger.warn("agent tick failed", { module: "agent", agentId, error: msg });
   } finally {
     await redis.del(lockKey(agentId)).catch(() => {});
+    // the state file reflects what the cycle just changed
+    await writeAgentState(agent).catch(() => {});
   }
 }
 
