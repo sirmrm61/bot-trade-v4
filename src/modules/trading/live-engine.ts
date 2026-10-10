@@ -351,7 +351,11 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
       where: { id: live.id },
       data: {
         lastSignalAt: new Date(),
-        ...(live.status === "STARTING" ? { status: "RUNNING" } : {}),
+        // a successful tick self-heals DEGRADED too — otherwise a strategy that
+        // recovered stays flagged until worker restart
+        ...(live.status === "STARTING" || live.status === "DEGRADED"
+          ? { status: "RUNNING" as const, circuitBreakerFailures: 0, lastError: null }
+          : {}),
         stats: JSON.stringify({
           ...prevStats, // learn + pendingCtx survive every tick
           sigEp: rawSignal === "HOLD" ? null : rawSignal, // signal-episode dedupe key
