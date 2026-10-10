@@ -260,6 +260,7 @@ async function createAgentStrategy(agent: Agent, p: Params) {
   const input = p.input as StrategyInput | undefined;
   if (!input) throw new AppError("VALIDATION", 400, { field: "input" });
   input.symbol = entry.symbol;
+  input.exchange = agent.exchange; // ticks must resolve the agent's exchange, not the NOBITEX default
   const { strategy } = await createStrategy(agent.userId, {
     ...input, name: input.name?.trim() || `ایجنت — ${entry.symbol}`,
   }, "AI");
