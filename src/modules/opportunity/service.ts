@@ -41,7 +41,7 @@ export async function scanOpportunities(
   const tf = opts.candleTimeframe ?? "5m";
   const tracer = new Tracer(makeScanRunId(), { level: "SUMMARY" });
 
-  const result = await rankPairs({ market: opts.market });
+  const result = await rankPairs({ market: opts.market, quote: "USDT" });
   const ranked = result.pairs.filter((p) => p.status === "RANKED" && p.score !== null);
   if (ranked.length === 0) {
     throw new AppError("INSUFFICIENT_DATA", 422, { reason: "no ranked pairs from scanner" });

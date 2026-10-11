@@ -6,7 +6,7 @@ import { SmartSelectDialog } from "../smart-select";
 
 export default async function CreateStrategyPage() {
   const session = await currentSession();
-  const pairs = await prisma.pair.findMany({ where: { active: true }, select: { symbol: true, exchange: true }, take: 2000 });
+  const pairs = await prisma.pair.findMany({ where: { active: true, quoteCurrency: "USDT" }, select: { symbol: true, exchange: true }, take: 2000 });
   const isAdmin = session?.role === "ADMIN";
 
   return (

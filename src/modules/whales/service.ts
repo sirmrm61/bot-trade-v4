@@ -23,7 +23,7 @@ export async function scanWhales(
   const count = clamp(Math.trunc(opts.count ?? 10), 1, 25);
   const cfg: WhaleConfig = { ...WHALE_DEFAULTS, ...opts.cfg };
 
-  const ranked = (await rankPairs({ market: opts.market })).pairs
+  const ranked = (await rankPairs({ market: opts.market, quote: "USDT" })).pairs
     .filter((p) => p.status === "RANKED")
     .slice(0, MAX_BOOK_FETCHES);
   if (ranked.length === 0) {

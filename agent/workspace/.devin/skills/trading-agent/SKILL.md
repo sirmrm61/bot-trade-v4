@@ -33,11 +33,13 @@ reason when a risk check rejects a call — read it before retrying.
 `{}` → `maxPairs`, currently `managed` symbols, and top-ranked `candidates`
 with symbol, marketType, score, volumeUsd24h, spreadPct, volatilityPct,
 dayRangePct, change24hPct, alreadyManaged, reasons.
+The platform's base currency is USDT — only USDT-quoted markets are listed.
 
 ### set_pairs — lock in your pair set
 
 `{"symbols": ["BTC-USDT", "ETH-USDT"]}` → sets managed pairs (max `maxPairs`,
-all must exist on your exchange). Pairs you drop are auto-PAUSED.
+all must be active USDT-quoted markets on your exchange — IRT/other quotes
+are rejected). Pairs you drop are auto-PAUSED.
 
 ### market_summary — read per pair every cycle
 

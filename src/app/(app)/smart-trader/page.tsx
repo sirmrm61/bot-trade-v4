@@ -4,7 +4,7 @@ import { SmartTraderMosaic } from "./mosaic";
 
 export default async function SmartTraderPage() {
   const pairs = await prisma.pair.findMany({
-    where: { active: true },
+    where: { active: true, quoteCurrency: "USDT" },
     select: { symbol: true, exchange: true },
     take: 2000,
   });

@@ -101,7 +101,7 @@ function requirePair(agent: Agent, p: Params): ManagedPair {
 // ---------------------------------------------------------------------------
 
 async function scanPairs(agent: Agent) {
-  const result = await rankPairs({ exchange: agent.exchange });
+  const result = await rankPairs({ exchange: agent.exchange, quote: "USDT" });
   const managed = new Set(managedList(agent).map((m) => m.symbol));
   return {
     maxPairs: agent.maxPairs,
@@ -127,13 +127,13 @@ async function setPairs(agent: Agent, p: Params) {
     throw new AppError("VALIDATION", 400, { reason: `max ${agent.maxPairs} pairs allowed` });
   }
   const found = await prisma.pair.findMany({
-    where: { symbol: { in: symbols }, exchange: agent.exchange, active: true },
+    where: { symbol: { in: symbols }, exchange: agent.exchange, active: true, quoteCurrency: "USDT" },
     select: { symbol: true },
   });
   const valid = new Set(found.map((f) => f.symbol));
   const missing = symbols.filter((s) => !valid.has(s));
   if (missing.length) {
-    throw new AppError("VALIDATION", 400, { reason: `unknown/inactive pairs on ${agent.exchange}`, detail: missing.join(",") });
+    throw new AppError("VALIDATION", 400, { reason: `unknown/inactive USDT pairs on ${agent.exchange} — base currency is USDT`, detail: missing.join(",") });
   }
 
   const prev = managedList(agent);

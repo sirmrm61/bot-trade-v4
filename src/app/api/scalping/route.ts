@@ -14,7 +14,7 @@ export const GET = api(async (req) => {
   }
   return rankPairs({
     exchange: q.get("exchange") || undefined,
-    quote: q.get("quote") || "all",
+    quote: q.get("quote") || "USDT",
     market: q.get("market") || "all",
     base: q.get("base") || undefined,
     minVolumeUsd: num(q.get("minVolumeUsd")),

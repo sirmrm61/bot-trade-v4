@@ -159,7 +159,7 @@ export async function autoGenerateStrategies(
   const count = clamp(Math.trunc(opts.count ?? 5), 1, 10);
   const mode: AutoGenMode = opts.mode ?? "SCALP";
 
-  const result = await rankPairs({});
+  const result = await rankPairs({ quote: "USDT" });
   const ranked = result.pairs.filter((p) => p.status === "RANKED" && p.score !== null);
   if (ranked.length === 0) {
     throw new AppError("INSUFFICIENT_DATA", 422, { reason: "no ranked pairs from scanner" });

@@ -30,7 +30,7 @@ interface Filters {
 
 const DEFAULT_FILTERS: Filters = {
   exchange: "all",
-  quote: "all",
+  quote: "USDT",
   market: "all",
   base: "",
   minVolumeUsd: "",
@@ -111,8 +111,8 @@ export function ScalpPanel({ pairs }: { pairs: { symbol: string; exchange?: stri
             <select className={inputCls} value={filters.quote}
               onChange={(e) => setFilters({ ...filters, quote: e.target.value })}>
               <option value="all">همه</option>
-              <option value="IRT">تومان (IRT)</option>
               <option value="USDT">تتر (USDT)</option>
+              <option value="IRT">تومان (IRT)</option>
             </select>
           </Field>
           <Field label="نوع بازار">

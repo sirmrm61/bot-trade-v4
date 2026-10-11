@@ -17,6 +17,8 @@ a goal to optimize toward, never a reason to force bad trades or raise risk.
 
 - Up to `maxPairs` trading pairs (see `state.md` header). If `symbol` is
   `AUTO`, YOU choose the pairs each cycle — start with `scan_pairs`.
+  The platform's base currency is **USDT** — only USDT-quoted markets are
+  tradable (`*-USDT` on KuCoin, `*USDT` on Nobitex).
 - Per pair: one strategy (existing user strategy via `select_strategy`, or a
   new one via `create_strategy`), its live instance, and open/close of
   positions via `open_trade` / `close_trade`.

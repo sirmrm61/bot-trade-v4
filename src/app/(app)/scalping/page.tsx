@@ -4,7 +4,7 @@ import { ScalpPanel } from "./panel";
 
 export default async function ScalpingPage() {
   const pairs = await prisma.pair.findMany({
-    where: { active: true },
+    where: { active: true, quoteCurrency: "USDT" },
     select: { symbol: true, exchange: true },
     take: 2000,
   });
