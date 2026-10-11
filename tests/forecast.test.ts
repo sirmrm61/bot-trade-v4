@@ -90,14 +90,25 @@ describe("trainLogReg + evaluate + honesty gate", () => {
     expect(gate.pass).toBe(true);
   });
 
-  it("passesHonestyGate rejects noise", () => {
-    const noise = trainLogReg(
-      X.slice(0, 560).map((r) => r.map(() => Math.random() - 0.5)),
-      y.slice(0, 560));
-    const m = evaluate(noise, testRows);
+  it("passesHonestyGate rejects a model with no real edge", () => {
+    // deterministic failure — the good model scored against inverted
+    // labels has AUC < 0.5 and must not pass
+    const flipped = rowsOf(X.slice(560), y.slice(560).map((v) => (v ? 0 : 1) as 0 | 1));
+    const m = evaluate(model, flipped);
+    expect(m.auc).toBeLessThan(0.5);
     const gate = passesHonestyGate(m);
     expect(gate.pass).toBe(false);
     expect(gate.reasons.length).toBeGreaterThan(0);
+  });
+
+  it("passesHonestyGate rejects baseline-level metrics", () => {
+    // a model indistinguishable from the base-rate predictor must not pass
+    const m = evaluate(model, testRows);
+    const gate = passesHonestyGate({
+      ...m, auc: 0.51, brier: m.brierBaseline + 0.001,
+    });
+    expect(gate.pass).toBe(false);
+    expect(gate.reasons.length).toBeGreaterThanOrEqual(2);
   });
 
   it("serialize/deserialize roundtrips predictions", () => {

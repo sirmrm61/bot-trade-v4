@@ -490,6 +490,7 @@ async function openTrade(agent: Agent, p: Params) {
 
   // forecast gate — probability + EV; active in PAPER (trial), REAL only via env
   let forecastMult = 1;
+  let forecastFeat: Record<string, unknown> | null = null;
   if (agent.mode === "PAPER" || process.env.FORECAST_REAL === "1") {
     const { forecastGate } = await import("@/modules/forecast/service");
     const fg = await forecastGate({
@@ -500,7 +501,10 @@ async function openTrade(agent: Agent, p: Params) {
     if (fg.applies && !fg.allow) {
       throw new AppError("RISK_VIOLATION", 422, { code: "FORECAST" }, fg.reason);
     }
-    if (fg.applies) forecastMult = fg.sizeMult ?? 1;
+    if (fg.applies) {
+      forecastMult = fg.sizeMult ?? 1;
+      forecastFeat = { p: fg.probability, ev: fg.ev, horizon: fg.horizon };
+    }
   }
 
   const adapter = publicAdapter(agent.exchange);
@@ -518,6 +522,11 @@ async function openTrade(agent: Agent, p: Params) {
       userId: agent.userId, liveStrategyId: live.id, symbol: entry.symbol,
       side, leverage: 1, entryPrice: price, amount, invested,
       stopLossPrice: slPrice, takeProfitPrice: tpPrice, trailingPeak: price,
+      meta: JSON.stringify({
+        source: "agent",
+        thesis: typeof p.reason === "string" ? p.reason.slice(0, 300) : undefined,
+        features: { ...(forecastFeat ? { forecast: forecastFeat } : {}), dailyState: plan.state },
+      }),
     },
   });
   await agentLog(agent.id, "ACTION",

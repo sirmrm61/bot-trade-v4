@@ -3,6 +3,7 @@ import { currentSession } from "@/modules/auth/session";
 import { Card, PageHeader, StatusBadge, Table, EmptyState, StatCard } from "@/components/ui";
 import { jalaliDateTime } from "@/shared/jalali";
 import { toman, faNumber, faPercent } from "@/shared/utils";
+import { tradeThesis } from "@/modules/trading/thesis";
 
 export default async function TradesPage() {
   const session = await currentSession();
@@ -30,8 +31,10 @@ export default async function TradesPage() {
         <EmptyState title="معامله‌ای ثبت نشده" />
       ) : (
         <Card>
-          <Table headers={["استراتژی", "نماد", "جهت", "ورود", "خروج", "سود/زیان", "دلیل", "وضعیت", "زمان"]}>
-            {trades.map((t) => (
+          <Table headers={["استراتژی", "نماد", "جهت", "هدف", "ورود", "خروج", "سود/زیان", "دلیل", "وضعیت", "زمان"]}>
+            {trades.map((t) => {
+              const th = tradeThesis(t);
+              return (
               <tr key={t.id}>
                 <td className="px-4 py-3 font-bold">
                   {t.liveStrategy?.strategy.name ?? "—"}
@@ -43,6 +46,14 @@ export default async function TradesPage() {
                     ? <span className="rounded bg-danger/15 px-1.5 py-0.5 text-xs font-bold text-danger">شورت{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</span>
                     : <span className="rounded bg-success/15 px-1.5 py-0.5 text-xs font-bold text-success">لانگ{t.leverage > 1 ? ` ${faNumber(t.leverage, true)}×` : ""}</span>}
                 </td>
+                <td className="px-4 py-3 text-xs">
+                  {th.plan ? <div className="font-bold whitespace-nowrap">{th.plan}</div> : null}
+                  {th.why.slice(0, 2).map((w, i) => (
+                    <div key={i} className="text-muted max-w-56">{w}</div>
+                  ))}
+                  {!th.plan && th.why.length === 0 && "—"}
+                  {th.source === "agent" && <span className="mt-0.5 inline-block rounded bg-accent/15 px-1.5 py-0.5 text-accent">تریدر هوشمند</span>}
+                </td>
                 <td className="px-4 py-3 ltr">{faNumber(t.entryPrice)}</td>
                 <td className="px-4 py-3 ltr">{t.exitPrice ? faNumber(t.exitPrice) : "—"}</td>
                 <td className="px-4 py-3 font-bold">
@@ -52,7 +63,8 @@ export default async function TradesPage() {
                 <td className="px-4 py-3"><StatusBadge status={t.status} /></td>
                 <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{jalaliDateTime(t.openedAt)}</td>
               </tr>
-            ))}
+              );
+            })}
           </Table>
         </Card>
       )}
