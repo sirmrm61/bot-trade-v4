@@ -178,6 +178,28 @@ export type TradingAgentLog = Prisma.TradingAgentLogModel
  */
 export type AgentJournal = Prisma.AgentJournalModel
 /**
+ * Model ModelVersion
+ * Versioned predictive model (logistic regression baseline). Only ONE
+ * version per (exchange, symbolScope, timeframe, horizon) may be active;
+ * a new version replaces the old only when it beats it out-of-sample.
+ */
+export type ModelVersion = Prisma.ModelVersionModel
+/**
+ * Model Prediction
+ * One stored probabilistic forecast. Resolved after `resolveAt` with the
+ * real triple-barrier outcome — live accuracy is continuously measured
+ * and can deactivate the model automatically.
+ */
+export type Prediction = Prisma.PredictionModel
+/**
+ * Model DailyPlan
+ * Daily goal plan + state machine — success is judged on the whole day's
+ * net PnL, not per trade. Hard guardrails still sit above this layer;
+ * the plan can only TIGHTEN behavior (smaller size, higher thresholds,
+ * no new entries), never loosen it.
+ */
+export type DailyPlan = Prisma.DailyPlanModel
+/**
  * Model JobRecord
  * 
  */

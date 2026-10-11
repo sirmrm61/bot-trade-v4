@@ -68,5 +68,6 @@ const emptyMetrics = (): ExtendedMetrics => ({
   profitPct: 0, winRate: 0, totalTrades: 0, maxDrawdownPct: 0, profitFactor: 0,
   expectancy: 0, avgWinPct: 0, avgLossPct: 0, payoffRatio: 0,
   sharpe: 0, sortino: 0, maxConsecLosses: 0,
-  days: 0, profitableDaysPct: 0, daysAbove5Pct: 0, meanDailyPct: 0,
+  days: 0, profitableDaysPct: 0, daysAbove05Pct: 0, daysAbove1Pct: 0,
+  daysAbove5Pct: 0, meanDailyPct: 0, worstDayPct: 0, worst7DayPct: 0,
 });

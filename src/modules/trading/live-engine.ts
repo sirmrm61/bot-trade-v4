@@ -525,8 +525,55 @@ export async function liveTick(liveStrategyId: string): Promise<void> {
     if (futures && agentManaged) marketCfg.leverage = Math.min(marketCfg.leverage, GUARDRAILS.AGENT_MAX_LEVERAGE);
     if (quality) sigFeats.quality = quality;
 
+    // ---- daily plan state machine + forecast gate — sits on TOP of the hard
+    // guardrails; it can only tighten (smaller size, higher floors, no entry)
+    let dailySizeMult = 1;
+    if (agentManaged) {
+      const agentRow = await prisma.tradingAgent.findUnique({
+        where: { id: agentManaged.id },
+        select: { id: true, userId: true, exchange: true, managed: true },
+      });
+      if (agentRow) {
+        const { refreshDailyPlan, dailyEntryGate, tradesTodayForAgent } = await import("./daily-plan");
+        const plan = await refreshDailyPlan(agentRow);
+        const gate = dailyEntryGate(plan);
+        if (!gate.allow) {
+          await logDecision("SKIP_DAILY_LOCKED", side);
+          return;
+        }
+        if (await tradesTodayForAgent(agentRow.id) >= plan.maxTrades) {
+          await logDecision("SKIP_DAILY_MAXTRADES", side);
+          return;
+        }
+        dailySizeMult = gate.sizeScale;
+        // stricter floors under PROTECTING / DEFENSIVE
+        if (quality && quality.score < minScore + gate.minScoreBoost) {
+          await logDecision("SKIP_LOW_SCORE", side);
+          return;
+        }
+        // forecast gate — calibrated probability + positive EV after costs.
+        // Active in PAPER always; REAL only when the 48h trial is approved on.
+        if (paper || process.env.FORECAST_REAL === "1") {
+          const { forecastGate } = await import("@/modules/forecast/service");
+          const fg = await forecastGate({
+            exchange, symbol: live.symbol, side,
+            slPct: stopDistPct, tpPct: tpDistPct,
+            minProbability: gate.minForecastP,
+          });
+          if (fg.applies) {
+            sigFeats.forecast = { p: fg.probability, ev: fg.ev, horizon: fg.horizon, versionId: fg.versionId };
+            if (!fg.allow) {
+              await logDecision("SKIP_FORECAST", side);
+              return;
+            }
+            dailySizeMult *= fg.sizeMult ?? 1;
+          }
+        }
+      }
+    }
+
     // learned sizing — smart layer scales risk within [0.5, 1.75]; hard caps stay
-    const riskCapital = live.allocatedCapital * (live.version.riskPerTradePct / 100) * smartSizeMult * live.sizeScale;
+    const riskCapital = live.allocatedCapital * (live.version.riskPerTradePct / 100) * smartSizeMult * live.sizeScale * dailySizeMult;
     const maxPosition = live.allocatedCapital * (live.version.maxPositionPct / 100);
     // exposure bounded by risk on the stop distance AND the position cap
     // (cap scales with leverage — margin posted stays bounded by capital)

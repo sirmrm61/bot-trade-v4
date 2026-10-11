@@ -47,6 +47,8 @@ export async function agentAction(agent: Agent, action: string, p: Params): Prom
     case "open_trade": return openTrade(agent, p);
     case "close_trade": return closeTrade(agent, p);
     case "journal": return getJournal(agent, p);
+    case "daily_plan": return dailyPlanView(agent);
+    case "forecast": return forecastView(agent, p);
     case "log": return writeLog(agent, p);
     default:
       throw new AppError("VALIDATION", 400, { reason: `unknown action: ${action}` });
@@ -475,6 +477,32 @@ async function openTrade(agent: Agent, p: Params) {
     throw new AppError("RISK_VIOLATION", 422, { code: guard.code }, guard.reason);
   }
 
+  // daily plan state machine — only tightens (LOCKED blocks, states halve size)
+  const { refreshDailyPlan, dailyEntryGate, tradesTodayForAgent } = await import("@/modules/trading/daily-plan");
+  const plan = await refreshDailyPlan(agent);
+  const dGate = dailyEntryGate(plan);
+  if (!dGate.allow) {
+    throw new AppError("RISK_VIOLATION", 422, { code: "DAILY_LOCKED" }, dGate.reason);
+  }
+  if (await tradesTodayForAgent(agent.id) >= plan.maxTrades) {
+    throw new AppError("RISK_VIOLATION", 422, { code: "DAILY_MAXTRADES" }, `سقف ${plan.maxTrades} معامله در روز`);
+  }
+
+  // forecast gate — probability + EV; active in PAPER (trial), REAL only via env
+  let forecastMult = 1;
+  if (agent.mode === "PAPER" || process.env.FORECAST_REAL === "1") {
+    const { forecastGate } = await import("@/modules/forecast/service");
+    const fg = await forecastGate({
+      exchange: agent.exchange, symbol: entry.symbol, side,
+      slPct: live.version.stopLossPct, tpPct: live.version.takeProfitPct,
+      minProbability: dGate.minForecastP,
+    });
+    if (fg.applies && !fg.allow) {
+      throw new AppError("RISK_VIOLATION", 422, { code: "FORECAST" }, fg.reason);
+    }
+    if (fg.applies) forecastMult = fg.sizeMult ?? 1;
+  }
+
   const adapter = publicAdapter(agent.exchange);
   const price = (await adapter.getTicker(entry.symbol)).last;
   if (!Number.isFinite(price) || price <= 0) throw new AppError("EXCHANGE_CONNECTION_FAILED", 502);
@@ -482,7 +510,7 @@ async function openTrade(agent: Agent, p: Params) {
   const long = side === "LONG";
   const slPrice = long ? price * (1 - live.version.stopLossPct / 100) : price * (1 + live.version.stopLossPct / 100);
   const tpPrice = long ? price * (1 + live.version.takeProfitPct / 100) : price * (1 - live.version.takeProfitPct / 100);
-  const invested = live.allocatedCapital * (live.version.maxPositionPct ?? 100) / 100 * (live.sizeScale ?? 1);
+  const invested = live.allocatedCapital * (live.version.maxPositionPct ?? 100) / 100 * (live.sizeScale ?? 1) * dGate.sizeScale * forecastMult;
   const amount = invested / price;
 
   const trade = await prisma.trade.create({
@@ -523,6 +551,46 @@ async function closeTrade(agent: Agent, p: Params) {
     { reason: typeof p.reason === "string" ? p.reason : undefined,
       data: { tradeId: trade.id, exitPrice: price, pnl, pnlPct } });
   return { tradeId: trade.id, exitPrice: price, pnl: round2(pnl), pnlPct: round2(pnlPct) };
+}
+
+/** today's plan + state machine — the agent reads this each cycle */
+async function dailyPlanView(agent: Agent) {
+  const { ensureDailyPlan, refreshDailyPlan, dailyEntryGate } = await import("@/modules/trading/daily-plan");
+  await ensureDailyPlan(agent);
+  const plan = await refreshDailyPlan(agent);
+  const gate = dailyEntryGate(plan);
+  const note = plan.forecastNote ? JSON.parse(plan.forecastNote) : null;
+  return {
+    date: plan.date, state: plan.state, stateReason: plan.lockedReason,
+    realizedPnlPct: round2(plan.realizedPnlPct), peakPnlPct: round2(plan.peakPnlPct),
+    targets: { min: plan.targetMin, normal: plan.targetNormal, stretch: plan.targetStretch },
+    tradesToday: plan.tradesToday, maxTrades: plan.maxTrades,
+    sizeScale: gate.sizeScale, minForecastP: gate.minForecastP,
+    entriesAllowed: gate.allow, gateReason: gate.reason ?? null,
+    forecastNote: note,
+  };
+}
+
+/** current probabilistic forecasts for a managed pair (null = no honest model) */
+async function forecastView(agent: Agent, p: Params) {
+  const entry = requirePair(agent, p);
+  const { predictNow } = await import("@/modules/forecast/service");
+  const horizons = [
+    { horizon: "5m", timeframe: "5m" }, { horizon: "15m", timeframe: "15m" },
+    { horizon: "1h", timeframe: "15m" }, { horizon: "4h", timeframe: "1h" },
+    { horizon: "12h", timeframe: "1h" },
+  ];
+  const out = [];
+  for (const h of horizons) {
+    const f = await predictNow(agent.exchange, entry.symbol, h.timeframe, h.horizon).catch(() => null);
+    out.push({ horizon: h.horizon, ...(f ? { pUp: round2(f.probability * 100), confidence: round2(f.confidence * 100), versionId: f.versionId } : { available: false }) });
+  }
+  const recent = await prisma.prediction.findMany({
+    where: { symbol: entry.symbol, exchange: agent.exchange },
+    orderBy: { createdAt: "desc" }, take: 10,
+    select: { horizon: true, probability: true, outcome: true, createdAt: true },
+  });
+  return { symbol: entry.symbol, now: out, recent: recent.map((r) => ({ horizon: r.horizon, pUp: round2(r.probability * 100), outcome: r.outcome, createdAt: r.createdAt })) };
 }
 
 /** recent journal entries — the agent's audit-trail memory */

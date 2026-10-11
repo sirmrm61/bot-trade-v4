@@ -19,7 +19,8 @@ import type { TradingAgent } from "@/generated/prisma/client";
 
 export type JournalType =
   | "DECISION" | "TRADE_OPEN" | "TRADE_CLOSE" | "STRATEGY_CHANGE"
-  | "BACKTEST" | "INCIDENT" | "LESSON" | "GOAL_UPDATE";
+  | "BACKTEST" | "INCIDENT" | "LESSON" | "GOAL_UPDATE"
+  | "FORECAST" | "DAILY_PLAN" | "DAILY_STATE_CHANGE" | "MODEL_UPDATE";
 
 export async function journalWrite(
   agentId: string,
@@ -91,6 +92,26 @@ export async function writeAgentState(agent: TradingAgent): Promise<void> {
     const pct = capital > 0 ? (realized / capital) * 100 : 0;
     const wins = closed24.filter((t) => (t.pnl ?? 0) > 0).length;
 
+    // daily plan + forecast status for the bootstrap file
+    const utcDay = new Date(); utcDay.setUTCHours(0, 0, 0, 0);
+    const [plan, activeModels, resolved24] = await Promise.all([
+      prisma.dailyPlan.findUnique({ where: { agentId_date: { agentId: agent.id, date: utcDay } } }),
+      prisma.modelVersion.findMany({
+        where: { active: true, symbolScope: { in: managed.map((m) => m.symbol) } },
+        select: { horizon: true, symbolScope: true, liveAccuracy: true },
+      }),
+      prisma.prediction.findMany({
+        where: { resolvedAt: { gte: dayAgo }, outcome: { in: ["WIN", "LOSS"] } },
+        select: { outcome: true },
+      }),
+    ]);
+    const acc24 = resolved24.length
+      ? (resolved24.filter((p) => p.outcome === "WIN").length / resolved24.length) * 100 : null;
+    const planStateFa: Record<string, string> = {
+      BUILDING: "در حال ساخت", PROTECTING: "محافظت از سود", LOCKED: "قفل", DEFENSIVE: "دفاعی",
+    };
+    const note = plan?.forecastNote ? parseJson<{ summary?: string }>(plan.forecastNote, {}) : null;
+
     const hypothesis = lives.flatMap((l) => {
       const st = parseJson<{ improve?: { hypothesis?: string; phase?: string } }>(l.stats, {});
       return st.improve?.hypothesis ? [`- ${l.symbol}: ${st.improve.hypothesis} (فاز: ${st.improve.phase ?? "?"})`] : [];
@@ -113,6 +134,15 @@ export async function writeAgentState(agent: TradingAgent): Promise<void> {
 - PnL تحقق‌یافته: ${realized.toFixed(2)} (${pct.toFixed(2)}٪ از ${capital.toFixed(0)} سرمایه)
 - معاملات بسته: ${closed24.length} (${wins} برد / ${closed24.length - wins} باخت)
 - پوزیشن‌های باز: ${open.length}
+
+## برنامه‌ی امروز (DailyPlan)
+${plan ? `- حالت: ${planStateFa[plan.state] ?? plan.state} · PnL امروز: ${plan.realizedPnlPct.toFixed(2)}٪ · اوج: ${plan.peakPnlPct.toFixed(2)}٪ · معاملات امروز: ${plan.tradesToday}/${plan.maxTrades}
+- اهداف: حداقل ${plan.targetMin}٪ · معمول ${plan.targetNormal}٪ · تلاشی ${plan.targetStretch}٪${plan.lockedReason ? ` · دلیل قفل: ${plan.lockedReason}` : ""}
+- پیش‌بینی روز: ${note?.summary ?? "—"}` : "- هنوز ساخته نشده — در اولین چرخه ساخته می‌شود"}
+
+## مدل پیش‌بینی
+${activeModels.length ? activeModels.map((m) => `- ${m.symbolScope} · افق ${m.horizon}${m.liveAccuracy != null ? ` · دقت زنده ${(m.liveAccuracy * 100).toFixed(0)}٪` : ""}`).join("\n") : "- مدل فعالی نیست — آستانه‌ی صداقت پاس نشده یا هنوز آموزش ندیده"}
+- دقت پیش‌بینی‌های ۲۴ ساعت: ${acc24 !== null ? `${acc24.toFixed(0)}٪ (${resolved24.length} مورد)` : "داده‌ی کافی نیست"}
 
 ## استراتژی‌های فعال
 ${liveLines.length ? liveLines.join("\n") : "- هنوز استراتژی فعالی نیست — از scan_pairs شروع کن"}

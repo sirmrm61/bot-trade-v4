@@ -51,6 +51,24 @@ are rejected). Pairs you drop are auto-PAUSED.
 `{}` → realized/unrealized PnL across all managed pairs, capital total,
 trade counts, `onTarget` flag.
 
+### daily_plan — today's goal state machine (read every cycle)
+
+`{}` → `state` (BUILDING|PROTECTING|LOCKED|DEFENSIVE), today's realized/peak
+PnL%, targets (min 0.5 / normal 1 / stretch 5), `tradesToday`/`maxTrades`
+(8/day churn cap), `sizeScale` for new entries, `minForecastP` probability
+floor, `entriesAllowed`, and the statistical "forecast of the day" note.
+When `entriesAllowed` is false or the state is PROTECTING/DEFENSIVE, adapt —
+never trade around it.
+
+### forecast — probabilistic market prediction per pair
+
+`{"symbol": "BTC-USDT"}` → per-horizon `pUp` (P(price hits +k·ATR first))
+for 5m/15m/1h/4h/12h + confidence + the last 10 stored predictions with
+their real outcomes. `available:false` means no model passed the honesty
+gate — treat it as no signal, never as a reason to trade anyway.
+Entry rule: trades only when calibrated p ≥ the plan's floor AND
+EV = p·TP − (1−p)·SL − cost > 0. Position size scales down with weak edge.
+
 ### list_trades — positions you manage
 
 `{}` (all pairs) or `{"symbol": "..."}` → `open`: id, symbol, side,
@@ -153,6 +171,10 @@ AGENT_STATE.md isn't enough context.
 - Max leverage: 1× spot / 2× futures · Max 3 concurrent positions
 - Every trade needs a stop-loss · Min reward:risk 1.5
 - Min composite signal-quality score 0.5 (per-version gate can be higher)
+- Daily state machine: LOCKED → no entries; PROTECTING/DEFENSIVE → half
+  size + higher thresholds · Max 8 entries/day
+- Forecast gate (when an honest model exists): calibrated p ≥ floor and
+  positive EV after costs — failures return `FORECAST` violations
 Violations return `RISK_VIOLATION` with a Persian `detail` — accept and
 adapt, never work around them.
 

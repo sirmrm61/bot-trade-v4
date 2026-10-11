@@ -429,6 +429,9 @@ export const ModelName = {
   TradingAgent: 'TradingAgent',
   TradingAgentLog: 'TradingAgentLog',
   AgentJournal: 'AgentJournal',
+  ModelVersion: 'ModelVersion',
+  Prediction: 'Prediction',
+  DailyPlan: 'DailyPlan',
   JobRecord: 'JobRecord'
 } as const
 
@@ -445,7 +448,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "traceEvent" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "opportunity" | "whaleEvent" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "tradingAgent" | "tradingAgentLog" | "agentJournal" | "jobRecord"
+    modelProps: "user" | "session" | "plan" | "userSubscription" | "userPlanOverride" | "wallet" | "walletTransaction" | "exchangeAccount" | "pair" | "strategy" | "strategyVersion" | "strategyIndicator" | "marketplaceListing" | "strategyPurchase" | "backtest" | "backtestTrade" | "traceEvent" | "liveStrategy" | "order" | "trade" | "historicalCandle" | "signalLog" | "opportunity" | "whaleEvent" | "referral" | "notification" | "activityLog" | "systemSetting" | "idempotencyKey" | "tradingAgent" | "tradingAgentLog" | "agentJournal" | "modelVersion" | "prediction" | "dailyPlan" | "jobRecord"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2817,6 +2820,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ModelVersion: {
+      payload: Prisma.$ModelVersionPayload<ExtArgs>
+      fields: Prisma.ModelVersionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ModelVersionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ModelVersionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload>
+        }
+        findFirst: {
+          args: Prisma.ModelVersionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ModelVersionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload>
+        }
+        findMany: {
+          args: Prisma.ModelVersionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload>[]
+        }
+        create: {
+          args: Prisma.ModelVersionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload>
+        }
+        createMany: {
+          args: Prisma.ModelVersionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ModelVersionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload>[]
+        }
+        delete: {
+          args: Prisma.ModelVersionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload>
+        }
+        update: {
+          args: Prisma.ModelVersionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload>
+        }
+        deleteMany: {
+          args: Prisma.ModelVersionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ModelVersionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ModelVersionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload>[]
+        }
+        upsert: {
+          args: Prisma.ModelVersionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ModelVersionPayload>
+        }
+        aggregate: {
+          args: Prisma.ModelVersionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateModelVersion>
+        }
+        groupBy: {
+          args: Prisma.ModelVersionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ModelVersionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ModelVersionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ModelVersionCountAggregateOutputType> | number
+        }
+      }
+    }
+    Prediction: {
+      payload: Prisma.$PredictionPayload<ExtArgs>
+      fields: Prisma.PredictionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PredictionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PredictionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload>
+        }
+        findFirst: {
+          args: Prisma.PredictionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PredictionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload>
+        }
+        findMany: {
+          args: Prisma.PredictionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload>[]
+        }
+        create: {
+          args: Prisma.PredictionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload>
+        }
+        createMany: {
+          args: Prisma.PredictionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PredictionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload>[]
+        }
+        delete: {
+          args: Prisma.PredictionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload>
+        }
+        update: {
+          args: Prisma.PredictionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload>
+        }
+        deleteMany: {
+          args: Prisma.PredictionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PredictionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PredictionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload>[]
+        }
+        upsert: {
+          args: Prisma.PredictionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PredictionPayload>
+        }
+        aggregate: {
+          args: Prisma.PredictionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePrediction>
+        }
+        groupBy: {
+          args: Prisma.PredictionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PredictionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PredictionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PredictionCountAggregateOutputType> | number
+        }
+      }
+    }
+    DailyPlan: {
+      payload: Prisma.$DailyPlanPayload<ExtArgs>
+      fields: Prisma.DailyPlanFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DailyPlanFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DailyPlanFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload>
+        }
+        findFirst: {
+          args: Prisma.DailyPlanFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DailyPlanFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload>
+        }
+        findMany: {
+          args: Prisma.DailyPlanFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload>[]
+        }
+        create: {
+          args: Prisma.DailyPlanCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload>
+        }
+        createMany: {
+          args: Prisma.DailyPlanCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DailyPlanCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload>[]
+        }
+        delete: {
+          args: Prisma.DailyPlanDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload>
+        }
+        update: {
+          args: Prisma.DailyPlanUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload>
+        }
+        deleteMany: {
+          args: Prisma.DailyPlanDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DailyPlanUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DailyPlanUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload>[]
+        }
+        upsert: {
+          args: Prisma.DailyPlanUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DailyPlanPayload>
+        }
+        aggregate: {
+          args: Prisma.DailyPlanAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDailyPlan>
+        }
+        groupBy: {
+          args: Prisma.DailyPlanGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyPlanGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DailyPlanCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DailyPlanCountAggregateOutputType> | number
+        }
+      }
+    }
     JobRecord: {
       payload: Prisma.$JobRecordPayload<ExtArgs>
       fields: Prisma.JobRecordFieldRefs
@@ -3579,6 +3804,75 @@ export const AgentJournalScalarFieldEnum = {
 export type AgentJournalScalarFieldEnum = (typeof AgentJournalScalarFieldEnum)[keyof typeof AgentJournalScalarFieldEnum]
 
 
+export const ModelVersionScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  exchange: 'exchange',
+  symbolScope: 'symbolScope',
+  timeframe: 'timeframe',
+  horizon: 'horizon',
+  barrierK: 'barrierK',
+  featureNames: 'featureNames',
+  weights: 'weights',
+  trainMetrics: 'trainMetrics',
+  testMetrics: 'testMetrics',
+  samplesTrain: 'samplesTrain',
+  samplesTest: 'samplesTest',
+  active: 'active',
+  beatsBaseline: 'beatsBaseline',
+  liveAccuracy: 'liveAccuracy',
+  deactivatedReason: 'deactivatedReason',
+  supersedesId: 'supersedesId',
+  trainedAt: 'trainedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type ModelVersionScalarFieldEnum = (typeof ModelVersionScalarFieldEnum)[keyof typeof ModelVersionScalarFieldEnum]
+
+
+export const PredictionScalarFieldEnum = {
+  id: 'id',
+  modelVersionId: 'modelVersionId',
+  exchange: 'exchange',
+  symbol: 'symbol',
+  timeframe: 'timeframe',
+  horizon: 'horizon',
+  probability: 'probability',
+  confidence: 'confidence',
+  directionHint: 'directionHint',
+  priceAt: 'priceAt',
+  resolveAt: 'resolveAt',
+  outcome: 'outcome',
+  resolvedAt: 'resolvedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PredictionScalarFieldEnum = (typeof PredictionScalarFieldEnum)[keyof typeof PredictionScalarFieldEnum]
+
+
+export const DailyPlanScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  userId: 'userId',
+  date: 'date',
+  state: 'state',
+  sizeScale: 'sizeScale',
+  peakPnlPct: 'peakPnlPct',
+  realizedPnlPct: 'realizedPnlPct',
+  targetMin: 'targetMin',
+  targetNormal: 'targetNormal',
+  targetStretch: 'targetStretch',
+  tradesToday: 'tradesToday',
+  maxTrades: 'maxTrades',
+  forecastNote: 'forecastNote',
+  lockedReason: 'lockedReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DailyPlanScalarFieldEnum = (typeof DailyPlanScalarFieldEnum)[keyof typeof DailyPlanScalarFieldEnum]
+
+
 export const JobRecordScalarFieldEnum = {
   id: 'id',
   queue: 'queue',
@@ -3841,6 +4135,9 @@ export type GlobalOmitConfig = {
   tradingAgent?: Prisma.TradingAgentOmit
   tradingAgentLog?: Prisma.TradingAgentLogOmit
   agentJournal?: Prisma.AgentJournalOmit
+  modelVersion?: Prisma.ModelVersionOmit
+  prediction?: Prisma.PredictionOmit
+  dailyPlan?: Prisma.DailyPlanOmit
   jobRecord?: Prisma.JobRecordOmit
 }
 

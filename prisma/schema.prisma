@@ -811,8 +811,9 @@ model TradingAgent {
   createdAt       DateTime @default(now())
   stoppedAt       DateTime?
 
-  logs     TradingAgentLog[]
-  journals AgentJournal[]
+  logs       TradingAgentLog[]
+  journals   AgentJournal[]
+  dailyPlans DailyPlan[]
 
   @@unique([userId, symbol, mode])
   @@index([userId, status])
@@ -845,6 +846,92 @@ model AgentJournal {
   createdAt  DateTime @default(now())
 
   @@index([agentId, createdAt])
+}
+
+// ------------------------------------------------------------
+// Forecast — probabilistic market prediction layer
+// ------------------------------------------------------------
+
+/// Versioned predictive model (logistic regression baseline). Only ONE
+/// version per (exchange, symbolScope, timeframe, horizon) may be active;
+/// a new version replaces the old only when it beats it out-of-sample.
+model ModelVersion {
+  id            String   @id @default(cuid())
+  kind          String   @default("LOGREG")
+  exchange      String
+  symbolScope   String   @default("*")   // trained per-symbol or pooled across pairs
+  timeframe     String
+  horizon       String                    // "5m" | "15m" | "1h" | "4h" | "12h"
+  barrierK      Float    @default(1.5)    // triple-barrier width in ATRs
+  featureNames  String                    // JSON string[]
+  weights       String                    // JSON { w:number[], b:number, mean:number[], std:number[] }
+  trainMetrics  String                    // JSON { auc, brier, n }
+  testMetrics   String                    // JSON { auc, brier, brierBaseline, calibration[], winRateByConfidence }
+  samplesTrain  Int      @default(0)
+  samplesTest   Int      @default(0)
+  active        Boolean  @default(false)
+  beatsBaseline Boolean  @default(false)  // honest gate — false → never used in decisions
+  liveAccuracy  Float?                    // rolling resolved-accuracy, updated by monitor
+  deactivatedReason String?
+  supersedesId  String?
+  trainedAt     DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  predictions Prediction[]
+
+  @@index([exchange, symbolScope, timeframe, horizon, active])
+}
+
+/// One stored probabilistic forecast. Resolved after `resolveAt` with the
+/// real triple-barrier outcome — live accuracy is continuously measured
+/// and can deactivate the model automatically.
+model Prediction {
+  id             String   @id @default(cuid())
+  modelVersionId String?
+  modelVersion   ModelVersion? @relation(fields: [modelVersionId], references: [id], onDelete: SetNull)
+  exchange       String
+  symbol         String
+  timeframe      String
+  horizon        String
+  probability    Float          // P(price hits +k*ATR before -k*ATR)
+  confidence     Float          // |p - 0.5| * 2
+  directionHint  String         // LONG when p>=0.5 else SHORT
+  priceAt        Float
+  resolveAt      DateTime
+  outcome        String?        // WIN | LOSS | NEUTRAL — filled by the resolver
+  resolvedAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([symbol, horizon, resolveAt])
+  @@index([resolveAt, outcome])
+}
+
+/// Daily goal plan + state machine — success is judged on the whole day's
+/// net PnL, not per trade. Hard guardrails still sit above this layer;
+/// the plan can only TIGHTEN behavior (smaller size, higher thresholds,
+/// no new entries), never loosen it.
+model DailyPlan {
+  id            String   @id @default(cuid())
+  agentId       String?
+  agent         TradingAgent? @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  userId        String
+  date          DateTime                  // UTC day start
+  state         String   @default("BUILDING") // BUILDING | PROTECTING | LOCKED | DEFENSIVE
+  sizeScale     Float    @default(1)      // 1 | 0.5 — multiplies live.sizeScale
+  peakPnlPct    Float    @default(0)      // best intraday pnl% seen today
+  realizedPnlPct Float   @default(0)      // current realized-day pnl %
+  targetMin     Float    @default(0.5)
+  targetNormal  Float    @default(1.0)
+  targetStretch Float    @default(5.0)
+  tradesToday   Int      @default(0)
+  maxTrades     Int      @default(8)      // fee-churn cap
+  forecastNote  String?                   // JSON — daily market forecast summary
+  lockedReason  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([agentId, date])
+  @@index([userId, date])
 }
 
 // Queue job persistence for durable records (BullMQ holds runtime state)

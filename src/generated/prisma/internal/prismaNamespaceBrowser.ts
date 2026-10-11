@@ -83,6 +83,9 @@ export const ModelName = {
   TradingAgent: 'TradingAgent',
   TradingAgentLog: 'TradingAgentLog',
   AgentJournal: 'AgentJournal',
+  ModelVersion: 'ModelVersion',
+  Prediction: 'Prediction',
+  DailyPlan: 'DailyPlan',
   JobRecord: 'JobRecord'
 } as const
 
@@ -749,6 +752,75 @@ export const AgentJournalScalarFieldEnum = {
 } as const
 
 export type AgentJournalScalarFieldEnum = (typeof AgentJournalScalarFieldEnum)[keyof typeof AgentJournalScalarFieldEnum]
+
+
+export const ModelVersionScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  exchange: 'exchange',
+  symbolScope: 'symbolScope',
+  timeframe: 'timeframe',
+  horizon: 'horizon',
+  barrierK: 'barrierK',
+  featureNames: 'featureNames',
+  weights: 'weights',
+  trainMetrics: 'trainMetrics',
+  testMetrics: 'testMetrics',
+  samplesTrain: 'samplesTrain',
+  samplesTest: 'samplesTest',
+  active: 'active',
+  beatsBaseline: 'beatsBaseline',
+  liveAccuracy: 'liveAccuracy',
+  deactivatedReason: 'deactivatedReason',
+  supersedesId: 'supersedesId',
+  trainedAt: 'trainedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type ModelVersionScalarFieldEnum = (typeof ModelVersionScalarFieldEnum)[keyof typeof ModelVersionScalarFieldEnum]
+
+
+export const PredictionScalarFieldEnum = {
+  id: 'id',
+  modelVersionId: 'modelVersionId',
+  exchange: 'exchange',
+  symbol: 'symbol',
+  timeframe: 'timeframe',
+  horizon: 'horizon',
+  probability: 'probability',
+  confidence: 'confidence',
+  directionHint: 'directionHint',
+  priceAt: 'priceAt',
+  resolveAt: 'resolveAt',
+  outcome: 'outcome',
+  resolvedAt: 'resolvedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type PredictionScalarFieldEnum = (typeof PredictionScalarFieldEnum)[keyof typeof PredictionScalarFieldEnum]
+
+
+export const DailyPlanScalarFieldEnum = {
+  id: 'id',
+  agentId: 'agentId',
+  userId: 'userId',
+  date: 'date',
+  state: 'state',
+  sizeScale: 'sizeScale',
+  peakPnlPct: 'peakPnlPct',
+  realizedPnlPct: 'realizedPnlPct',
+  targetMin: 'targetMin',
+  targetNormal: 'targetNormal',
+  targetStretch: 'targetStretch',
+  tradesToday: 'tradesToday',
+  maxTrades: 'maxTrades',
+  forecastNote: 'forecastNote',
+  lockedReason: 'lockedReason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DailyPlanScalarFieldEnum = (typeof DailyPlanScalarFieldEnum)[keyof typeof DailyPlanScalarFieldEnum]
 
 
 export const JobRecordScalarFieldEnum = {

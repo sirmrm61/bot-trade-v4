@@ -24,7 +24,10 @@ export type SignalDecision =
   | "SKIP_REGIME"        // hostile market regime (extreme volatility)
   | "SKIP_LOW_SCORE"     // composite entry-quality score below the floor
   | "SKIP_GUARDRAIL"     // hard guardrail (drawdown / max positions / no-SL / RR)
-  | "SKIP_GUARDRAIL_DAILY"; // daily-loss circuit breaker active
+  | "SKIP_GUARDRAIL_DAILY" // daily-loss circuit breaker active
+  | "SKIP_DAILY_LOCKED"  // daily-plan state machine has the day locked
+  | "SKIP_DAILY_MAXTRADES" // fee-churn cap — max entries/day reached
+  | "SKIP_FORECAST";     // model probability/EV below the floor
 
 export interface SignalLogInput {
   liveStrategyId: string;

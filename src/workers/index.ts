@@ -345,6 +345,63 @@ async function main() {
     }
   }, 30 * 60_000);
 
+  // forecast layer — every 15 min: record predictions for managed pairs and
+  // resolve the ones whose horizon elapsed (feeds the live-accuracy monitor)
+  setInterval(async () => {
+    try {
+      const fc = await import("@/modules/forecast/service");
+      const n = await fc.recordPredictions();
+      const r = await fc.resolvePredictions();
+      if (n || r) logger.info("forecast cycle", { module: "forecast", recorded: n, resolved: r });
+    } catch (e) {
+      logger.warn("forecast cycle error", { module: "forecast", errorCode: String(e).slice(0, 120) });
+    }
+  }, 15 * 60_000);
+
+  // forecast maintenance — every 6h: live-accuracy monitor (2 bad days →
+  // deactivate) + daily retrain check. retrainModels is itself the gatekeeper:
+  // a version activates only when it beats the baseline out-of-sample.
+  setInterval(async () => {
+    try {
+      const fc = await import("@/modules/forecast/service");
+      await fc.checkLiveAccuracy();
+      const key = `forecast:retrain:${new Date().toISOString().slice(0, 10)}`;
+      if (await redis.set(key, "1", "EX", 86_400, "NX")) {
+        const reports = await fc.retrainModels();
+        logger.info("forecast retrain done", {
+          module: "forecast",
+          models: reports.length,
+          activated: reports.filter((r) => r.activated).length,
+        });
+      }
+    } catch (e) {
+      logger.warn("forecast retrain error", { module: "forecast", errorCode: String(e).slice(0, 120) });
+    }
+  }, 6 * 3_600_000);
+
+  // daily plan — every 5 min refresh each running agent's state machine
+  // (catches transitions even when no entry is attempted); once after UTC
+  // midnight write yesterday's closing summary to the journal.
+  setInterval(async () => {
+    try {
+      const { refreshDailyPlan, closeDailyPlan } = await import("@/modules/trading/daily-plan");
+      const agents = await prisma.tradingAgent.findMany({
+        where: { status: { in: ["RUNNING", "PAUSED"] } },
+        select: { id: true, userId: true, exchange: true, managed: true },
+      });
+      for (const a of agents) await refreshDailyPlan(a).catch(() => {});
+      const day = new Date().toISOString().slice(0, 10);
+      if (new Date().getUTCHours() === 0) {
+        const key = `dailyplan:close:${day}`;
+        if (await redis.set(key, "1", "EX", 86_400, "NX")) {
+          for (const a of agents) await closeDailyPlan(a.id).catch(() => {});
+        }
+      }
+    } catch (e) {
+      logger.warn("daily plan cycle error", { module: "dailyplan", errorCode: String(e).slice(0, 120) });
+    }
+  }, 5 * 60_000);
+
   // cron-style repeatables via BullMQ job schedulers — retry until Redis is up
   const repeatable = async (queue: string, name: string, data: object, everyMs: number) => {
     await getQueue(queue as never).upsertJobScheduler(`cron:${name}`, { every: everyMs }, { name, data });

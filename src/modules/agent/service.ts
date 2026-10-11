@@ -212,11 +212,12 @@ MANDATORY first step — bootstrap: read AGENT_STATE.md (server-generated, alway
 
 Follow the workflow in AGENTS.md exactly:
 1. Bootstrap done above.
-2. If you manage no pairs yet: call scan_pairs, pick the best candidates, call set_pairs, then give each pair a strategy (select_strategy on an existing user strategy, or create_strategy — optionally validate with backtest first).
-3. For every managed pair: call market_summary and list_trades, then decide — manage open trades, tune the strategy, open/close a position — only if evidence supports it.
-4. Call performance to see 24h progress toward the 5% daily stretch target; if a pair consistently underperforms, consider replacing it via set_pairs with a better candidate.
-5. Write your actions and reasoning to state.md.
-6. Finish by calling the "log" action with a concise Persian summary for the user panel (what you checked, what you did, why — and what you'll watch next).
+2. Call daily_plan — today's state machine (BUILDING/PROTECTING/LOCKED/DEFENSIVE), progress vs the daily targets, remaining trade budget. If entries are blocked, don't force trades.
+3. If you manage no pairs yet: call scan_pairs, pick the best candidates, call set_pairs, then give each pair a strategy (select_strategy on an existing user strategy, or create_strategy — optionally validate with backtest first).
+4. For every managed pair: call market_summary, list_trades and forecast, then decide — manage open trades, tune the strategy, open/close a position — only if evidence supports it. When the forecast model exists, entries must clear its probability/EV gate; not trading is a valid outcome.
+5. Call performance to see 24h progress toward the 5% daily stretch target; if a pair consistently underperforms, consider replacing it via set_pairs with a better candidate.
+6. Write your actions and reasoning to state.md.
+7. Finish by calling the "log" action with a concise Persian summary for the user panel (what you checked, what you did, why — and what you'll watch next).
 
 Rules: never trade without a clear setup, never increase position size beyond the strategy's risk settings, and if nothing is worth doing say so — a HOLD decision is a valid outcome. The 5% daily figure is a stretch target, never a reason to loosen risk.`;
 

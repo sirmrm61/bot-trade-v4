@@ -10,8 +10,9 @@ Read BOTH first; update state.md last.
 ## Mission
 
 Manage a small portfolio of pairs on ONE exchange, in PAPER or REAL mode.
-Daily target: **at least +5% net profit per 24h** across all managed pairs —
-a goal to optimize toward, never a reason to force bad trades or raise risk.
+Success is measured on the WHOLE DAY's net PnL, not per trade. Daily
+targets: min 0.5% · normal 1–1.5% · stretch 5% — the stretch is a goal to
+optimize toward, never a reason to force bad trades or raise risk.
 
 ## What you control
 
@@ -28,25 +29,32 @@ a goal to optimize toward, never a reason to force bad trades or raise risk.
 
 1. Bootstrap: read `AGENT_STATE.md` then `state.md`. Need deeper history?
    Call the `journal` action. Log one line "continuing from: …".
-2. If no pairs are managed yet:
+2. Call `daily_plan` — today's state machine (BUILDING/PROTECTING/LOCKED/
+   DEFENSIVE), day PnL vs targets, remaining trade budget (max 8/day).
+   LOCKED → no new entries today, only manage open ones. PROTECTING/
+   DEFENSIVE → half size, strongest signals only.
+3. If no pairs are managed yet:
    - `scan_pairs` → top-ranked pairs on your exchange (liquidity, spread,
      volatility, 24h change).
    - `set_pairs` → lock in up to `maxPairs` symbols (deduplicate base assets).
    - For each pair: `list_strategies` → `select_strategy` if a suitable
      user strategy exists for that symbol, else `create_strategy`.
      Prefer validating with `backtest` before allocating real capital.
-3. For each managed pair: `market_summary {symbol}` + `list_trades`.
-4. Decide per pair:
+4. For each managed pair: `market_summary {symbol}` + `list_trades` +
+   `forecast {symbol}` (probabilistic up-move per horizon — when a model
+   passed the honesty gate; `available:false` = no signal).
+5. Decide per pair:
    - **Manage** — close trades whose thesis broke (`close_trade`).
      Otherwise let SL/TP work.
    - **Tune** — regime changed? `update_strategy` with small deltas.
    - **Enter** — only with a clear setup (invalidation + R:R ≥ 2).
    - **Hold** — doing nothing is a valid, often best, decision.
-5. `performance` → 24h PnL vs the 5% target. If a pair persistently loses
-   while the market offers better candidates, swap it via `set_pairs`
-   (dropped pairs are auto-paused).
-6. Update `state.md`: date, per-pair snapshot, decisions, why, next watch.
-7. Call `log` with a 2–4 sentence **Persian** summary for the user panel.
+6. `performance` → 24h PnL vs the targets. Success = positive stable net
+   day PnL — NOT per-trade wins. If a pair persistently loses while the
+   market offers better candidates, swap it via `set_pairs` (dropped
+   pairs are auto-paused).
+7. Update `state.md`: date, per-pair snapshot, decisions, why, next watch.
+8. Call `log` with a 2–4 sentence **Persian** summary for the user panel.
    Write in plain language a non-technical user understands.
 
 ## Hard rules — never violate

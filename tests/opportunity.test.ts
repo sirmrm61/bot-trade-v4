@@ -202,6 +202,6 @@ describe("scanOpportunities — persistence", () => {
   it("passes market filter to the underlying scanner", async () => {
     vi.mocked(rankPairs).mockResolvedValue({ pairs: [], meta: { ...META, ranked: 0 } });
     await expect(scanOpportunities("u-opp-test", { market: "PERPETUAL" })).rejects.toThrow();
-    expect(vi.mocked(rankPairs)).toHaveBeenCalledWith({ market: "PERPETUAL" });
+    expect(vi.mocked(rankPairs)).toHaveBeenCalledWith({ market: "PERPETUAL", quote: "USDT" });
   });
 });

@@ -25,8 +25,12 @@ export interface ExtendedMetrics {
   // daily distribution
   days: number;
   profitableDaysPct: number;
+  daysAbove05Pct: number;    // share of days hitting the min target
+  daysAbove1Pct: number;     // share of days hitting the normal target
   daysAbove5Pct: number;     // share of days hitting the stretch target
   meanDailyPct: number;
+  worstDayPct: number;
+  worst7DayPct: number;      // worst rolling 7-day cumulative return
 }
 
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
@@ -78,9 +82,90 @@ export function extendedMetrics(result: BacktestResult): ExtendedMetrics {
     maxConsecLosses: maxStreak,
     days: daily.length,
     profitableDaysPct: daily.length ? (daily.filter((d) => d > 0).length / daily.length) * 100 : 0,
+    daysAbove05Pct: daily.length ? (daily.filter((d) => d >= 0.5).length / daily.length) * 100 : 0,
+    daysAbove1Pct: daily.length ? (daily.filter((d) => d >= 1).length / daily.length) * 100 : 0,
     daysAbove5Pct: daily.length ? (daily.filter((d) => d >= 5).length / daily.length) * 100 : 0,
     meanDailyPct: dMean,
+    worstDayPct: daily.length ? Math.min(...daily) : 0,
+    worst7DayPct: worstRolling(daily, 7),
   };
+}
+
+/** worst cumulative return over any rolling `n`-day window (0 if fewer days) */
+function worstRolling(daily: number[], n: number): number {
+  if (daily.length < n) return daily.length ? daily.reduce((a, b) => a + b, 0) : 0;
+  let worst = Infinity;
+  for (let i = 0; i + n <= daily.length; i++) {
+    let s = 0;
+    for (let j = i; j < i + n; j++) s += daily[j];
+    if (s < worst) worst = s;
+  }
+  return worst;
+}
+
+// ---------------------------------------------------------------------------
+// daily state machine simulation — does the day-level goal layer actually
+// help, or does it just cost opportunity? Replayed over the same SimTrade[]
+// stream: day PnL drives BUILDING→PROTECTING→LOCKED/DEFENSIVE transitions
+// exactly like the live daily-plan module.
+// ---------------------------------------------------------------------------
+
+export interface DailyMachineComparison {
+  withMachine: ExtendedMetrics;
+  without: ExtendedMetrics;
+  /** positive = the machine helped (more profit AND less drawdown → adopt) */
+  verdict: "ADOPT" | "REJECT" | "NEUTRAL";
+  note: string;
+}
+
+export function simulateDailyStateMachine(result: BacktestResult): DailyMachineComparison {
+  const trades = [...result.trades].sort((a, b) => a.entryTime - b.entryTime);
+  const kept: SimTrade[] = [];
+
+  let dayKey = "";
+  let dayPnlPct = 0;
+  let dayPeak = 0;
+  let dayTrades = 0;
+  let state: "BUILDING" | "PROTECTING" | "LOCKED" | "DEFENSIVE" = "BUILDING";
+  const cap = result.initialBalance;
+
+  for (const t of trades) {
+    const d = new Date(t.entryTime).toISOString().slice(0, 10);
+    if (d !== dayKey) { dayKey = d; dayPnlPct = 0; dayPeak = 0; dayTrades = 0; state = "BUILDING"; }
+    if (state === "LOCKED" || dayTrades >= 8) continue;
+
+    const scale = state === "PROTECTING" || state === "DEFENSIVE" ? 0.5 : 1;
+    const adj: SimTrade = { ...t, pnl: t.pnl * scale, pnlPct: t.pnlPct * scale, amount: t.amount * scale };
+    kept.push(adj);
+    dayTrades++;
+
+    // update the day's state AFTER this trade's pnl (approximation: entry-time
+    // day — exits landing next day book into the exit day below)
+    const exitDay = new Date(t.exitTime).toISOString().slice(0, 10);
+    if (exitDay === dayKey) {
+      dayPnlPct += (t.pnl * scale / cap) * 100;
+      dayPeak = Math.max(dayPeak, dayPnlPct);
+      if (dayPnlPct <= -1) state = "DEFENSIVE";
+      else if (dayPnlPct >= 5) state = "LOCKED";
+      else if (dayPnlPct >= 1) {
+        state = "PROTECTING";
+        if (dayPeak > 0 && (dayPeak - dayPnlPct) / dayPeak > 0.4) state = "LOCKED";
+      }
+    }
+  }
+
+  const without = extendedMetrics(result);
+  const withMachine = extendedMetrics({ ...result, trades: kept });
+  let verdict: DailyMachineComparison["verdict"] = "NEUTRAL";
+  let note = "تفاوت معنادار نیست";
+  if (withMachine.totalTrades < without.totalTrades * 0.7 && withMachine.profitPct < without.profitPct) {
+    verdict = "REJECT";
+    note = "ماشین‌حالت سود را بیش از حد قربانی کرد";
+  } else if (withMachine.maxDrawdownPct < without.maxDrawdownPct * 0.8 && withMachine.profitPct >= without.profitPct * 0.9) {
+    verdict = "ADOPT";
+    note = "دراوداون کمتر با سود مشابه — ماشین‌حالت ارزش دارد";
+  }
+  return { withMachine, without, verdict, note };
 }
 
 // ---------------------------------------------------------------------------
