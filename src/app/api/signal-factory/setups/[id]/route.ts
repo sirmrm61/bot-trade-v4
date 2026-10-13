@@ -3,6 +3,7 @@ import { prisma } from "@/infrastructure/database/prisma";
 import { AppError } from "@/shared/errors";
 import { getCandles } from "@/modules/signal-factory/data";
 import { COMBINED_SYMBOL } from "@/modules/signal-factory/backtest";
+import { liveChecklist } from "@/modules/signal-factory/live";
 import { parseJson } from "@/shared/utils";
 
 /** GET /api/signal-factory/setups/[id] — detail for the dialog: parsed
@@ -41,6 +42,8 @@ export const GET = api(async (_req, ctx) => {
   ]);
 
   const combined = backtests.find((b) => b.symbol === COMBINED_SYMBOL) ?? null;
+  const live = await liveChecklist(setup.typeKey, setup.userId);
+
   return {
     setup: {
       ...setup,
@@ -67,6 +70,13 @@ export const GET = api(async (_req, ctx) => {
     history: history.map((h) => ({
       at: h.createdAt, type: h.type, summary: h.summary, reason: h.reason,
     })),
+    live: {
+      typeKey: setup.typeKey,
+      checklistOk: live.ok,
+      missing: live.missing,
+      liveApproved: live.type?.liveApproved ?? false,
+      liveSizeScale: live.type?.liveSizeScale ?? 0.25,
+    },
     sparkline: candles.slice(-60).map((c) => c.close),
   };
 });

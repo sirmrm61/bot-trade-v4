@@ -479,6 +479,20 @@ async function main() {
     }
   }, 60_000);
 
+  // signal-factory live position manager — every 1 min: monitored exits on
+  // real positions (adapters can't place exchange-side stop orders — this
+  // monitor IS the stop). Runs even when config.enabled=false: a kill switch
+  // must never leave an open real position unmanaged.
+  setInterval(async () => {
+    try {
+      const { jobRun } = await import("@/modules/signal-factory/jobs");
+      const { runLiveManager } = await import("@/modules/signal-factory/live");
+      await jobRun("live-position-manager", "1min", () => runLiveManager());
+    } catch (e) {
+      logger.warn("live manager error", { module: "signal-factory", errorCode: String(e).slice(0, 120) });
+    }
+  }, 60_000);
+
   // signal-factory outcome-tracker — every 1h: hypothetical outcome for
   // terminal setups that never triggered (honest stats for untracked signals).
   setInterval(async () => {

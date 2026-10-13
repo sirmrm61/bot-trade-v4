@@ -1,6 +1,7 @@
 import { currentSession } from "@/modules/auth/session";
 import { getOrCreateConfig, configTimeframes } from "@/modules/signal-factory/config";
 import { Card, CardTitle, PageHeader } from "@/components/ui";
+import { ActionButton } from "@/components/client";
 import { SignalFactoryForm } from "./form";
 
 export default async function SignalFactorySettingsPage() {
@@ -32,6 +33,21 @@ export default async function SignalFactorySettingsPage() {
         <div className="text-sm leading-6 text-amber-800 dark:text-amber-200">
           <b>توجه:</b> معاملات واقعی (LIVE) فقط بعد از تأیید بک‌تست، حداقل ۲۰ معامله‌ی
           کاغذی موفق و تأیید صریح شما فعال می‌شود. قوانین ریسک سیستم همیشه برترند.
+        </div>
+      </Card>
+      <Card className="border-red-300 dark:border-red-800">
+        <CardTitle>توقف اضطراری</CardTitle>
+        <div className="text-sm leading-6 text-muted">
+          همه‌ی سفارش‌های باز سیگنال‌ساز روی صرافی لغو می‌شود و سیستم + معاملات واقعی
+          خاموش می‌گردد. پوزیشن‌های باز تحت مانیتور استاپ باقی می‌مانند.
+        </div>
+        <div className="mt-3">
+          <ActionButton
+            endpoint="/api/signal-factory/kill"
+            variant="danger"
+            label="توقف اضطراری"
+            confirm="همه‌ی سفارش‌های باز سیگنال‌ساز لغو و سیستم + معاملات واقعی خاموش می‌شود. مطمئن هستید؟"
+          />
         </div>
       </Card>
     </div>

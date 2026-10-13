@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui";
-import { Spinner } from "@/components/client";
+import { ActionButton, Spinner } from "@/components/client";
 import { cn, faNumber, faPercent } from "@/shared/utils";
 import { jalaliDateTime } from "@/shared/jalali";
 
@@ -49,6 +49,13 @@ interface Detail {
   } | null;
   peers: { symbol: string; passed: boolean; test: Metrics | null }[];
   history: { at: string; type: string; summary: string; reason: string | null }[];
+  live: {
+    typeKey: string;
+    checklistOk: boolean;
+    missing: string[];
+    liveApproved: boolean;
+    liveSizeScale: number;
+  };
   sparkline: number[];
 }
 
@@ -246,6 +253,39 @@ export function SetupDetailDialog({ id, onClose }: { id: string; onClose: () => 
                 </div>
               ) : (
                 <div className="mt-1 text-xs text-muted">هنوز بک‌تست نشده — در صف backtest-runner</div>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-border p-3">
+              <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
+                ارتقا به معامله‌ی زنده
+                {d.live.liveApproved && (
+                  <Badge tone="success">تأییدشده — سایز {faPercent(d.live.liveSizeScale * 100)}</Badge>
+                )}
+              </div>
+              {d.live.liveApproved ? (
+                <div className="mt-1 text-xs leading-5 text-muted">
+                  این الگو برای معامله‌ی واقعی تأیید شده — پس از تأیید تریگر، سفارش واقعی با سایز محدود ثبت می‌شود و استاپ به‌صورت مانیتورشده (هر دقیقه) مدیریت می‌گردد.
+                </div>
+              ) : d.live.checklistOk ? (
+                <div className="mt-2 space-y-2">
+                  <div className="text-xs leading-5 text-muted">
+                    همه‌ی پیش‌نیازها برقرار است — با تأیید، ستاپ‌های این الگو با سفارش واقعی و ۲۵٪ سایز اجرا می‌شوند.
+                  </div>
+                  <ActionButton
+                    endpoint="/api/signal-factory/approve"
+                    payload={{ typeKey: d.live.typeKey }}
+                    label="تأیید ارتقا به زنده محدود"
+                    confirm="ارتقای این الگو به معامله‌ی واقعی با ۲۵٪ سایز را تأیید می‌کنید؟ قوانین ریسک سیستم همچنان اعمال می‌شوند."
+                  />
+                </div>
+              ) : (
+                <ul className="mt-1 space-y-1 text-xs leading-5">
+                  <li className="font-bold text-amber-600">پیش‌نیازهای باقی‌مانده برای ارتقا:</li>
+                  {d.live.missing.map((m) => (
+                    <li key={m} className="text-muted">• {m}</li>
+                  ))}
+                </ul>
               )}
             </div>
 

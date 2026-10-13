@@ -1035,6 +1035,7 @@ model SetupType {
   weight      Float @default(1)
   liveApproved Boolean @default(false)
   liveApprovedAt DateTime?
+  liveSizeScale Float @default(0.25)          // LIVE_SMALL=0.25 — ارتقای صریح بعدی → ۱ (سایز کامل)
   updatedAt   DateTime @updatedAt
 }
 

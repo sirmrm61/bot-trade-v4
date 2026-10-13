@@ -82,12 +82,14 @@ export interface TriggerDeps {
   fetchTicker?: (exchange: string, symbol: string) => Promise<Ticker>;
   now?: number;
   openPaper?: (setup: Setup) => Promise<unknown>;
+  openLive?: (setup: Setup) => Promise<"OPENED" | "SKIPPED" | "VETOED">;
 }
 
 export interface TriggerMonitorResult {
   checked: number;
   promoted: number;
   opened: number;
+  liveOpened: number;
   invalidated: number;
   expired: number;
   rejected: number;
@@ -98,17 +100,19 @@ export interface TriggerMonitorResult {
  * setup-trigger-monitor body (1 min). Order per setup:
  * REJECTED label → terminal · expiresAt → EXPIRED · ticker past
  * invalidatePrice → INVALIDATED · eligible label → WAITING_TRIGGER ·
- * last closed candle confirms → paper trade (PAPER_OPEN).
+ * last closed candle confirms → live entry (LIVE_SMALL) when the pattern is
+ * approved, else paper trade (PAPER_OPEN).
  */
 export async function runTriggerMonitor(deps: TriggerDeps = {}): Promise<TriggerMonitorResult> {
   const now = deps.now ?? Date.now();
   const fetchCandles = deps.fetchCandles ?? ((e, s, tf) => getCandles(e, s, tf, 8));
   const fetchTicker = deps.fetchTicker ?? ((e, s) => publicAdapter(e).getTicker(s));
-  // dynamic import: paper.ts statically imports transitionSetup from here
+  // dynamic import: paper.ts and live.ts statically import transitionSetup from here
   const openPaper = deps.openPaper ?? ((s: Setup) => import("./paper").then((m) => m.openPaperTrade(s)));
+  const openLive = deps.openLive ?? ((s: Setup) => import("./live").then((m) => m.liveEntry(s)));
 
   const setups = await prisma.setup.findMany({ where: { state: { in: [...PRE_ENTRY_STATES] } } });
-  const out: TriggerMonitorResult = { checked: 0, promoted: 0, opened: 0, invalidated: 0, expired: 0, rejected: 0, failed: 0 };
+  const out: TriggerMonitorResult = { checked: 0, promoted: 0, opened: 0, liveOpened: 0, invalidated: 0, expired: 0, rejected: 0, failed: 0 };
 
   const candleCache = new Map<string, Promise<Candle[]>>();
   const tickerCache = new Map<string, Promise<Ticker>>();
@@ -172,8 +176,13 @@ export async function runTriggerMonitor(deps: TriggerDeps = {}): Promise<Trigger
         horizonCandles: 1,
       }, closed)) continue;
 
-      const trade = await openPaper(setup);
-      if (trade) out.opened++;
+      const live = await openLive(setup);
+      if (live === "OPENED") { out.liveOpened++; continue; }
+      if (live === "SKIPPED") {
+        const trade = await openPaper(setup);
+        if (trade) out.opened++;
+      }
+      // VETOED — guardrail blocked the real entry; stays WAITING_TRIGGER
     } catch (e) {
       out.failed++;
       logger.warn("trigger monitor step failed", {

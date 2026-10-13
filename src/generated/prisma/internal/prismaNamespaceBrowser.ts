@@ -924,6 +924,7 @@ export const SetupTypeScalarFieldEnum = {
   weight: 'weight',
   liveApproved: 'liveApproved',
   liveApprovedAt: 'liveApprovedAt',
+  liveSizeScale: 'liveSizeScale',
   updatedAt: 'updatedAt'
 } as const
 
