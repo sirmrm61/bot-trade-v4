@@ -417,13 +417,33 @@ async function main() {
 
   // signal-factory market scan — hourly due-check; each enabled config scans
   // when its own scanEveryHours has elapsed (tracked per-user in SystemSetting).
+  // After any config actually scanned, the backtest-runner picks up the fresh
+  // NOT_TESTED setups; a nightly sweep catches whatever is still pending.
   setInterval(async () => {
     try {
       const { jobRun } = await import("@/modules/signal-factory/jobs");
       const { scanDueConfigs } = await import("@/modules/signal-factory/setups");
-      await jobRun("market-scan", "1h", scanDueConfigs, { kind: "BULLMQ" });
+      const scanned = await jobRun("market-scan", "1h", scanDueConfigs, { kind: "BULLMQ" });
+      if (scanned && scanned > 0) {
+        const { runBacktestSweep } = await import("@/modules/signal-factory/backtest");
+        await jobRun("backtest-runner", "on-scan + nightly", () => runBacktestSweep());
+      }
     } catch (e) {
       logger.warn("market scan scheduler error", { module: "signal-factory", errorCode: String(e).slice(0, 120) });
+    }
+  }, 60 * 60_000);
+
+  // signal-factory backtest-runner — nightly pass over remaining NOT_TESTED
+  // setups (once per UTC day, deduped via a Redis flag).
+  setInterval(async () => {
+    try {
+      const day = new Date().toISOString().slice(0, 10);
+      if (!(await redis.set(`sf:backtest-sweep:${day}`, "1", "EX", 86_400, "NX"))) return;
+      const { jobRun } = await import("@/modules/signal-factory/jobs");
+      const { runBacktestSweep } = await import("@/modules/signal-factory/backtest");
+      await jobRun("backtest-runner", "on-scan + nightly", () => runBacktestSweep());
+    } catch (e) {
+      logger.warn("backtest runner error", { module: "signal-factory", errorCode: String(e).slice(0, 120) });
     }
   }, 60 * 60_000);
 

@@ -41,6 +41,7 @@ export interface SetupRow {
   executable: boolean;
   state: string;
   backtestLabel: string;
+  rejectionReasons: string[];
   expiresAt: string;
   priceAtScan: number;
 }
@@ -218,6 +219,11 @@ export function TopSetupsPanel({
                             <span key={k}><b>{META_LABEL[k] ?? k}:</b> {v}</span>
                           ))}
                         </div>
+                        {s.backtestLabel === "REJECTED" && s.rejectionReasons.length > 0 && (
+                          <div className="text-xs text-danger">
+                            دلیل رد بک‌تست: {s.rejectionReasons.join("؛ ")}
+                          </div>
+                        )}
                         <div className="text-xs text-muted ltr">
                           trigger {fmt(s.triggerPrice)} · price@scan {fmt(s.priceAtScan)}
                         </div>

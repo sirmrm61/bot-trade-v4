@@ -3,6 +3,7 @@ import { prisma } from "@/infrastructure/database/prisma";
 import { getOrCreateConfig, configTimeframes } from "@/modules/signal-factory/config";
 import { marketContext } from "@/modules/signal-factory/context";
 import { lastScanAt } from "@/modules/signal-factory/setups";
+import { rejectionReasons } from "@/modules/signal-factory/backtest";
 import { dataFresh } from "@/modules/signal-factory/data";
 import { parseJson } from "@/shared/utils";
 import { PageHeader } from "@/components/ui";
@@ -14,14 +15,20 @@ export default async function TopSetupsPage() {
   const session = await currentSession();
   const cfg = await getOrCreateConfig(session!.sub);
 
-  const [setups, lastScan] = await Promise.all([
+  const [setups, rejected, lastScan] = await Promise.all([
     prisma.setup.findMany({
       where: { userId: session!.sub, state: { in: ACTIVE_STATES } },
       orderBy: { score: "desc" },
       take: 10,
     }),
+    prisma.setup.findMany({
+      where: { userId: session!.sub, state: "REJECTED" },
+      orderBy: { closedAt: "desc" },
+      take: 5,
+    }),
     lastScanAt(session!.sub),
   ]);
+  const reasons = await rejectionReasons([...setups, ...rejected].map((s) => s.id));
 
   let context: ContextRow | null = null;
   try {
@@ -32,7 +39,7 @@ export default async function TopSetupsPage() {
     context = null;
   }
 
-  const rows: SetupRow[] = setups.map((s) => ({
+  const rows: SetupRow[] = [...setups, ...rejected].map((s) => ({
     id: s.id,
     symbol: s.symbol,
     direction: s.direction,
@@ -53,6 +60,7 @@ export default async function TopSetupsPage() {
     executable: s.executable,
     state: s.state,
     backtestLabel: s.backtestLabel,
+    rejectionReasons: reasons.get(s.id) ?? [],
     expiresAt: s.expiresAt.toISOString(),
     priceAtScan: s.priceAtScan,
   }));

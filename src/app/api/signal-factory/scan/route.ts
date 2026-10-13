@@ -17,5 +17,9 @@ export const POST = api(async (_req, ctx) => {
   if (result === undefined) {
     return { ok: false, disabled: true, error: "job اسکن پس از خطاهای پیاپی غیرفعال است" };
   }
+  // enqueue the backtest-runner — fresh setups land as NOT_TESTED
+  void import("@/modules/signal-factory/backtest")
+    .then(({ runBacktestSweep }) => jobRun("backtest-runner", "on-scan + nightly", () => runBacktestSweep(), { userId: ctx.userId }))
+    .catch(() => {});
   return { ok: true, result };
 });
