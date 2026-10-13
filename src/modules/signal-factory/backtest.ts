@@ -37,7 +37,7 @@ export const VERDICT_FA: Record<Exclude<BacktestLabel, "NOT_TESTED">, string> = 
 
 const MIN_CANDLES = 40;
 const BT_CANDLE_LIMIT = 300;
-const POSITION_FRACTION = 0.1;   // flat 10% of initial balance per occurrence
+export const POSITION_FRACTION = 0.1;   // flat 10% of initial balance per occurrence
 const TP1_CLOSE_FRAC = 0.5;
 const PEER_COUNT = 2;
 const PEER_CANDIDATES = 8;

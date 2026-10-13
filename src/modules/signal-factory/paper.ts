@@ -230,6 +230,7 @@ export async function runPaperManager(deps: ManagerDeps = {}): Promise<{
   for (const trade of open) {
     const setup = trade.setup;
     try {
+      if (!setup) { out.failed++; continue; } // setup cleaned up (>30d) — orphan trade
       const k = `${setup.exchange}|${setup.symbol}|${setup.timeframe}`;
       if (!candleCache.has(k)) {
         candleCache.set(k, fetchCandles(setup.exchange, setup.symbol, setup.timeframe));

@@ -897,6 +897,7 @@ export const SetupScalarFieldEnum = {
   closedAt: 'closedAt',
   outcome: 'outcome',
   outcomePnlPct: 'outcomePnlPct',
+  meta: 'meta',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

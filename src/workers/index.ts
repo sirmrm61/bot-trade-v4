@@ -201,6 +201,14 @@ async function main() {
         const n = a.count + b.count + c.count + d.count;
         if (n > 0) logger.info("log rotation", { module: "worker", deleted: n });
       }
+      if (type === "OLD_SETUPS") {
+        // signal-factory setups >30d — SetupBacktest rows aren't FK'd and the
+        // PaperTrade FK is SET NULL, so the evidence records survive
+        const r = await prisma.setup.deleteMany({
+          where: { createdAt: { lt: new Date(Date.now() - 30 * 86_400_000) } },
+        });
+        if (r.count) logger.info("old setups cleanup", { module: "worker", deleted: r.count });
+      }
       if (type === "SQLITE_VACUUM") {
         await prisma.$executeRawUnsafe("VACUUM").catch((e) =>
           logger.warn("sqlite vacuum failed", { module: "worker", error: String(e).slice(0, 120) }));
@@ -471,6 +479,37 @@ async function main() {
     }
   }, 60_000);
 
+  // signal-factory outcome-tracker — every 1h: hypothetical outcome for
+  // terminal setups that never triggered (honest stats for untracked signals).
+  setInterval(async () => {
+    try {
+      const { jobRun } = await import("@/modules/signal-factory/jobs");
+      const { runOutcomeTracker } = await import("@/modules/signal-factory/stats");
+      await jobRun("outcome-tracker", "1h", () => runOutcomeTracker());
+    } catch (e) {
+      logger.warn("outcome tracker error", { module: "signal-factory", errorCode: String(e).slice(0, 120) });
+    }
+  }, 60 * 60_000);
+
+  // signal-factory stats-aggregator + daily-report — once per UTC day,
+  // deduped via Redis flags (same pattern as the daily-plan close above).
+  setInterval(async () => {
+    try {
+      if (new Date().getUTCHours() !== 0) return;
+      const day = new Date().toISOString().slice(0, 10);
+      const { jobRun } = await import("@/modules/signal-factory/jobs");
+      const sf = await import("@/modules/signal-factory/stats");
+      if (await redis.set(`sf:stats:${day}`, "1", "EX", 86_400, "NX")) {
+        await jobRun("stats-aggregator", "daily", () => sf.runStatsAggregator());
+      }
+      if (await redis.set(`sf:daily-report:${day}`, "1", "EX", 86_400, "NX")) {
+        await jobRun("daily-report", "daily", () => sf.runDailyReport());
+      }
+    } catch (e) {
+      logger.warn("stats/daily-report scheduler error", { module: "signal-factory", errorCode: String(e).slice(0, 120) });
+    }
+  }, 15 * 60_000);
+
   // cron-style repeatables via BullMQ job schedulers — retry until Redis is up
   const repeatable = async (queue: string, name: string, data: object, everyMs: number) => {
     await getQueue(queue as never).upsertJobScheduler(`cron:${name}`, { every: everyMs }, { name, data });
@@ -482,6 +521,7 @@ async function main() {
     await repeatable(QUEUE_NAMES.CLEANUP, "cleanup-sessions", { type: "EXPIRED_SESSIONS" }, 6 * 3_600_000);
     await repeatable(QUEUE_NAMES.CLEANUP, "cleanup-candles", { type: "OLD_CANDLES" }, 24 * 3_600_000);
     await repeatable(QUEUE_NAMES.CLEANUP, "cleanup-logs", { type: "OLD_LOGS" }, 24 * 3_600_000);
+    await repeatable(QUEUE_NAMES.CLEANUP, "cleanup-setups", { type: "OLD_SETUPS" }, 24 * 3_600_000);
     await repeatable(QUEUE_NAMES.CLEANUP, "sqlite-vacuum", { type: "SQLITE_VACUUM" }, 7 * 24 * 3_600_000);
     await repeatable(QUEUE_NAMES.CLEANUP, "disk-check", { type: "DISK_CHECK" }, 6 * 3_600_000);
     await redis.set(WORKER_HEARTBEAT_KEY, String(Date.now()));

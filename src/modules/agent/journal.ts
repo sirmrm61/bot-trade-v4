@@ -22,7 +22,7 @@ export type JournalType =
   | "BACKTEST" | "INCIDENT" | "LESSON" | "GOAL_UPDATE"
   | "FORECAST" | "DAILY_PLAN" | "DAILY_STATE_CHANGE" | "MODEL_UPDATE"
   | "SCAN" | "SETUP_CREATED" | "SETUP_STATE_CHANGE" | "PAPER_TRADE"
-  | "PROMOTION_REQUEST" | "JOB_CREATED" | "JOB_FAILED";
+  | "PROMOTION_REQUEST" | "JOB_CREATED" | "JOB_FAILED" | "DEGRADED" | "DAILY_REPORT";
 
 export async function journalWrite(
   agentId: string,
@@ -119,6 +119,10 @@ export async function writeAgentState(agent: TradingAgent): Promise<void> {
       return st.improve?.hypothesis ? [`- ${l.symbol}: ${st.improve.hypothesis} (فاز: ${st.improve.phase ?? "?"})`] : [];
     });
 
+    const sfSection = await import("@/modules/signal-factory/stats")
+      .then((m) => m.signalFactorySection(agent.userId))
+      .catch(() => "");
+
     const liveLines = lives.map((l) => {
       const m = managed.find((x) => x.liveStrategyId === l.id);
       return `- ${l.symbol}: ${l.status} · ${l.mode} · نسخه v${l.version?.versionNumber ?? "?"} (${l.version?.kind ?? "?"})${l.sizeScale < 1 ? ` · سایز آزمایشی ×${l.sizeScale}` : ""}${m?.strategyId ? ` · strategy ${m.strategyId}` : ""}`;
@@ -166,7 +170,7 @@ ${lastEvents.slice(0, 10).map((e) => `- [${e.createdAt.toISOString().slice(5, 16
 
 ## جفت‌ارزهای تحت مدیریت
 ${managed.map((m) => `- ${m.symbol}`).join("\n") || "- هیچ — از scan_pairs شروع کن"}
-`;
+${sfSection}`;
 
     const dir = path.join(WORKSPACE_ROOT(), agent.id);
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });

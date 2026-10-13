@@ -1007,6 +1007,7 @@ model Setup {
   closedAt    DateTime?
   outcome     String?                      // TP1_HIT|TP2_HIT|SL_HIT|EXPIRED|INVALIDATED
   outcomePnlPct Float?
+  meta        String?                      // JSON: {hypothetical, triggered} — نتیجه‌ی فرضی outcome-tracker
   paperTrade  PaperTrade?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1057,8 +1058,8 @@ model SetupBacktest {
 
 model PaperTrade {
   id        String @id @default(cuid())
-  setupId   String @unique
-  setup     Setup @relation(fields: [setupId], references: [id])
+  setupId   String? @unique                    // nullable: ستاپ‌های >۳۰روز پاک می‌شوند ولی رکورد پیپر می‌ماند
+  setup     Setup?  @relation(fields: [setupId], references: [id])
   userId    String
   symbol    String
   side      String

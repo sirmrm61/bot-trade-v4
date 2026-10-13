@@ -354,10 +354,26 @@ export async function persistSetups(
   drafts: SetupDraft[],
   regime: MarketRegime,
 ): Promise<{ created: number; updated: number; kept: SetupDraft[] }> {
+  // degraded patterns rank lower — the SetupType weight scales the draft's
+  // score before the top-N cut and is what gets persisted on the row
+  const keyByDraft = new Map<SetupDraft, { typeKey: string; paramsHash: string }>();
+  for (const d of drafts) keyByDraft.set(d, typeKeyOf(d, regime));
+  const keys = [...new Set([...keyByDraft.values()].map((k) => k.typeKey))];
+  const weights = new Map(
+    (await prisma.setupType.findMany({
+      where: { key: { in: keys } },
+      select: { key: true, weight: true },
+    })).map((t) => [t.key, t.weight]),
+  );
+  for (const d of drafts) {
+    const w = weights.get(keyByDraft.get(d)!.typeKey) ?? 1;
+    if (w !== 1) d.score = Math.max(0, Math.round(d.score * w));
+  }
+
   const kept = rankTop(drafts);
   let created = 0, updated = 0;
   for (const d of kept) {
-    const { typeKey, paramsHash } = typeKeyOf(d, regime);
+    const { typeKey, paramsHash } = keyByDraft.get(d)!;
     await prisma.setupType.upsert({
       where: { key: typeKey },
       create: { key: typeKey, kind: d.kind, paramsHash },
