@@ -1,8 +1,9 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardTitle, Badge, EmptyState, Table } from "@/components/ui";
 import { ActionButton } from "@/components/client";
+import { SetupDetailDialog } from "./detail";
 import { cn, faNumber, faPercent } from "@/shared/utils";
 import { jalaliDateTime } from "@/shared/jalali";
 
@@ -81,10 +82,6 @@ const BACKTEST_LABEL: Record<string, { label: string; tone: "default" | "success
   INSUFFICIENT: { label: "داده ناکافی", tone: "warning" },
   REJECTED: { label: "ردشده", tone: "danger" },
 };
-const META_LABEL: Record<string, string> = {
-  trigger: "تریگر", entry: "ورود", sl: "استاپ", tp1: "TP1", tp2: "TP2", invalidate: "ابطال",
-};
-
 const fmt = (n: number) => {
   const dec = Math.abs(n) >= 1000 ? 0 : Math.abs(n) >= 1 ? 2 : 4;
   return new Intl.NumberFormat("fa-IR", { maximumFractionDigits: dec }).format(n);
@@ -103,7 +100,7 @@ export function TopSetupsPanel({
 }) {
   const [dirFilter, setDirFilter] = useState("all");
   const [stateFilter, setStateFilter] = useState("all");
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const states = useMemo(() => [...new Set(setups.map((s) => s.state))], [setups]);
   const filtered = setups.filter(
@@ -180,9 +177,8 @@ export function TopSetupsPanel({
         ) : (
           <Table headers={["جفت", "نوع", "جهت", "ورود", "شرط تأیید", "TP1", "TP2", "SL", "R:R", "امتیاز", "بک‌تست", "وضعیت", "انقضا"]}>
             {filtered.map((s) => (
-              <Fragment key={s.id}>
-                <tr
-                  onClick={() => setExpanded(expanded === s.id ? null : s.id)}
+                <tr key={s.id}
+                  onClick={() => setDetailId(s.id)}
                   className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40"
                 >
                   <td className="px-4 py-3 font-bold ltr whitespace-nowrap">{s.symbol}</td>
@@ -209,33 +205,12 @@ export function TopSetupsPanel({
                   <td className="px-4 py-3 text-xs whitespace-nowrap">{STATE_LABEL[s.state] ?? s.state}</td>
                   <td className="px-4 py-3 text-xs text-muted whitespace-nowrap">{jalaliDateTime(s.expiresAt)}</td>
                 </tr>
-                {expanded === s.id && (
-                  <tr className="bg-slate-50/60 dark:bg-slate-800/20">
-                    <td colSpan={13} className="px-4 py-3">
-                      <div className="space-y-2 text-sm leading-6">
-                        <div><span className="text-muted">دلیل: </span>{s.reasonFa}</div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-                          {Object.entries(s.levelsMeta).map(([k, v]) => (
-                            <span key={k}><b>{META_LABEL[k] ?? k}:</b> {v}</span>
-                          ))}
-                        </div>
-                        {s.backtestLabel === "REJECTED" && s.rejectionReasons.length > 0 && (
-                          <div className="text-xs text-danger">
-                            دلیل رد بک‌تست: {s.rejectionReasons.join("؛ ")}
-                          </div>
-                        )}
-                        <div className="text-xs text-muted ltr">
-                          trigger {fmt(s.triggerPrice)} · price@scan {fmt(s.priceAtScan)}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
             ))}
           </Table>
         )}
       </Card>
+
+      {detailId && <SetupDetailDialog id={detailId} onClose={() => setDetailId(null)} />}
 
       <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
         <div className="text-sm leading-6 text-amber-800 dark:text-amber-200">

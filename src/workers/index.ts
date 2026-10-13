@@ -447,6 +447,30 @@ async function main() {
     }
   }, 60 * 60_000);
 
+  // signal-factory trigger monitor — every 1 min: expire/invalidation checks
+  // on armed + pending setups, trigger confirm on the latest closed candle.
+  setInterval(async () => {
+    try {
+      const { jobRun } = await import("@/modules/signal-factory/jobs");
+      const { runTriggerMonitor } = await import("@/modules/signal-factory/lifecycle");
+      await jobRun("setup-trigger-monitor", "1min", () => runTriggerMonitor());
+    } catch (e) {
+      logger.warn("trigger monitor error", { module: "signal-factory", errorCode: String(e).slice(0, 120) });
+    }
+  }, 60_000);
+
+  // signal-factory paper position manager — every 1 min: TP1 partial /
+  // breakeven / TP2 / SL / expiry management on open PaperTrades.
+  setInterval(async () => {
+    try {
+      const { jobRun } = await import("@/modules/signal-factory/jobs");
+      const { runPaperManager } = await import("@/modules/signal-factory/paper");
+      await jobRun("paper-position-manager", "1min", () => runPaperManager());
+    } catch (e) {
+      logger.warn("paper manager error", { module: "signal-factory", errorCode: String(e).slice(0, 120) });
+    }
+  }, 60_000);
+
   // cron-style repeatables via BullMQ job schedulers — retry until Redis is up
   const repeatable = async (queue: string, name: string, data: object, everyMs: number) => {
     await getQueue(queue as never).upsertJobScheduler(`cron:${name}`, { every: everyMs }, { name, data });

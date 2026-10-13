@@ -342,13 +342,27 @@ export async function backtestSetup(setup: Setup, deps: BacktestDeps = {}): Prom
     }),
     prisma.setup.update({
       where: { id: setup.id },
-      data: {
-        backtestLabel: verdict.label,
-        ...(verdict.label === "VERIFIED" ? { state: "BACKTESTED" } : {}),
-        ...(verdict.label === "REJECTED" ? { state: "REJECTED", closedAt: new Date() } : {}),
-      },
+      data: { backtestLabel: verdict.label },
     }),
   ]);
+
+  // state transitions go through the lifecycle so they land in the journal —
+  // VERIFIED promotes PROPOSED → BACKTESTED; REJECTED is terminal but only
+  // from a pre-entry state (an already-open paper trade runs to its own close)
+  const wantsTransition =
+    verdict.label === "REJECTED" || (verdict.label === "VERIFIED" && setup.state === "PROPOSED");
+  if (wantsTransition) {
+    const { transitionSetup, PRE_ENTRY_STATES } = await import("./lifecycle");
+    const to = verdict.label === "REJECTED"
+      ? ((PRE_ENTRY_STATES as readonly string[]).includes(setup.state) ? "REJECTED" : null)
+      : "BACKTESTED";
+    if (to) {
+      await transitionSetup(setup, to,
+        verdict.label === "REJECTED"
+          ? `بک‌تست الگو رد شد${verdict.reasons.length ? ` — ${verdict.reasons.join("؛ ")}` : ""}`
+          : "بک‌تست الگو تأیید شد — آماده‌ی مسلح‌شدن تریگر");
+    }
+  }
 
   // roll the outcome into the pattern stats — samples/wins accumulate,
   // expectancy is a running mean, PF/DD track the latest pooled verdict.
@@ -409,7 +423,9 @@ export async function runBacktestSweep(opts: { limit?: number } = {}): Promise<{
   tested: number; verified: number; insufficient: number; rejected: number; failed: number; skipped: number;
 }> {
   const pending = await prisma.setup.findMany({
-    where: { backtestLabel: "NOT_TESTED", state: { in: ["PROPOSED", "BACKTESTED"] } },
+    // WAITING_TRIGGER included — untested setups arm immediately and still
+    // need their verdict (REJECTED kills an armed setup, VERIFIED keeps it)
+    where: { backtestLabel: "NOT_TESTED", state: { in: ["PROPOSED", "BACKTESTED", "WAITING_TRIGGER"] } },
     orderBy: { createdAt: "asc" },
     take: opts.limit ?? SWEEP_LIMIT,
   });
