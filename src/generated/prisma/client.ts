@@ -228,3 +228,38 @@ export type DailyPlan = Prisma.DailyPlanModel
  * 
  */
 export type JobRecord = Prisma.JobRecordModel
+/**
+ * Model SignalMakerConfig
+ * 
+ */
+export type SignalMakerConfig = Prisma.SignalMakerConfigModel
+/**
+ * Model Setup
+ * 
+ */
+export type Setup = Prisma.SetupModel
+/**
+ * Model SetupType
+ * 
+ */
+export type SetupType = Prisma.SetupTypeModel
+/**
+ * Model SetupBacktest
+ * 
+ */
+export type SetupBacktest = Prisma.SetupBacktestModel
+/**
+ * Model PaperTrade
+ * 
+ */
+export type PaperTrade = Prisma.PaperTradeModel
+/**
+ * Model JobRegistry
+ * 
+ */
+export type JobRegistry = Prisma.JobRegistryModel
+/**
+ * Model Incident
+ * 
+ */
+export type Incident = Prisma.IncidentModel

@@ -20,7 +20,9 @@ import type { TradingAgent } from "@/generated/prisma/client";
 export type JournalType =
   | "DECISION" | "TRADE_OPEN" | "TRADE_CLOSE" | "STRATEGY_CHANGE"
   | "BACKTEST" | "INCIDENT" | "LESSON" | "GOAL_UPDATE"
-  | "FORECAST" | "DAILY_PLAN" | "DAILY_STATE_CHANGE" | "MODEL_UPDATE";
+  | "FORECAST" | "DAILY_PLAN" | "DAILY_STATE_CHANGE" | "MODEL_UPDATE"
+  | "SCAN" | "SETUP_CREATED" | "SETUP_STATE_CHANGE" | "PAPER_TRADE"
+  | "PROMOTION_REQUEST" | "JOB_CREATED" | "JOB_FAILED";
 
 export async function journalWrite(
   agentId: string,

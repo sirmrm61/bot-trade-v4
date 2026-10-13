@@ -59,6 +59,9 @@ export const EXCHANGE_LABELS: Record<ExchangeId, string> = {
   KUCOIN: "کوکوین",
 };
 
+/** Signal factory — timeframes the setup scanner may analyze (must exist in pairs/service tfMs). */
+export const SIGNAL_TIMEFRAMES = ["15m", "30m", "1h", "4h", "1d"] as const;
+
 export const STRATEGY_STATUS = {
   DRAFT: "DRAFT",
   BACKTESTING: "BACKTESTING",

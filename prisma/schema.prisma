@@ -57,6 +57,7 @@ model User {
   trades              Trade[]
   idempotencyKeys     IdempotencyKey[]
   tradingAgents       TradingAgent[]
+  signalMakerConfig   SignalMakerConfig?
 }
 
 model Session {
@@ -948,4 +949,158 @@ model JobRecord {
   updatedAt   DateTime @updatedAt
 
   @@index([queue, status])
+}
+
+// ------------------------------------------------------------
+// Signal Factory — conditional setup maker (per-user config,
+// setups, pattern stats, backtests, paper trades, jobs, incidents)
+// ------------------------------------------------------------
+
+model SignalMakerConfig {
+  id        String  @id @default(cuid())
+  userId    String  @unique
+  user      User    @relation(fields: [userId], references: [id])
+  exchange  String  @default("KUCOIN")      // NOBITEX | KUCOIN
+  marketType String @default("SPOT")        // SPOT | FUTURES
+  quote     String  @default("USDT")
+  minVolume24h Float @default(0)            // فیلتر نقدشوندگی
+  timeframes String @default("[\"4h\",\"1h\",\"1d\"]")
+  scanEveryHours Int @default(4)
+  enabled   Boolean @default(true)
+  liveTradingEnabled Boolean @default(false)
+  setups    Setup[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Setup {
+  id          String  @id @default(cuid())
+  userId      String
+  configId    String
+  config      SignalMakerConfig @relation(fields: [configId], references: [id])
+  exchange    String
+  symbol      String
+  marketType  String
+  direction   String                       // LONG | SHORT
+  kind        String                       // LONG_BREAKOUT | LONG_BOUNCE | SHORT_BREAKDOWN | SHORT_REJECTION
+  typeKey     String                       // kind + paramsHash → لینک به SetupType
+  timeframe   String                       // تایم‌فریم مرجع تحلیل (۴h)
+  triggerPrice Float
+  confirmRule String                       // e.g. CLOSE_ABOVE_TF
+  entryLow    Float
+  entryHigh   Float
+  tp1         Float
+  tp2         Float
+  sl          Float
+  invalidatePrice Float
+  rr          Float
+  score       Float                        // 0..100
+  confidence  Float                        // 0..1
+  reasonFa    String
+  levelsMeta  String                       // JSON: منشأ هر سطح
+  executable  Boolean  @default(true)      // false = شورت روی SPOT
+  state       String  @default("PROPOSED")
+  expiresAt   DateTime
+  priceAtScan Float
+  backtestLabel String @default("NOT_TESTED")  // NOT_TESTED|VERIFIED|INSUFFICIENT|REJECTED
+  activatedAt DateTime?
+  closedAt    DateTime?
+  outcome     String?                      // TP1_HIT|TP2_HIT|SL_HIT|EXPIRED|INVALIDATED
+  outcomePnlPct Float?
+  paperTrade  PaperTrade?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([userId, state])
+  @@index([typeKey])
+  @@index([symbol, direction, state])
+}
+
+model SetupType {
+  id          String @id @default(cuid())
+  key         String @unique
+  kind        String
+  paramsHash  String
+  samples     Int @default(0)
+  wins        Int @default(0)
+  expectancy  Float @default(0)
+  pfTrain     Float?
+  pfTest      Float?
+  maxDD       Float?
+  paperTrades Int @default(0)
+  paperExpectancy Float?
+  paperDays   Int @default(0)
+  degraded    Boolean @default(false)
+  degradedReason String?
+  weight      Float @default(1)
+  liveApproved Boolean @default(false)
+  liveApprovedAt DateTime?
+  updatedAt   DateTime @updatedAt
+}
+
+model SetupBacktest {
+  id        String @id @default(cuid())
+  setupId   String?
+  typeKey   String
+  symbol    String
+  timeframe String
+  startDate DateTime
+  endDate   DateTime
+  feePct    Float
+  slippagePct Float
+  trainMetrics String
+  testMetrics String
+  passed    Boolean
+  reasons   String
+  createdAt DateTime @default(now())
+  @@index([typeKey])
+}
+
+model PaperTrade {
+  id        String @id @default(cuid())
+  setupId   String @unique
+  setup     Setup @relation(fields: [setupId], references: [id])
+  userId    String
+  symbol    String
+  side      String
+  entryPrice Float
+  amount    Float
+  invested  Float
+  tp1       Float
+  tp2       Float
+  sl        Float
+  status    String @default("OPEN")   // OPEN | CLOSED
+  exitPrice Float?
+  exitReason String?
+  pnl       Float?
+  pnlPct    Float?
+  costsPct  Float
+  tp1Hit    Boolean @default(false)
+  openedAt  DateTime @default(now())
+  closedAt  DateTime?
+  meta      String?
+}
+
+model JobRegistry {
+  id        String @id @default(cuid())
+  name      String @unique
+  schedule  String
+  kind      String @default("INTERVAL")   // INTERVAL | BULLMQ
+  lastRunAt DateTime?
+  lastStatus String?
+  lastError String?
+  failCount Int @default(0)
+  enabled   Boolean @default(true)
+  createdBy String @default("system")
+  reason    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Incident {
+  id      String @id @default(cuid())
+  userId  String?
+  kind    String
+  summary String
+  data    String?
+  createdAt DateTime @default(now())
 }

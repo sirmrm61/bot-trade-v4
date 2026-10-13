@@ -86,7 +86,14 @@ export const ModelName = {
   ModelVersion: 'ModelVersion',
   Prediction: 'Prediction',
   DailyPlan: 'DailyPlan',
-  JobRecord: 'JobRecord'
+  JobRecord: 'JobRecord',
+  SignalMakerConfig: 'SignalMakerConfig',
+  Setup: 'Setup',
+  SetupType: 'SetupType',
+  SetupBacktest: 'SetupBacktest',
+  PaperTrade: 'PaperTrade',
+  JobRegistry: 'JobRegistry',
+  Incident: 'Incident'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -837,6 +844,167 @@ export const JobRecordScalarFieldEnum = {
 } as const
 
 export type JobRecordScalarFieldEnum = (typeof JobRecordScalarFieldEnum)[keyof typeof JobRecordScalarFieldEnum]
+
+
+export const SignalMakerConfigScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  exchange: 'exchange',
+  marketType: 'marketType',
+  quote: 'quote',
+  minVolume24h: 'minVolume24h',
+  timeframes: 'timeframes',
+  scanEveryHours: 'scanEveryHours',
+  enabled: 'enabled',
+  liveTradingEnabled: 'liveTradingEnabled',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SignalMakerConfigScalarFieldEnum = (typeof SignalMakerConfigScalarFieldEnum)[keyof typeof SignalMakerConfigScalarFieldEnum]
+
+
+export const SetupScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  configId: 'configId',
+  exchange: 'exchange',
+  symbol: 'symbol',
+  marketType: 'marketType',
+  direction: 'direction',
+  kind: 'kind',
+  typeKey: 'typeKey',
+  timeframe: 'timeframe',
+  triggerPrice: 'triggerPrice',
+  confirmRule: 'confirmRule',
+  entryLow: 'entryLow',
+  entryHigh: 'entryHigh',
+  tp1: 'tp1',
+  tp2: 'tp2',
+  sl: 'sl',
+  invalidatePrice: 'invalidatePrice',
+  rr: 'rr',
+  score: 'score',
+  confidence: 'confidence',
+  reasonFa: 'reasonFa',
+  levelsMeta: 'levelsMeta',
+  executable: 'executable',
+  state: 'state',
+  expiresAt: 'expiresAt',
+  priceAtScan: 'priceAtScan',
+  backtestLabel: 'backtestLabel',
+  activatedAt: 'activatedAt',
+  closedAt: 'closedAt',
+  outcome: 'outcome',
+  outcomePnlPct: 'outcomePnlPct',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SetupScalarFieldEnum = (typeof SetupScalarFieldEnum)[keyof typeof SetupScalarFieldEnum]
+
+
+export const SetupTypeScalarFieldEnum = {
+  id: 'id',
+  key: 'key',
+  kind: 'kind',
+  paramsHash: 'paramsHash',
+  samples: 'samples',
+  wins: 'wins',
+  expectancy: 'expectancy',
+  pfTrain: 'pfTrain',
+  pfTest: 'pfTest',
+  maxDD: 'maxDD',
+  paperTrades: 'paperTrades',
+  paperExpectancy: 'paperExpectancy',
+  paperDays: 'paperDays',
+  degraded: 'degraded',
+  degradedReason: 'degradedReason',
+  weight: 'weight',
+  liveApproved: 'liveApproved',
+  liveApprovedAt: 'liveApprovedAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SetupTypeScalarFieldEnum = (typeof SetupTypeScalarFieldEnum)[keyof typeof SetupTypeScalarFieldEnum]
+
+
+export const SetupBacktestScalarFieldEnum = {
+  id: 'id',
+  setupId: 'setupId',
+  typeKey: 'typeKey',
+  symbol: 'symbol',
+  timeframe: 'timeframe',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  feePct: 'feePct',
+  slippagePct: 'slippagePct',
+  trainMetrics: 'trainMetrics',
+  testMetrics: 'testMetrics',
+  passed: 'passed',
+  reasons: 'reasons',
+  createdAt: 'createdAt'
+} as const
+
+export type SetupBacktestScalarFieldEnum = (typeof SetupBacktestScalarFieldEnum)[keyof typeof SetupBacktestScalarFieldEnum]
+
+
+export const PaperTradeScalarFieldEnum = {
+  id: 'id',
+  setupId: 'setupId',
+  userId: 'userId',
+  symbol: 'symbol',
+  side: 'side',
+  entryPrice: 'entryPrice',
+  amount: 'amount',
+  invested: 'invested',
+  tp1: 'tp1',
+  tp2: 'tp2',
+  sl: 'sl',
+  status: 'status',
+  exitPrice: 'exitPrice',
+  exitReason: 'exitReason',
+  pnl: 'pnl',
+  pnlPct: 'pnlPct',
+  costsPct: 'costsPct',
+  tp1Hit: 'tp1Hit',
+  openedAt: 'openedAt',
+  closedAt: 'closedAt',
+  meta: 'meta'
+} as const
+
+export type PaperTradeScalarFieldEnum = (typeof PaperTradeScalarFieldEnum)[keyof typeof PaperTradeScalarFieldEnum]
+
+
+export const JobRegistryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  schedule: 'schedule',
+  kind: 'kind',
+  lastRunAt: 'lastRunAt',
+  lastStatus: 'lastStatus',
+  lastError: 'lastError',
+  failCount: 'failCount',
+  enabled: 'enabled',
+  createdBy: 'createdBy',
+  reason: 'reason',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type JobRegistryScalarFieldEnum = (typeof JobRegistryScalarFieldEnum)[keyof typeof JobRegistryScalarFieldEnum]
+
+
+export const IncidentScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  kind: 'kind',
+  summary: 'summary',
+  data: 'data',
+  createdAt: 'createdAt'
+} as const
+
+export type IncidentScalarFieldEnum = (typeof IncidentScalarFieldEnum)[keyof typeof IncidentScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -402,6 +402,19 @@ async function main() {
     }
   }, 5 * 60_000);
 
+  // signal-factory data-freshness watchdog — every 5 min, registered in
+  // JobRegistry via jobRun; on stale/unreachable data it raises an Incident
+  // and flips dataFresh() so setup production is skipped.
+  setInterval(async () => {
+    try {
+      const { jobRun } = await import("@/modules/signal-factory/jobs");
+      const { runDataFreshnessWatchdog } = await import("@/modules/signal-factory/watchdog");
+      await jobRun("data-freshness-watchdog", "5min", runDataFreshnessWatchdog);
+    } catch (e) {
+      logger.warn("data freshness watchdog error", { module: "signal-factory", errorCode: String(e).slice(0, 120) });
+    }
+  }, 5 * 60_000);
+
   // cron-style repeatables via BullMQ job schedulers — retry until Redis is up
   const repeatable = async (queue: string, name: string, data: object, everyMs: number) => {
     await getQueue(queue as never).upsertJobScheduler(`cron:${name}`, { every: everyMs }, { name, data });
