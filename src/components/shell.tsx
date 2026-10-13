@@ -8,6 +8,7 @@ import {
   Gauge, Wallet, Robot, Flask, Lightning, ArrowsLeftRight, Storefront,
   ShoppingBag, UsersThree, Bell, Question, SignOut, UserCircle, Key, ShieldCheck,
   Moon, Sun, List, ChartLineUp, GearSix, HardDrives, Crosshair, Brain, Factory,
+  Target,
 } from "@phosphor-icons/react";
 
 const NAV = [
@@ -20,6 +21,7 @@ const NAV = [
   { href: "/live", label: "معاملات زنده", icon: Lightning },
   { href: "/trades", label: "تاریخچه معاملات", icon: ArrowsLeftRight },
   { href: "/scalping", label: "اسکالپ اسکنر", icon: Crosshair },
+  { href: "/top-setups", label: "ستاپ‌های برتر", icon: Target },
   { href: "/smart-trader", label: "تریدر هوشمند", icon: Brain },
   { href: "/settings/signal-factory", label: "سیگنال‌ساز", icon: Factory },
   { href: "/marketplace", label: "بازار استراتژی", icon: Storefront },

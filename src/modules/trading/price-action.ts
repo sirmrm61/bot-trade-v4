@@ -82,10 +82,10 @@ const lw = (c: Candle) => Math.min(c.open, c.close) - c.low;
 const bull = (c: Candle) => c.close > c.open;
 const EPS = 1e-10;
 
-interface Swing { i: number; price: number }
+export interface Swing { i: number; price: number }
 
 /** fractal swings — index i is a swing if its extreme beats `k` neighbours each side */
-function swingPoints(cs: Candle[], k: number): { highs: Swing[]; lows: Swing[] } {
+export function swingPoints(cs: Candle[], k: number): { highs: Swing[]; lows: Swing[] } {
   const highs: Swing[] = [];
   const lows: Swing[] = [];
   for (let i = k; i < cs.length - k; i++) {
