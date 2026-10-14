@@ -1,7 +1,8 @@
 import { prisma } from "@/infrastructure/database/prisma";
 import { publicAdapter } from "@/modules/exchanges/registry";
 import { logger } from "@/infrastructure/logging/logger";
-import { configTimeframes, pairFilter, pairVolume24h } from "./config";
+import { configTimeframes } from "./config";
+import { candidateSymbols } from "./setups";
 import { isStale, markDataFresh } from "./data";
 import { systemAgentId } from "./jobs";
 import { journalWrite } from "@/modules/agent/journal";
@@ -26,15 +27,16 @@ export async function runDataFreshnessWatchdog(): Promise<void> {
     try {
       const adapter = publicAdapter(exchange);
       for (const cfg of cfgs) {
-        const pairs = await pairFilter(cfg);
-        if (!pairs.length) continue; // no candidates — nothing to go stale on
-        await adapter.getTicker(pairs[0].symbol); // connectivity probe
+        // probe the actual universe being scanned — futures configs must
+        // check futures contracts, not the spot Pair table
+        const symbols = (await candidateSymbols(cfg)).slice(0, TOP_SYMBOLS);
+        if (!symbols.length) continue; // no candidates — nothing to go stale on
+        await adapter.getTicker(symbols[0]); // connectivity probe
         const tf = configTimeframes(cfg)[0];
-        const top = [...pairs].sort((a, b) => pairVolume24h(b) - pairVolume24h(a)).slice(0, TOP_SYMBOLS);
-        for (const p of top) {
-          const candles = await adapter.getCandles(p.symbol, tf, undefined, 5);
+        for (const sym of symbols) {
+          const candles = await adapter.getCandles(sym, tf, undefined, 5);
           if (isStale(candles, tf)) {
-            throw new Error(`داده کهنه: ${p.symbol} (${tf})`);
+            throw new Error(`داده کهنه: ${sym} (${tf})`);
           }
         }
       }

@@ -32,7 +32,10 @@ export function SignalFactoryForm({ config }: { config: SignalFactoryFormConfig 
           options={EXCHANGE_IDS.map((id) => ({ value: id, label: EXCHANGE_LABELS[id] }))}
         />
       </Field>
-      <Field label="نوع بازار">
+      <Field
+        label="نوع بازار"
+        hint="فیوچرز در کوکوین = قراردادهای پرپچوال (با فاندینگ/OI)؛ در نوبیتکس = معامله‌ی اهرم‌دار (مارجین) روی نمادهای اسپات"
+      >
         <Select
           name="marketType"
           defaultValue={config.marketType}
